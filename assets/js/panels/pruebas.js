@@ -2,6 +2,7 @@
 import { $, el, fmtMs } from '../util.js';
 import { state, on } from '../state.js';
 import { registerPanel, setCount } from '../panels.js';
+import { LANG } from '../lang.js';
 
 const ICON = { pass: '✓', fail: '✗', error: '!', todo: '⏳' };
 const LABEL = { pass: 'correcta', fail: 'falla', error: 'error', todo: 'pendiente' };
@@ -17,7 +18,7 @@ function render() {
 
   if (!tests.length) {
     host.append(el('div', { class: 'placeholder' }, r
-      ? 'Este archivo no tiene pruebas (usa prueba(), comprueba() o lanza()). Escribe «prueba» y pulsa Tab para una plantilla.'
+      ? LANG.testsHint
       : 'Ejecuta el archivo para ver las pruebas.'));
     return;
   }

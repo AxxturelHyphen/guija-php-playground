@@ -1,0 +1,1696 @@
+{
+"functions":{
+"length":{
+"p":[],
+"r":0,
+"ret":": int",
+"d":"**String**: Número de caracteres del texto.",
+"o":"O(1)"
+},
+"charAt":{
+"p":[
+"int i"
+],
+"r":1,
+"ret":": char",
+"d":"**String**: El carácter de la posición `i` (desde 0). Fuera de rango lanza `StringIndexOutOfBoundsException`.",
+"o":"O(1)"
+},
+"substring":{
+"p":[
+"int ini",
+"int fin"
+],
+"r":1,
+"ret":": String",
+"d":"**String**: Trozo desde `ini` hasta `fin` (sin incluirlo). Si omites `fin`, hasta el final.",
+"o":"O(n)"
+},
+"indexOf":{
+"p":[
+"String s"
+],
+"r":1,
+"ret":": int",
+"d":"**String**: Posición de la primera aparición o -1 si no está.\n\n**List**: Posición de la primera aparición o -1.",
+"o":"O(n)"
+},
+"lastIndexOf":{
+"p":[
+"String s"
+],
+"r":1,
+"ret":": int",
+"d":"**String**: Posición de la última aparición o -1.",
+"o":"O(n)"
+},
+"contains":{
+"p":[
+"CharSequence s"
+],
+"r":1,
+"ret":": boolean",
+"d":"**String**: `true` si el texto contiene `s`.\n\n**List**: `true` si algún elemento es `equals` a `o`. En `Set`/`Map` es O(1).",
+"o":"O(n)"
+},
+"equals":{
+"p":[
+"Object o"
+],
+"r":1,
+"ret":": boolean",
+"d":"**String**: Compara el **contenido**. Nunca uses `==` con textos.\n\n**Arrays**: Compara contenidos (`==` y `a.equals(b)` no).\n\n**Object**: Igualdad de contenido; sobrescríbelo junto con `hashCode`.",
+"o":"O(n) (String) · O(n) (Arrays) · O(1) (Object)"
+},
+"equalsIgnoreCase":{
+"p":[
+"String s"
+],
+"r":1,
+"ret":": boolean",
+"d":"**String**: Como `equals` pero ignorando mayúsculas.",
+"o":"O(n)"
+},
+"compareTo":{
+"p":[
+"String s"
+],
+"r":1,
+"ret":": int",
+"d":"**String**: Orden alfabético: negativo, 0 o positivo.",
+"o":"O(n)"
+},
+"startsWith":{
+"p":[
+"String prefijo"
+],
+"r":1,
+"ret":": boolean",
+"d":"**String**: `true` si empieza por `prefijo`.",
+"o":"O(1)"
+},
+"endsWith":{
+"p":[
+"String sufijo"
+],
+"r":1,
+"ret":": boolean",
+"d":"**String**: `true` si acaba en `sufijo`.",
+"o":"O(1)"
+},
+"isEmpty":{
+"p":[],
+"r":0,
+"ret":": boolean",
+"d":"**String**: `true` si tiene 0 caracteres.\n\n**List**: `true` si no tiene elementos.",
+"o":"O(1)"
+},
+"isBlank":{
+"p":[],
+"r":0,
+"ret":": boolean",
+"d":"**String**: `true` si está vacío o solo tiene espacios.",
+"o":"O(n)"
+},
+"toUpperCase":{
+"p":[],
+"r":0,
+"ret":": String",
+"d":"**String**: Copia en mayúsculas (los `String` son inmutables).",
+"o":"O(n)"
+},
+"toLowerCase":{
+"p":[],
+"r":0,
+"ret":": String",
+"d":"**String**: Copia en minúsculas.",
+"o":"O(n)"
+},
+"trim":{
+"p":[],
+"r":0,
+"ret":": String",
+"d":"**String**: Copia sin espacios al principio y al final.",
+"o":"O(n)"
+},
+"strip":{
+"p":[],
+"r":0,
+"ret":": String",
+"d":"**String**: Como `trim()` pero entiende espacios Unicode.",
+"o":"O(n)"
+},
+"split":{
+"p":[
+"String regex"
+],
+"r":1,
+"ret":": String[]",
+"d":"**String**: Parte el texto por una expresión regular: `\"a,b\".split(\",\")`.",
+"o":"O(n)"
+},
+"replace":{
+"p":[
+"CharSequence a",
+"CharSequence b"
+],
+"r":2,
+"ret":": String",
+"d":"**String**: Reemplaza todas las apariciones literales de `a` por `b`.",
+"o":"O(n)"
+},
+"replaceAll":{
+"p":[
+"String regex",
+"String b"
+],
+"r":2,
+"ret":": String",
+"d":"**String**: Reemplaza lo que case con la expresión regular.",
+"o":"O(n)"
+},
+"toCharArray":{
+"p":[],
+"r":0,
+"ret":": char[]",
+"d":"**String**: Copia del texto como array de `char`.",
+"o":"O(n)"
+},
+"matches":{
+"p":[
+"String regex"
+],
+"r":1,
+"ret":": boolean",
+"d":"**String**: `true` si **todo** el texto casa con la expresión regular.",
+"o":"O(n)"
+},
+"concat":{
+"p":[
+"String s"
+],
+"r":1,
+"ret":": String",
+"d":"**String**: Texto nuevo con `s` pegado al final (igual que `+`).",
+"o":"O(n)"
+},
+"repeat":{
+"p":[
+"int n"
+],
+"r":1,
+"ret":": String",
+"d":"**String**: El texto repetido `n` veces.",
+"o":"O(n)"
+},
+"chars":{
+"p":[],
+"r":0,
+"ret":": IntStream",
+"d":"**String**: Flujo de los códigos de carácter.",
+"o":"O(n)"
+},
+"format":{
+"p":[
+"String formato",
+"Object... args"
+],
+"r":1,
+"ret":": String",
+"d":"**String**: Texto con formato: `String.format(\"%.2f\", x)`.",
+"o":"O(n)"
+},
+"valueOf":{
+"p":[
+"Object o"
+],
+"r":1,
+"ret":": String",
+"d":"**String**: Convierte cualquier valor a texto.\n\n**Integer**: Convierte a objeto `Integer` (con caché para -128..127).",
+"o":"O(1) (String) · O(n) (Integer)"
+},
+"join":{
+"p":[
+"CharSequence sep",
+"Iterable<?> items"
+],
+"r":2,
+"ret":": String",
+"d":"**String**: Une los elementos con un separador.",
+"o":"O(n)"
+},
+"append":{
+"p":[
+"Object x"
+],
+"r":1,
+"ret":": StringBuilder",
+"d":"**StringBuilder**: Añade al final y devuelve el propio builder (se pueden encadenar). Amortizado O(1): úsalo en vez de `+=` en bucles.",
+"o":"O(1)"
+},
+"insert":{
+"p":[
+"int pos",
+"Object x"
+],
+"r":2,
+"ret":": StringBuilder",
+"d":"**StringBuilder**: Inserta en una posición; desplaza lo que haya detrás.",
+"o":"O(n)"
+},
+"reverse":{
+"p":[],
+"r":0,
+"ret":": StringBuilder",
+"d":"**StringBuilder**: Invierte el contenido.\n\n**Collections**: Invierte una lista.",
+"o":"O(n)"
+},
+"toString":{
+"p":[],
+"r":0,
+"ret":": String",
+"d":"**StringBuilder**: Convierte el builder en `String`.\n\n**Integer**: El número como texto.\n\n**Arrays**: Texto `[1, 2, 3]` para imprimir (`println(a)` imprime una dirección).\n\n**Object**: Representación en texto; sobrescríbelo para imprimir bien tus objetos.",
+"o":"O(n) (StringBuilder) · O(n) (Integer) · O(n) (Arrays) · O(1) (Object)"
+},
+"deleteCharAt":{
+"p":[
+"int i"
+],
+"r":1,
+"ret":": StringBuilder",
+"d":"**StringBuilder**: Quita el carácter de la posición `i`.",
+"o":"O(n)"
+},
+"setCharAt":{
+"p":[
+"int i",
+"char c"
+],
+"r":2,
+"ret":": void",
+"d":"**StringBuilder**: Cambia el carácter de la posición `i`.",
+"o":"O(1)"
+},
+"setLength":{
+"p":[
+"int n"
+],
+"r":1,
+"ret":": void",
+"d":"**StringBuilder**: Acorta (o rellena con `\\0`) hasta `n` caracteres.",
+"o":"O(n)"
+},
+"abs":{
+"p":[
+"x"
+],
+"r":1,
+"ret":": número",
+"d":"**Math**: Valor absoluto.",
+"o":"O(1)"
+},
+"max":{
+"p":[
+"a",
+"b"
+],
+"r":1,
+"ret":": número",
+"d":"**Math**: El mayor de dos valores.\n\n**Collections**: El mayor elemento.",
+"o":"O(1) (Math) · O(n) (Collections)"
+},
+"min":{
+"p":[
+"a",
+"b"
+],
+"r":1,
+"ret":": número",
+"d":"**Math**: El menor de dos valores.\n\n**Collections**: El menor elemento.",
+"o":"O(1) (Math) · O(n) (Collections)"
+},
+"pow":{
+"p":[
+"double base",
+"double exp"
+],
+"r":2,
+"ret":": double",
+"d":"**Math**: Potencia: `Math.pow(2, 10)` = 1024.0.",
+"o":"O(1)"
+},
+"sqrt":{
+"p":[
+"double x"
+],
+"r":1,
+"ret":": double",
+"d":"**Math**: Raíz cuadrada (`NaN` si `x` es negativo).",
+"o":"O(1)"
+},
+"cbrt":{
+"p":[
+"double x"
+],
+"r":1,
+"ret":": double",
+"d":"**Math**: Raíz cúbica.",
+"o":"O(1)"
+},
+"floor":{
+"p":[
+"double x"
+],
+"r":1,
+"ret":": double",
+"d":"**Math**: Redondea hacia abajo.\n\n**TreeSet**: El mayor elemento ≤ `x`.",
+"o":"O(1) (Math) · O(log n) (TreeSet)"
+},
+"ceil":{
+"p":[
+"double x"
+],
+"r":1,
+"ret":": double",
+"d":"**Math**: Redondea hacia arriba.",
+"o":"O(1)"
+},
+"round":{
+"p":[
+"double x"
+],
+"r":1,
+"ret":": long",
+"d":"**Math**: Redondea al entero más cercano (devuelve `long`; con `float`, `int`).",
+"o":"O(1)"
+},
+"random":{
+"p":[],
+"r":0,
+"ret":": double",
+"d":"**Math**: Número aleatorio en [0, 1).",
+"o":"O(1)"
+},
+"floorDiv":{
+"p":[
+"int a",
+"int b"
+],
+"r":2,
+"ret":": int",
+"d":"**Math**: División entera redondeando hacia abajo (distinta de `/` con negativos).",
+"o":"O(1)"
+},
+"floorMod":{
+"p":[
+"int a",
+"int b"
+],
+"r":2,
+"ret":": int",
+"d":"**Math**: Resto que nunca es negativo si `b` es positivo.",
+"o":"O(1)"
+},
+"hypot":{
+"p":[
+"double a",
+"double b"
+],
+"r":2,
+"ret":": double",
+"d":"**Math**: `sqrt(a² + b²)`.",
+"o":"O(1)"
+},
+"log":{
+"p":[
+"double x"
+],
+"r":1,
+"ret":": double",
+"d":"**Math**: Logaritmo natural.",
+"o":"O(1)"
+},
+"log10":{
+"p":[
+"double x"
+],
+"r":1,
+"ret":": double",
+"d":"**Math**: Logaritmo en base 10.",
+"o":"O(1)"
+},
+"addExact":{
+"p":[
+"int a",
+"int b"
+],
+"r":2,
+"ret":": int",
+"d":"**Math**: Suma que lanza `ArithmeticException` si desborda (en vez de dar la vuelta).",
+"o":"O(1)"
+},
+"multiplyExact":{
+"p":[
+"int a",
+"int b"
+],
+"r":2,
+"ret":": int",
+"d":"**Math**: Producto que lanza `ArithmeticException` si desborda.",
+"o":"O(1)"
+},
+"toIntExact":{
+"p":[
+"long x"
+],
+"r":1,
+"ret":": int",
+"d":"**Math**: Convierte a `int` o lanza si no cabe.",
+"o":"O(1)"
+},
+"parseInt":{
+"p":[
+"String s"
+],
+"r":1,
+"ret":": int",
+"d":"**Integer**: Convierte un texto a `int`. Lanza `NumberFormatException` si no es un número.",
+"o":"O(n)"
+},
+"compare":{
+"p":[
+"int a",
+"int b"
+],
+"r":2,
+"ret":": int",
+"d":"**Integer**: Compara sin riesgo de desbordamiento (mejor que `a - b`).",
+"o":"O(1)"
+},
+"toBinaryString":{
+"p":[
+"int n"
+],
+"r":1,
+"ret":": String",
+"d":"**Integer**: El número en binario.",
+"o":"O(1)"
+},
+"bitCount":{
+"p":[
+"int n"
+],
+"r":1,
+"ret":": int",
+"d":"**Integer**: Número de bits a 1.",
+"o":"O(1)"
+},
+"sum":{
+"p":[
+"int a",
+"int b"
+],
+"r":0,
+"ret":": int",
+"d":"**Integer**: `a + b` (útil como referencia: `Integer::sum`).\n\n**Stream**: Suma (en `IntStream`/`DoubleStream`).",
+"o":"O(1) (Integer) · O(n) (Stream)"
+},
+"parseLong":{
+"p":[
+"String s"
+],
+"r":1,
+"ret":": long",
+"d":"**Long**: Convierte un texto a `long`.",
+"o":"O(n)"
+},
+"parseDouble":{
+"p":[
+"String s"
+],
+"r":1,
+"ret":": double",
+"d":"**Double**: Convierte un texto a `double`.",
+"o":"O(n)"
+},
+"parseBoolean":{
+"p":[
+"String s"
+],
+"r":1,
+"ret":": boolean",
+"d":"**Boolean**: `true` solo si el texto es \"true\" (sin importar mayúsculas).",
+"o":"O(1)"
+},
+"isDigit":{
+"p":[
+"char c"
+],
+"r":1,
+"ret":": boolean",
+"d":"**Character**: `true` si es un dígito.",
+"o":"O(1)"
+},
+"isLetter":{
+"p":[
+"char c"
+],
+"r":1,
+"ret":": boolean",
+"d":"**Character**: `true` si es una letra.",
+"o":"O(1)"
+},
+"isLetterOrDigit":{
+"p":[
+"char c"
+],
+"r":1,
+"ret":": boolean",
+"d":"**Character**: `true` si es letra o dígito.",
+"o":"O(1)"
+},
+"isUpperCase":{
+"p":[
+"char c"
+],
+"r":1,
+"ret":": boolean",
+"d":"**Character**: `true` si es mayúscula.",
+"o":"O(1)"
+},
+"isLowerCase":{
+"p":[
+"char c"
+],
+"r":1,
+"ret":": boolean",
+"d":"**Character**: `true` si es minúscula.",
+"o":"O(1)"
+},
+"isWhitespace":{
+"p":[
+"char c"
+],
+"r":1,
+"ret":": boolean",
+"d":"**Character**: `true` si es un espacio, tabulador o salto de línea.",
+"o":"O(1)"
+},
+"getNumericValue":{
+"p":[
+"char c"
+],
+"r":1,
+"ret":": int",
+"d":"**Character**: Valor numérico del dígito (`'7'` → 7).",
+"o":"O(1)"
+},
+"add":{
+"p":[
+"E x"
+],
+"r":1,
+"ret":": boolean",
+"d":"**List**: Añade `x` al final (también existe `add(i, x)`, que desplaza el resto).\n\n**Set**: Añade; devuelve `false` si ya estaba.\n\n**PriorityQueue**: Inserta; el primero siempre es el menor (según el orden).",
+"o":"O(1) amortizado (List) · O(1) (Set) · O(log n) (PriorityQueue)"
+},
+"get":{
+"p":[
+"int i"
+],
+"r":1,
+"ret":": E",
+"d":"**List**: Elemento de la posición `i`. En `LinkedList` es O(n).\n\n**Map**: Valor de la clave o `null` si no existe.",
+"o":"O(1)"
+},
+"set":{
+"p":[
+"int i",
+"E x"
+],
+"r":2,
+"ret":": E",
+"d":"**List**: Sustituye el elemento de `i` y devuelve el anterior.",
+"o":"O(1)"
+},
+"remove":{
+"p":[
+"int i"
+],
+"r":1,
+"ret":": E",
+"d":"**List**: Quita por posición (o por valor si pasas un objeto). Desplaza lo que va detrás.",
+"o":"O(n)"
+},
+"size":{
+"p":[],
+"r":0,
+"ret":": int",
+"d":"**List**: Número de elementos.",
+"o":"O(1)"
+},
+"clear":{
+"p":[],
+"r":0,
+"ret":": void",
+"d":"**List**: Quita todos los elementos.",
+"o":"O(n)"
+},
+"addAll":{
+"p":[
+"Collection<E> c"
+],
+"r":1,
+"ret":": boolean",
+"d":"**List**: Añade todos los elementos de otra colección.",
+"o":"O(n)"
+},
+"sort":{
+"p":[
+"Comparator<E> c"
+],
+"r":1,
+"ret":": void",
+"d":"**List**: Ordena en el sitio (`null` = orden natural). Estable.\n\n**Collections**: Ordena una lista en el sitio. Estable.\n\n**Arrays**: Ordena el array en el sitio (dual-pivot quicksort; objetos: TimSort).",
+"o":"O(n log n)"
+},
+"forEach":{
+"p":[
+"Consumer<E> f"
+],
+"r":1,
+"ret":": void",
+"d":"**List**: Ejecuta `f` para cada elemento.",
+"o":"O(n)"
+},
+"stream":{
+"p":[],
+"r":0,
+"ret":": Stream<E>",
+"d":"**List**: Abre un flujo para filter/map/collect...\n\n**Arrays**: Flujo del array.",
+"o":"O(1) (List) · O(n) (Arrays)"
+},
+"subList":{
+"p":[
+"int ini",
+"int fin"
+],
+"r":2,
+"ret":": List<E>",
+"d":"**List**: Vista de un trozo (comparte los datos con la original).",
+"o":"O(1)"
+},
+"removeIf":{
+"p":[
+"Predicate<E> p"
+],
+"r":1,
+"ret":": boolean",
+"d":"**List**: Quita los elementos que cumplen `p` (seguro mientras recorres).",
+"o":"O(n)"
+},
+"toArray":{
+"p":[],
+"r":0,
+"ret":": Object[]",
+"d":"**List**: Copia a un array.",
+"o":"O(n)"
+},
+"of":{
+"p":[
+"E... xs"
+],
+"r":0,
+"ret":": List<E>",
+"d":"**List**: Lista **inmutable**: `add`/`set` lanzan `UnsupportedOperationException`.\n\n**Optional**: Envuelve un valor no nulo.",
+"o":"O(n) (List) · O(1) (Optional)"
+},
+"put":{
+"p":[
+"K k",
+"V v"
+],
+"r":2,
+"ret":": V",
+"d":"**Map**: Guarda o reemplaza; devuelve el valor anterior (o null).",
+"o":"O(1)"
+},
+"getOrDefault":{
+"p":[
+"Object k",
+"V def"
+],
+"r":2,
+"ret":": V",
+"d":"**Map**: Valor de la clave o `def` si no existe.",
+"o":"O(1)"
+},
+"containsKey":{
+"p":[
+"Object k"
+],
+"r":1,
+"ret":": boolean",
+"d":"**Map**: `true` si la clave existe.",
+"o":"O(1)"
+},
+"containsValue":{
+"p":[
+"Object v"
+],
+"r":1,
+"ret":": boolean",
+"d":"**Map**: `true` si algún valor es `v`.",
+"o":"O(n)"
+},
+"keySet":{
+"p":[],
+"r":0,
+"ret":": Set<K>",
+"d":"**Map**: Vista de las claves.",
+"o":"O(1)"
+},
+"values":{
+"p":[],
+"r":0,
+"ret":": Collection<V>",
+"d":"**Map**: Vista de los valores.",
+"o":"O(1)"
+},
+"entrySet":{
+"p":[],
+"r":0,
+"ret":": Set<Map.Entry<K,V>>",
+"d":"**Map**: Vista de los pares: `for (var e : mapa.entrySet())`.",
+"o":"O(1)"
+},
+"putIfAbsent":{
+"p":[
+"K k",
+"V v"
+],
+"r":2,
+"ret":": V",
+"d":"**Map**: Guarda solo si la clave no existía.",
+"o":"O(1)"
+},
+"computeIfAbsent":{
+"p":[
+"K k",
+"Function<K, V> f"
+],
+"r":2,
+"ret":": V",
+"d":"**Map**: Si falta la clave la calcula con `f`: `m.computeIfAbsent(k, x -> new ArrayList<>()).add(v)`.",
+"o":"O(1)"
+},
+"merge":{
+"p":[
+"K k",
+"V v",
+"BiFunction f"
+],
+"r":3,
+"ret":": V",
+"d":"**Map**: Combina con el valor existente: `m.merge(p, 1, Integer::sum)` cuenta.",
+"o":"O(1)"
+},
+"retainAll":{
+"p":[
+"Collection<?> c"
+],
+"r":1,
+"ret":": boolean",
+"d":"**Set**: Deja solo los elementos que también están en `c` (intersección).",
+"o":"O(n)"
+},
+"removeAll":{
+"p":[
+"Collection<?> c"
+],
+"r":1,
+"ret":": boolean",
+"d":"**Set**: Quita los elementos que están en `c` (diferencia).",
+"o":"O(n)"
+},
+"push":{
+"p":[
+"E x"
+],
+"r":1,
+"ret":": void",
+"d":"**Deque**: Apila al principio (pila LIFO).",
+"o":"O(1)"
+},
+"pop":{
+"p":[],
+"r":0,
+"ret":": E",
+"d":"**Deque**: Desapila del principio; lanza si está vacía.",
+"o":"O(1)"
+},
+"peek":{
+"p":[],
+"r":0,
+"ret":": E",
+"d":"**Deque**: Mira el primero sin quitarlo (`null` si está vacía).\n\n**PriorityQueue**: Mira el menor sin quitarlo.",
+"o":"O(1)"
+},
+"offer":{
+"p":[
+"E x"
+],
+"r":1,
+"ret":": boolean",
+"d":"**Deque**: Encola al final.",
+"o":"O(1)"
+},
+"poll":{
+"p":[],
+"r":0,
+"ret":": E",
+"d":"**Deque**: Quita y devuelve el primero (`null` si está vacía).\n\n**PriorityQueue**: Quita y devuelve el menor.",
+"o":"O(1) (Deque) · O(log n) (PriorityQueue)"
+},
+"addFirst":{
+"p":[
+"E x"
+],
+"r":1,
+"ret":": void",
+"d":"**Deque**: Añade al principio.",
+"o":"O(1)"
+},
+"addLast":{
+"p":[
+"E x"
+],
+"r":1,
+"ret":": void",
+"d":"**Deque**: Añade al final.",
+"o":"O(1)"
+},
+"pollFirst":{
+"p":[],
+"r":0,
+"ret":": E",
+"d":"**Deque**: Quita el primero (`null` si vacía).\n\n**TreeSet**: Quita y devuelve el menor.",
+"o":"O(1) (Deque) · O(log n) (TreeSet)"
+},
+"pollLast":{
+"p":[],
+"r":0,
+"ret":": E",
+"d":"**Deque**: Quita el último (`null` si vacía).",
+"o":"O(1)"
+},
+"peekFirst":{
+"p":[],
+"r":0,
+"ret":": E",
+"d":"**Deque**: Mira el primero.",
+"o":"O(1)"
+},
+"peekLast":{
+"p":[],
+"r":0,
+"ret":": E",
+"d":"**Deque**: Mira el último.",
+"o":"O(1)"
+},
+"removeFirst":{
+"p":[],
+"r":0,
+"ret":": E",
+"d":"**Deque**: Quita el primero; lanza si vacía.",
+"o":"O(1)"
+},
+"removeLast":{
+"p":[],
+"r":0,
+"ret":": E",
+"d":"**Deque**: Quita el último; lanza si vacía.",
+"o":"O(1)"
+},
+"firstKey":{
+"p":[],
+"r":0,
+"ret":": K",
+"d":"**TreeMap**: La clave más pequeña.",
+"o":"O(log n)"
+},
+"lastKey":{
+"p":[],
+"r":0,
+"ret":": K",
+"d":"**TreeMap**: La clave más grande.",
+"o":"O(log n)"
+},
+"floorKey":{
+"p":[
+"K k"
+],
+"r":1,
+"ret":": K",
+"d":"**TreeMap**: La mayor clave ≤ `k`.",
+"o":"O(log n)"
+},
+"ceilingKey":{
+"p":[
+"K k"
+],
+"r":1,
+"ret":": K",
+"d":"**TreeMap**: La menor clave ≥ `k`.",
+"o":"O(log n)"
+},
+"pollFirstEntry":{
+"p":[],
+"r":0,
+"ret":": Map.Entry",
+"d":"**TreeMap**: Quita y devuelve el par de la clave más pequeña.",
+"o":"O(log n)"
+},
+"first":{
+"p":[],
+"r":0,
+"ret":": E",
+"d":"**TreeSet**: El menor elemento.",
+"o":"O(log n)"
+},
+"last":{
+"p":[],
+"r":0,
+"ret":": E",
+"d":"**TreeSet**: El mayor elemento.",
+"o":"O(log n)"
+},
+"ceiling":{
+"p":[
+"E x"
+],
+"r":1,
+"ret":": E",
+"d":"**TreeSet**: El menor elemento ≥ `x`.",
+"o":"O(log n)"
+},
+"shuffle":{
+"p":[
+"List<?> l"
+],
+"r":1,
+"ret":": void",
+"d":"**Collections**: Desordena aleatoriamente.",
+"o":"O(n)"
+},
+"swap":{
+"p":[
+"List<?> l",
+"int i",
+"int j"
+],
+"r":3,
+"ret":": void",
+"d":"**Collections**: Intercambia dos posiciones.",
+"o":"O(1)"
+},
+"frequency":{
+"p":[
+"Collection<?> c",
+"Object o"
+],
+"r":2,
+"ret":": int",
+"d":"**Collections**: Cuántas veces aparece `o`.",
+"o":"O(n)"
+},
+"unmodifiableList":{
+"p":[
+"List<T> l"
+],
+"r":1,
+"ret":": List<T>",
+"d":"**Collections**: Vista de solo lectura.",
+"o":"O(1)"
+},
+"emptyList":{
+"p":[],
+"r":0,
+"ret":": List<T>",
+"d":"**Collections**: Lista vacía inmutable.",
+"o":"O(1)"
+},
+"fill":{
+"p":[
+"int[] a",
+"int v"
+],
+"r":2,
+"ret":": void",
+"d":"**Arrays**: Rellena el array con un valor.",
+"o":"O(n)"
+},
+"deepToString":{
+"p":[
+"Object[] a"
+],
+"r":1,
+"ret":": String",
+"d":"**Arrays**: Como `toString` para arrays de arrays.",
+"o":"O(n)"
+},
+"asList":{
+"p":[
+"T... xs"
+],
+"r":0,
+"ret":": List<T>",
+"d":"**Arrays**: Lista de tamaño fijo respaldada por el array (`add` lanza).",
+"o":"O(1)"
+},
+"copyOf":{
+"p":[
+"int[] a",
+"int n"
+],
+"r":2,
+"ret":": int[]",
+"d":"**Arrays**: Copia con nueva longitud (recorta o rellena con 0).",
+"o":"O(n)"
+},
+"copyOfRange":{
+"p":[
+"int[] a",
+"int ini",
+"int fin"
+],
+"r":3,
+"ret":": int[]",
+"d":"**Arrays**: Copia un trozo [ini, fin).",
+"o":"O(n)"
+},
+"binarySearch":{
+"p":[
+"int[] a",
+"int x"
+],
+"r":2,
+"ret":": int",
+"d":"**Arrays**: Búsqueda binaria en un array **ya ordenado**.",
+"o":"O(log n)"
+},
+"ofNullable":{
+"p":[
+"T x"
+],
+"r":1,
+"ret":": Optional<T>",
+"d":"**Optional**: Envuelve un valor que puede ser `null`.",
+"o":"O(1)"
+},
+"isPresent":{
+"p":[],
+"r":0,
+"ret":": boolean",
+"d":"**Optional**: `true` si hay valor.",
+"o":"O(1)"
+},
+"orElse":{
+"p":[
+"T def"
+],
+"r":1,
+"ret":": T",
+"d":"**Optional**: El valor o `def` si está vacío.",
+"o":"O(1)"
+},
+"orElseThrow":{
+"p":[],
+"r":0,
+"ret":": T",
+"d":"**Optional**: El valor o lanza `NoSuchElementException`.",
+"o":"O(1)"
+},
+"ifPresent":{
+"p":[
+"Consumer<T> f"
+],
+"r":1,
+"ret":": void",
+"d":"**Optional**: Ejecuta `f` solo si hay valor.",
+"o":"O(1)"
+},
+"filter":{
+"p":[
+"Predicate<T> p"
+],
+"r":1,
+"ret":": Stream<T>",
+"d":"**Stream**: Se queda con los que cumplen `p`.",
+"o":"O(n)"
+},
+"map":{
+"p":[
+"Function<T, R> f"
+],
+"r":1,
+"ret":": Stream<R>",
+"d":"**Stream**: Transforma cada elemento.",
+"o":"O(n)"
+},
+"sorted":{
+"p":[],
+"r":0,
+"ret":": Stream<T>",
+"d":"**Stream**: Ordena el flujo (orden natural o con comparador).",
+"o":"O(n log n)"
+},
+"distinct":{
+"p":[],
+"r":0,
+"ret":": Stream<T>",
+"d":"**Stream**: Quita repetidos.",
+"o":"O(n)"
+},
+"limit":{
+"p":[
+"long n"
+],
+"r":1,
+"ret":": Stream<T>",
+"d":"**Stream**: Solo los primeros `n`.",
+"o":"O(n)"
+},
+"collect":{
+"p":[
+"Collector c"
+],
+"r":1,
+"ret":": R",
+"d":"**Stream**: Termina el flujo: `collect(Collectors.toList())`, `groupingBy`, `joining`.",
+"o":"O(n)"
+},
+"toList":{
+"p":[],
+"r":0,
+"ret":": List<T>",
+"d":"**Stream**: Termina en una lista **inmutable**.\n\n**Collectors**: Recoge en una lista.",
+"o":"O(n)"
+},
+"count":{
+"p":[],
+"r":0,
+"ret":": long",
+"d":"**Stream**: Cuenta los elementos.",
+"o":"O(n)"
+},
+"reduce":{
+"p":[
+"T zero",
+"BinaryOperator<T> f"
+],
+"r":2,
+"ret":": T",
+"d":"**Stream**: Combina todos los elementos en uno.",
+"o":"O(n)"
+},
+"anyMatch":{
+"p":[
+"Predicate<T> p"
+],
+"r":1,
+"ret":": boolean",
+"d":"**Stream**: `true` si alguno cumple `p`.",
+"o":"O(n)"
+},
+"mapToInt":{
+"p":[
+"ToIntFunction<T> f"
+],
+"r":1,
+"ret":": IntStream",
+"d":"**Stream**: Convierte a flujo de `int`.",
+"o":"O(n)"
+},
+"toMap":{
+"p":[
+"Function k",
+"Function v"
+],
+"r":2,
+"ret":": Collector",
+"d":"**Collectors**: Recoge en un `Map` (falla con claves repetidas salvo que des un tercer argumento).",
+"o":"O(n)"
+},
+"groupingBy":{
+"p":[
+"Function f"
+],
+"r":1,
+"ret":": Collector",
+"d":"**Collectors**: Agrupa en un `Map<clave, List<...>>`.",
+"o":"O(n)"
+},
+"joining":{
+"p":[
+"CharSequence sep"
+],
+"r":0,
+"ret":": Collector",
+"d":"**Collectors**: Une `String`s con separador.",
+"o":"O(n)"
+},
+"counting":{
+"p":[],
+"r":0,
+"ret":": Collector",
+"d":"**Collectors**: Cuenta (típico con `groupingBy`).",
+"o":"O(n)"
+},
+"nextInt":{
+"p":[],
+"r":0,
+"ret":": int",
+"d":"**Scanner**: Lee el siguiente entero. No consume el salto de línea (cuidado antes de `nextLine`).",
+"o":"O(1)"
+},
+"nextLine":{
+"p":[],
+"r":0,
+"ret":": String",
+"d":"**Scanner**: Lee una línea completa.",
+"o":"O(n)"
+},
+"next":{
+"p":[],
+"r":0,
+"ret":": String",
+"d":"**Scanner**: Lee la siguiente palabra.",
+"o":"O(n)"
+},
+"nextDouble":{
+"p":[],
+"r":0,
+"ret":": double",
+"d":"**Scanner**: Lee un decimal.",
+"o":"O(1)"
+},
+"nextLong":{
+"p":[],
+"r":0,
+"ret":": long",
+"d":"**Scanner**: Lee un `long`.",
+"o":"O(1)"
+},
+"hasNext":{
+"p":[],
+"r":0,
+"ret":": boolean",
+"d":"**Scanner**: `true` si queda otra palabra.",
+"o":"O(1)"
+},
+"hasNextInt":{
+"p":[],
+"r":0,
+"ret":": boolean",
+"d":"**Scanner**: `true` si lo siguiente es un entero.",
+"o":"O(1)"
+},
+"hasNextLine":{
+"p":[],
+"r":0,
+"ret":": boolean",
+"d":"**Scanner**: `true` si queda otra línea.",
+"o":"O(1)"
+},
+"close":{
+"p":[],
+"r":0,
+"ret":": void",
+"d":"**Scanner**: Cierra el Scanner.",
+"o":"O(1)"
+},
+"println":{
+"p":[
+"Object x"
+],
+"r":0,
+"ret":": void",
+"d":"**System**: `System.out.println(x)`: imprime y salta de línea.",
+"o":"O(n)"
+},
+"print":{
+"p":[
+"Object x"
+],
+"r":1,
+"ret":": void",
+"d":"**System**: `System.out.print(x)`: imprime sin salto de línea.",
+"o":"O(n)"
+},
+"printf":{
+"p":[
+"String formato",
+"Object... args"
+],
+"r":1,
+"ret":": PrintStream",
+"d":"**System**: `System.out.printf(\"%d + %d = %d%n\", a, b, a + b)`. `%d` entero, `%.2f` decimal, `%s` texto, `%n` salto.",
+"o":"O(n)"
+},
+"currentTimeMillis":{
+"p":[],
+"r":0,
+"ret":": long",
+"d":"**System**: Milisegundos desde 1970 (para medir tiempos).",
+"o":"O(1)"
+},
+"nanoTime":{
+"p":[],
+"r":0,
+"ret":": long",
+"d":"**System**: Reloj de alta precisión en nanosegundos (para medir).",
+"o":"O(1)"
+},
+"hashCode":{
+"p":[],
+"r":0,
+"ret":": int",
+"d":"**Object**: Entero asociado al contenido (lo usan `HashMap`/`HashSet`).",
+"o":"O(1)"
+},
+"pendiente":{
+"p":[
+"String mensaje"
+],
+"r":0,
+"ret":": T",
+"d":"Marca un ejercicio sin hacer. Las pruebas lo muestran como «pendiente», no como fallo.",
+"pg":true
+},
+"grupo":{
+"p":[
+"String nombre"
+],
+"r":1,
+"ret":": void",
+"d":"Agrupa las pruebas siguientes bajo un título en el panel de pruebas.",
+"pg":true
+},
+"caso":{
+"p":[
+"String desc",
+"Object esperado",
+"Object... args"
+],
+"r":2,
+"ret":": Caso",
+"d":"Un caso de prueba: descripción, resultado esperado y argumentos de la llamada.",
+"pg":true
+},
+"args":{
+"p":[
+"Object... a"
+],
+"r":0,
+"ret":": Object[]",
+"d":"Empaqueta los argumentos para `medir`.",
+"pg":true
+},
+"prueba":{
+"p":[
+"String metodo",
+"Caso... casos"
+],
+"r":2,
+"ret":": void",
+"d":"Ejecuta el método static con ese nombre sobre cada caso y compara con lo esperado.",
+"pg":true
+},
+"pruebaSinOrden":{
+"p":[
+"String metodo",
+"Caso... casos"
+],
+"r":2,
+"ret":": void",
+"d":"Como `prueba`, pero ignora el orden de las listas.",
+"pg":true
+},
+"pruebaCon":{
+"p":[
+"String metodo",
+"BiPredicate<Object, Object> cmp",
+"Caso... casos"
+],
+"r":3,
+"ret":": void",
+"d":"Como `prueba`, con tu propio comparador.",
+"pg":true
+},
+"comprueba":{
+"p":[
+"String descripcion",
+"Supplier<?> fn",
+"Object esperado"
+],
+"r":2,
+"ret":": void",
+"d":"Comprueba que `fn` da `esperado` (sin el tercero, que da `true`).",
+"pg":true
+},
+"lanza":{
+"p":[
+"String descripcion",
+"Ejecutable fn",
+"Class<? extends Throwable> excepcion"
+],
+"r":3,
+"ret":": void",
+"d":"Comprueba que el código lanza esa excepción.",
+"pg":true
+},
+"medir":{
+"p":[
+"String metodo",
+"IntFunction<Object[]> entrada"
+],
+"r":2,
+"ret":": void",
+"d":"Mide el tiempo del método con tamaños crecientes y estima su O().",
+"pg":true
+},
+"lista":{
+"p":[
+"int n"
+],
+"r":1,
+"ret":": List<Integer>",
+"d":"Lista de `n` enteros 0..n-1 para medir.",
+"pg":true
+},
+"numeros":{
+"p":[
+"int n"
+],
+"r":1,
+"ret":": int[]",
+"d":"Array de `n` enteros 0..n-1 para medir.",
+"pg":true
+},
+"aleatorios":{
+"p":[
+"int n",
+"int max",
+"long semilla"
+],
+"r":3,
+"ret":": int[]",
+"d":"Array de `n` enteros aleatorios (reproducibles con la semilla).",
+"pg":true
+},
+"rango":{
+"p":[
+"int desde",
+"int hasta",
+"int paso"
+],
+"r":2,
+"ret":": int[]",
+"d":"Array con los enteros de `desde` a `hasta` (excluido).",
+"pg":true
+}
+},
+"classes":{
+"String":{
+"d":"Texto **inmutable**. Se compara con `equals`, no con `==`. Concatenar muchos en un bucle con `+=` es O(n²): usa `StringBuilder`."
+},
+"StringBuilder":{
+"d":"Texto mutable para construir cadenas. `append` es O(1) amortizado; `toString()` al final."
+},
+"Math":{
+"d":"Funciones matemáticas estáticas (`Math.sqrt`, `Math.max`...)."
+},
+"List":{
+"d":"Interfaz de lista ordenada. `ArrayList` (array dinámico): acceso O(1), `add` al final O(1), `contains` O(n), `remove(0)` O(n)."
+},
+"ArrayList":{
+"d":"Lista sobre un array dinámico. `get(i)` O(1); `add` al final O(1) amortizado; `contains`/`indexOf`/`remove(0)`/`add(0, x)` O(n)."
+},
+"LinkedList":{
+"d":"Lista doblemente enlazada. `get(i)` es O(n) (¡no la uses con índices!); añadir/quitar en los extremos O(1). Casi siempre es mejor `ArrayList` o `ArrayDeque`."
+},
+"Map":{
+"d":"Diccionario clave → valor. `HashMap`: buscar/insertar/borrar O(1); `TreeMap`: O(log n) y ordenado por clave; `LinkedHashMap`: mantiene el orden de inserción."
+},
+"HashMap":{
+"d":"Diccionario por tabla hash. `get`/`put`/`containsKey` O(1) amortizado. No garantiza orden."
+},
+"LinkedHashMap":{
+"d":"`HashMap` que recuerda el orden de inserción."
+},
+"TreeMap":{
+"d":"Diccionario ordenado por clave (árbol rojo-negro). `get`/`put`/`remove` O(log n); `firstKey`, `floorKey`, `ceilingKey`..."
+},
+"Set":{
+"d":"Conjunto sin repetidos. `HashSet`: `contains`/`add` O(1); `TreeSet`: O(log n) y ordenado."
+},
+"HashSet":{
+"d":"Conjunto por tabla hash. `add`/`contains`/`remove` O(1). Sin orden."
+},
+"TreeSet":{
+"d":"Conjunto ordenado (árbol). `add`/`contains` O(log n); `first`, `last`, `floor`, `ceiling`."
+},
+"LinkedHashSet":{
+"d":"`HashSet` que recuerda el orden de inserción."
+},
+"Deque":{
+"d":"Cola doble: pila y cola a la vez. `ArrayDeque` hace `push`/`pop`/`offer`/`poll` en O(1). Es mejor que `Stack` y que `LinkedList`."
+},
+"ArrayDeque":{
+"d":"Cola doble sobre un array circular. Todas las operaciones de los extremos son O(1). No admite `null`."
+},
+"Queue":{
+"d":"Cola FIFO: `offer` encola, `poll` desencola, `peek` mira. Impleméntala con `ArrayDeque`."
+},
+"PriorityQueue":{
+"d":"Cola de prioridad (montículo): `poll` saca siempre el menor. `add`/`poll` O(log n), `peek` O(1)."
+},
+"Stack":{
+"d":"Pila antigua (sincronizada y lenta). Prefiere `ArrayDeque` con `push`/`pop`."
+},
+"Collections":{
+"d":"Utilidades para colecciones: `sort`, `reverse`, `max`, `min`, `shuffle`, `frequency`..."
+},
+"Arrays":{
+"d":"Utilidades para arrays: `sort`, `fill`, `toString`, `copyOf`, `asList`, `binarySearch`..."
+},
+"Optional":{
+"d":"Contenedor de «un valor o nada». Evita devolver `null`: `isPresent`, `orElse`, `ifPresent`, `map`."
+},
+"Stream":{
+"d":"Flujo de datos con `filter`, `map`, `sorted`, `collect`... Se evalúa al llegar a una operación terminal."
+},
+"Collectors":{
+"d":"Recolectores para `stream.collect(...)`: `toList`, `toMap`, `groupingBy`, `joining`, `counting`."
+},
+"Integer":{
+"d":"Envoltorio de `int`. `Integer.parseInt(texto)`, `MAX_VALUE` = 2 147 483 647. Con `==` compara referencias: usa `equals`."
+},
+"Long":{
+"d":"Envoltorio de `long` (64 bits). `Long.parseLong`, `MAX_VALUE`."
+},
+"Character":{
+"d":"Envoltorio de `char` con utilidades: `isDigit`, `isLetter`, `toUpperCase`..."
+},
+"Scanner":{
+"d":"Lee texto de `System.in` (en el playground, del cuadro «Entrada»): `nextInt`, `nextLine`, `hasNext`."
+},
+"System":{
+"d":"`System.out.println(...)`, `System.in`, `System.nanoTime()`, `System.exit(n)`."
+},
+"Object":{
+"d":"Raíz de todas las clases: `equals`, `hashCode`, `toString`."
+},
+"Random":{
+"d":"Generador pseudoaleatorio: `new Random(semilla).nextInt(n)` da 0..n-1."
+},
+"Objects":{
+"d":"Utilidades: `Objects.equals(a, b)` (null-safe), `Objects.hash(...)`, `Objects.requireNonNull(x)`."
+},
+"Iterator":{
+"d":"Recorre una colección: `hasNext()`, `next()`, `remove()` (la forma segura de borrar mientras recorres)."
+},
+"Comparator":{
+"d":"Criterio de orden: `Comparator.comparing(Persona::edad).thenComparing(...)`, `.reversed()`."
+},
+"Record":{
+"d":"`record Punto(int x, int y) {}` crea una clase inmutable con constructor, getters (`x()`), `equals`, `hashCode` y `toString`."
+},
+"Exception":{
+"d":"Excepción comprobada: hay que capturarla o declararla con `throws`. `RuntimeException` y sus hijas no."
+},
+"RuntimeException":{
+"d":"Excepción no comprobada: no obliga a `try/catch` (`NullPointerException`, `IllegalArgumentException`...)."
+},
+"IntStream":{
+"d":"Flujo de `int`: `IntStream.range(0, n)`, `sum()`, `max()`, `boxed()`."
+}
+},
+"keywords":{
+"abstract":"Clase o método sin implementación completa: las subclases lo completan.",
+"assert":"Comprueba una condición al ejecutar con `-ea`.",
+"boolean":"Tipo primitivo `true`/`false`.",
+"break":"Sale del bucle o `switch` actual.",
+"byte":"Entero de 8 bits (-128..127).",
+"case":"Una rama de un `switch`.",
+"catch":"Captura una excepción lanzada en el `try`.",
+"char":"Un carácter (16 bits), entre comillas simples: `'a'`.",
+"class":"Declara una clase.",
+"continue":"Salta a la siguiente vuelta del bucle.",
+"default":"Rama por defecto de un `switch` (o método por defecto de una interfaz).",
+"do":"Bucle que ejecuta el cuerpo al menos una vez: `do { } while (cond);`.",
+"double":"Decimal de 64 bits.",
+"else":"Rama alternativa de un `if`.",
+"enum":"Conjunto fijo de constantes.",
+"extends":"Hereda de otra clase.",
+"final":"Una vez asignado no cambia (variable), no se sobrescribe (método) o no se hereda (clase).",
+"finally":"Se ejecuta siempre al salir de un `try`.",
+"float":"Decimal de 32 bits (`3.5f`).",
+"for":"Bucle: `for (int i = 0; i < n; i++)` o for-each `for (T x : xs)`.",
+"if":"Ejecuta un bloque si la condición es `true`.",
+"implements":"La clase cumple una interfaz.",
+"import":"Trae una clase de otro paquete: `import java.util.*;`.",
+"instanceof":"Comprueba el tipo real: `if (o instanceof String s)`.",
+"int":"Entero de 32 bits (±2 147 483 647).",
+"interface":"Contrato de métodos que una clase implementa.",
+"long":"Entero de 64 bits (`123L`).",
+"new":"Crea un objeto o un array.",
+"null":"Referencia que no apunta a nada. Usarla con `.` lanza `NullPointerException`.",
+"private":"Visible solo dentro de la clase.",
+"protected":"Visible en el paquete y en las subclases.",
+"public":"Visible desde cualquier sitio.",
+"record":"Clase de datos inmutable en una línea.",
+"return":"Devuelve un valor y sale del método.",
+"short":"Entero de 16 bits.",
+"static":"Pertenece a la clase, no a cada objeto.",
+"super":"La clase padre: `super(...)`, `super.metodo()`.",
+"switch":"Elige una rama según un valor (`case X ->` o `case X:`).",
+"this":"El objeto actual.",
+"throw":"Lanza una excepción: `throw new IllegalArgumentException(\"...\")`.",
+"throws":"Declara qué excepciones comprobadas puede lanzar un método.",
+"try":"Bloque donde se vigilan excepciones (con `catch`/`finally`).",
+"var":"El compilador deduce el tipo local: `var xs = new ArrayList<Integer>();`.",
+"void":"El método no devuelve nada.",
+"while":"Bucle mientras la condición sea `true`.",
+"yield":"Devuelve el valor de una rama de `switch` con bloque.",
+"true":"Valor booleano verdadero.",
+"false":"Valor booleano falso.",
+"sealed":"Clase que limita qué clases pueden heredar de ella (`permits`).",
+"permits":"Lista de subclases permitidas de una clase `sealed`.",
+"->":"Flecha de lambda (`x -> x * 2`) o de rama de `switch` (`case 1 -> \"uno\"`).",
+"::":"Referencia a método: `String::length`, `System.out::println`.",
+"...":"Argumentos variables: `int... xs` llega como `int[]`.",
+">>>":"Desplazamiento a la derecha sin signo."
+}
+}

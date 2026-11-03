@@ -3,6 +3,7 @@ import { $, el } from './util.js';
 import { state, on, activeTab } from './state.js';
 import { ctx } from './ctx.js';
 import { showPanel } from './panels.js';
+import { LANG } from './lang.js';
 
 export function initStatusbar(editor) {
   const pos = $('#st-pos'), fn = $('#st-fn'), lint = $('#st-lint'), save = $('#st-save');
@@ -39,6 +40,6 @@ export function initStatusbar(editor) {
   on('active', () => { renderSave(); renderFn(); });
   on('saved', renderSave);
   lint.addEventListener('click', () => showPanel('problemas'));
-  $('#st-php').textContent = 'PHP ' + (state.meta?.php ?? '');
+  $('#st-php').textContent = LANG.name + ' ' + (state.meta?.version ?? '');
   setLint('idle');
 }

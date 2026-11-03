@@ -5,9 +5,10 @@ declare(strict_types=1);
  * Playground en la terminal: ejecuta un archivo con el mismo motor que el editor web
  * (errores explicados, pruebas, análisis de complejidad y comparación con la solución de referencia).
  *
- *   php pg.php archivo.php [--analisis] [--medir] [--comparar] [--timeout=N] [--sin-color]
+ *   php pg.php archivo.(php|py|java) [--lang=php|python|java] [--analisis] [--medir] [--comparar] [--timeout=N] [--sin-color]
  *
- * El archivo puede ser una ruta o un nombre que exista en ejemplos/, practicas/ o soluciones/ (p. ej. 04-recursion.php).
+ * El lenguaje sale de la extensión (o de --lang). El archivo puede ser una ruta o un nombre que exista en los
+ * ejemplos, las prácticas o las soluciones de ese lenguaje (p. ej. 04-recursion.php, 03-recursion.py).
  * Código de salida: 0 todo bien · 1 errores, pruebas que fallan o veredicto «mejorable» · 2 uso incorrecto.
  */
 if (PHP_SAPI !== 'cli') {
@@ -15,8 +16,7 @@ if (PHP_SAPI !== 'cli') {
 }
 require __DIR__ . '/app/bootstrap.php';
 
-use Playground\{Api, Explainer, Report, Runner, Solutions};
-use Playground\Analysis\{Parser, Source};
+use Playground\Core\{Bench, Language, Languages, Report, Solutions};
 
 // ───────────────────────────── argumentos ─────────────────────────────
 $args = array_slice($argv, 1);
@@ -32,23 +32,29 @@ foreach ($args as $a) {
 }
 if (isset($flags['ayuda']) || isset($flags['help']) || $files === []) {
     fwrite($files === [] && !isset($flags['ayuda']) && !isset($flags['help']) ? STDERR : STDOUT, <<<TXT
-    Uso: php pg.php archivo.php [opciones]
+    Uso: php pg.php archivo.(php|py|java) [opciones]
 
+      --lang=L        php, python o java (por defecto, según la extensión)
       --analisis      tabla de complejidad ciclomática, cognitiva y O() por función
       --medir         ejecuta también los medir() y dibuja las mediciones
       --comparar      compara tu código con la solución de referencia (rendimiento y pruebas)
       --timeout=N     segundos máximos (por defecto 30; 60 con --medir/--comparar)
       --sin-color     sin colores ANSI
 
-    El archivo puede ser una ruta, o un nombre dentro de ejemplos/, practicas/ o soluciones/.
+    El archivo puede ser una ruta, o un nombre dentro de los ejemplos, prácticas o soluciones del lenguaje.
 
     TXT);
     exit($files === [] && !isset($flags['ayuda']) && !isset($flags['help']) ? 2 : 0);
 }
 
-$path = resolvePath($files[0]);
+$lang = isset($flags['lang']) ? Languages::get((string) $flags['lang']) : Languages::forFile($files[0]);
+if ($lang === null) {
+    fwrite(STDERR, "No sé de qué lenguaje es «{$files[0]}»: usa una extensión .php, .py o .java, o --lang=php|python|java.\n");
+    exit(2);
+}
+$path = resolvePath($lang, $files[0]);
 if ($path === null) {
-    fwrite(STDERR, "No encuentro el archivo «{$files[0]}».\n");
+    fwrite(STDERR, "No encuentro el archivo «{$files[0]}» ({$lang->name()}).\n");
     exit(2);
 }
 
@@ -71,24 +77,23 @@ $wantBench = isset($flags['medir']) || isset($flags['comparar']);
 $timeout = max(1, min(120, (int) ($flags['timeout'] ?? ($wantBench ? 60 : 30))));
 $problemExit = false;
 
-$src = new Source($code);
-$explainer = new Explainer($src, new Parser($src));
+$explainer = $lang->explainer($code);
 
 echo c('b', "▶ {$name}"), c('gray', '  (' . number_format(strlen($code)) . " bytes)\n");
 
-$syntax = Runner::syntaxError($code);
+$syntax = $lang->syntaxError($code);
 if ($syntax !== null) {
     $d = $explainer->explain($syntax);
     printDiag($d);
     echo c('red', "\nNo se ejecuta: corrige el error de sintaxis.\n");
     if (isset($flags['analisis'])) {
-        printAnalysis((new Api())->analyse($code));
+        printAnalysis($lang->analyse($code));
     }
     exit(1);
 }
 
 $opts = ['timeout' => $timeout, 'bench' => $wantBench] + ($wantBench ? ['benchBudgetMs' => 2500] : []);
-$report = Report::build((new Runner())->run($code, 'tu_codigo.php', $opts), $explainer);
+$report = Report::build($lang->run($code, $lang->displayName('tu_codigo'), $opts), $explainer);
 
 echo c('gray', str_repeat('─', 72) . "\n");
 foreach ($report['segments'] as $seg) {
@@ -96,6 +101,7 @@ foreach ($report['segments'] as $seg) {
         'out' => print($seg['text']),
         'diag' => printDiag($seg['diag']),
         'note' => print(c('yellow', "\n⚠ {$seg['text']}\n")),
+        'img' => print(c('gray', '[gráfica' . ($seg['title'] !== '' ? ': ' . $seg['title'] : '') . " — se ve en el editor web]\n")),
         default => null,
     };
 }
@@ -122,16 +128,16 @@ if (isset($flags['medir']) && !isset($flags['comparar'])) {
 
 // ───────────────────────────── análisis ─────────────────────────────
 if (isset($flags['analisis'])) {
-    printAnalysis((new Api())->analyse($code));
+    printAnalysis($lang->analyse($code));
 }
 
 // ───────────────────────────── comparación ─────────────────────────────
 if (isset($flags['comparar'])) {
-    $solPath = Solutions::pathFor($name);
+    $solPath = (new Solutions($lang))->pathFor($name);
     if ($solPath === null) {
-        echo c('yellow', "\nEste archivo no tiene soluciones de referencia (soluciones/{$name}).\n");
+        echo c('yellow', "\nEste archivo no tiene soluciones de referencia (contenido/{$lang->id()}/soluciones/{$name}).\n");
     } else {
-        $problemExit = compareWithSolution($code, (string) file_get_contents($solPath), $report, $timeout) || $problemExit;
+        $problemExit = compareWithSolution($lang, $code, (string) file_get_contents($solPath), $report, $timeout) || $problemExit;
     }
 }
 
@@ -139,10 +145,10 @@ exit($problemExit ? 1 : 0);
 
 // ═════════════════════════════ funciones ═════════════════════════════
 
-function resolvePath(string $arg): ?string
+function resolvePath(Language $lang, string $arg): ?string
 {
-    foreach ([$arg, PG_EJEMPLOS . '/' . $arg, PG_PRACTICAS . '/' . $arg, PG_SOLUCIONES . '/' . $arg] as $candidate) {
-        if (is_file($candidate) && str_ends_with(strtolower($candidate), '.php')) {
+    foreach ([$arg, $lang->examplesDir() . '/' . $arg, $lang->practiceDir() . '/' . $arg, $lang->solutionsDir() . '/' . $arg] as $candidate) {
+        if (is_file($candidate) && str_ends_with(strtolower($candidate), '.' . $lang->ext())) {
             return $candidate;
         }
     }
@@ -278,13 +284,12 @@ function printAnalysis(array $result): void
 }
 
 /** @return bool true si el veredicto sugiere que hay mejora posible o algo falla */
-function compareWithSolution(string $code, string $solution, array $mine, int $timeout): bool
+function compareWithSolution(Language $lang, string $code, string $solution, array $mine, int $timeout): bool
 {
-    $spliced = Solutions::splice($code, $solution);
-    $runner = new Runner();
+    $solutions = new Solutions($lang);
+    $spliced = $solutions->splice($code, $solution);
     $opts = ['timeout' => $timeout, 'bench' => true, 'benchBudgetMs' => 2500];
-    $bestSrc = new Source($spliced);
-    $best = Report::build($runner->run($spliced, 'solucion.php', $opts), new Explainer($bestSrc, new Parser($bestSrc)));
+    $best = Report::build($lang->run($spliced, $lang->displayName('solucion'), $opts), $lang->explainer($spliced));
 
     echo c('b', "\n\nComparación con la solución de referencia\n");
     $sm = $mine['testSummary'];
@@ -292,7 +297,7 @@ function compareWithSolution(string $code, string $solution, array $mine, int $t
     echo sprintf("  tus pruebas:      %d/%d ✓\n  con la solución:  %d/%d ✓\n", $sm['pass'], $sm['total'], $sb['pass'], $sb['total']);
 
     $warn = false;
-    $items = Solutions::compare($code, $solution);
+    $items = $solutions->compare($code, $solution);
     if ($items) {
         echo c('b', "\n  Declaraciones\n");
         foreach ($items as $it) {
@@ -304,7 +309,7 @@ function compareWithSolution(string $code, string $solution, array $mine, int $t
         }
     }
 
-    foreach (Api::series($mine['benches'], $best['benches']) as $row) {
+    foreach (Bench::series($mine['benches'], $best['benches']) as $row) {
         $style = match ($row['level']) {
             'ok' => 'green', 'warning' => 'yellow', default => 'cyan',
         };

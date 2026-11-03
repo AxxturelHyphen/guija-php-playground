@@ -3,6 +3,7 @@
 import { $, el } from './util.js';
 import { state, emit } from './state.js';
 import { loadMonaco, registerIde, refreshLenses, diagStore } from './monaco-setup.js';
+import { LANG } from './lang.js';
 
 const SEVERITY = m => ({ error: m.MarkerSeverity.Error, warning: m.MarkerSeverity.Warning, info: m.MarkerSeverity.Info, hint: m.MarkerSeverity.Hint });
 
@@ -42,7 +43,7 @@ function monacoEditor(monaco, actions) {
   host.replaceChildren();
   const s = state.settings;
   const ed = monaco.editor.create(host, {
-    language: 'phpx', theme: 'islands-dark', model: null,
+    language: LANG.monaco, theme: 'islands-dark', model: null,
     fontFamily: '"JetBrains Mono", Consolas, monospace', fontSize: s.fontSize, lineHeight: Math.round(s.fontSize * 1.57), fontLigatures: false,
     tabSize: 4, insertSpaces: true, automaticLayout: true, wordWrap: s.wordWrap ? 'on' : 'off',
     minimap: { enabled: s.minimap }, scrollBeyondLastLine: false, padding: { top: 12, bottom: 12 },
@@ -83,7 +84,7 @@ function monacoEditor(monaco, actions) {
     openDoc(id, text, { readOnly = false } = {}) {
       let model = models.get(id);
       if (!model) {
-        model = monaco.editor.createModel(text, 'phpx', uriOf(id));
+        model = monaco.editor.createModel(text, LANG.monaco, uriOf(id));
         model.__pgReadOnly = readOnly;
         model.onDidChangeContent(() => emit('doc-change', { id }));
         models.set(id, model);
@@ -161,8 +162,8 @@ function monacoEditor(monaco, actions) {
       // se destruye, Alt+Enter dejaría de funcionar en el editor principal («InstantiationService has been disposed»).
       const entry = diffPool.pop() ?? newDiffEntry();
       host.append(entry.box);
-      const o = monaco.editor.createModel(original, 'phpx');
-      const m = monaco.editor.createModel(modified, 'phpx');
+      const o = monaco.editor.createModel(original, LANG.monaco);
+      const m = monaco.editor.createModel(modified, LANG.monaco);
       entry.diff.setModel({ original: o, modified: m });
       entry.diff.layout();
       return () => {

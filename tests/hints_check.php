@@ -4,7 +4,7 @@ declare(strict_types=1);
 // Comprobación puntual de Hints (el autotest completo estará en tests/run.php).
 require dirname(__DIR__) . '/app/bootstrap.php';
 
-use Playground\Analysis\{Source, Parser, Metrics, Hints};
+use Playground\Lang\Php\Analysis\{Source, Parser, Metrics, Hints};
 
 function hints(string $code): array
 {
@@ -104,7 +104,7 @@ foreach ($fixCases as $code) {
             $res = applyFix($code, $fx);
             file_put_contents($tmp, $res);
             $out = [];
-            exec('php -l ' . escapeshellarg($tmp) . ' 2>&1', $out, $rc);
+            exec(escapeshellarg(PHP_BINARY) . ' -l ' . escapeshellarg($tmp) . ' 2>&1', $out, $rc);
             echo ($rc === 0 ? 'ok   ' : 'FAIL ') . 'fix ' . str_pad($h['code'], 16) . ' -> ' . json_encode(substr($res, 0, 70), JSON_UNESCAPED_UNICODE)
                 . ($rc !== 0 ? '  [' . trim($out[0] ?? '') . ']' : '') . "\n";
             $fail += (int) ($rc !== 0);

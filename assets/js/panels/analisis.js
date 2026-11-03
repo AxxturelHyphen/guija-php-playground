@@ -4,8 +4,9 @@ import { state, on } from '../state.js';
 import { ctx } from '../ctx.js';
 import { registerPanel, setCount } from '../panels.js';
 import { renderChart } from '../chart.js';
+import { LANG } from '../lang.js';
 
-const CC_RULE = 'Complejidad ciclomática (McCabe): 1 + cada if, elseif, for, foreach, while, do, case, catch, &&, ||, and, or, xor, ?:, ?? y cada brazo de match (sin el default). ' +
+const CC_RULE = LANG.ccRule +
   'Es el número mínimo de pruebas para recorrer todos los caminos. Nota: 1-5 A, 6-10 B, 11-20 C, 21-30 D, 31-40 E, 41+ F.';
 const COG_RULE = 'Complejidad cognitiva (Sonar): como la ciclomática pero penaliza el anidamiento (un if dentro de un for dentro de un if cuesta más que tres if seguidos). Mide lo difícil que es de leer.';
 const BIGO_RULE = 'Estimación estática a partir de los bucles anidados, el coste de las funciones nativas y la recursión. Es una pista, no una prueba: la cifra real la da «Medir» (medir() en tu código).';

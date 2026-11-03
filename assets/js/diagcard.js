@@ -2,6 +2,7 @@
 import { el, md } from './util.js';
 import { state } from './state.js';
 import { ctx } from './ctx.js';
+import { LANG } from './lang.js';
 
 const ICON = { error: '✕', warning: '!', info: 'i', hint: '·' };
 
@@ -53,7 +54,7 @@ export function diagCard(d, { open = true, withExcerpt = true } = {}) {
     body.append(el('details', { class: 'trace' }, el('summary', {}, `Traza (${d.trace.length})`),
       d.trace.map(t => el('div', {}, `${t.fn ?? '?'}${t.line ? '  ·  línea ' + t.line : ''}`))));
   }
-  if (d.original && d.original !== d.title) body.append(el('div', { class: 'orig' }, 'Mensaje original de PHP: ' + d.original));
+  if (d.original && d.original !== d.title) body.append(el('div', { class: 'orig' }, 'Mensaje original de ' + LANG.name + ': ' + d.original));
 
   const loc = d.line ? el('span', { class: 'diag-loc jump', title: 'Ir a la línea', onclick: e => { e.stopPropagation(); ctx.editor.reveal(d.line, d.col > 1 ? d.col : 1); } }, `línea ${d.line}`) : null;
   const head = el('div', { class: 'diag-head', onclick: () => { body.hidden = !body.hidden; } },

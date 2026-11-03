@@ -1,0 +1,687 @@
+{
+  "version": 1,
+  "descripcion": "Fuente común del temario. Cada lección tiene, por lenguaje, su archivo y título; 'ejercicios' lista los nombres en cada lenguaje (null = no existe en ese lenguaje), el @bigo esperado y si se mide con medir(). 'paridad' recoge las diferencias justificadas entre lenguajes; tests/paridad.php comprueba el resto.",
+  "lecciones": [
+    {
+      "id": "fundamentos",
+      "tema": "El lenguaje",
+      "php": {
+        "archivo": "01-java-a-php.php",
+        "titulo": "01 · De Java a PHP",
+        "requierePhp": "8.5"
+      },
+      "java": {
+        "archivo": "01-java-moderno.java",
+        "titulo": "01 · Java moderno esencial"
+      },
+      "python": {
+        "archivo": "01-python-esencial.py",
+        "titulo": "01 · Python esencial",
+        "fusiona": [
+          "fundamentos",
+          "poo"
+        ]
+      },
+      "ejercicios": []
+    },
+    {
+      "id": "poo",
+      "tema": "POO a fondo",
+      "php": {
+        "archivo": "02-poo-a-fondo.php",
+        "titulo": "02 · POO a fondo"
+      },
+      "java": {
+        "archivo": "02-poo-a-fondo.java",
+        "titulo": "02 · POO a fondo"
+      },
+      "python": {
+        "fusionadaEn": "fundamentos"
+      },
+      "ejercicios": [
+        {
+          "php": "Dinero",
+          "java": "Dinero",
+          "python": "Dinero",
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "DescuentoPorcentaje",
+          "java": "DescuentoPorcentaje",
+          "python": "DescuentoPorcentaje",
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "DescuentoFijo",
+          "java": "DescuentoFijo",
+          "python": "DescuentoFijo",
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "TresPorDos",
+          "java": "TresPorDos",
+          "python": "TresPorDos",
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "Carrito",
+          "java": "Carrito",
+          "python": "Carrito",
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "RepositorioUsuariosEnMemoria",
+          "java": "RepositorioUsuariosEnMemoria",
+          "python": "RepositorioUsuariosEnMemoria",
+          "tipo": "type",
+          "bigo": "1",
+          "medir": true
+        },
+        {
+          "php": "Contenedor",
+          "java": "Contenedor",
+          "python": null,
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "Despachador",
+          "java": "Despachador",
+          "python": "Despachador",
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
+        }
+      ]
+    },
+    {
+      "id": "colecciones",
+      "tema": "Arrays y colecciones",
+      "php": {
+        "archivo": "03-arrays-y-colecciones.php",
+        "titulo": "03 · Arrays y colecciones"
+      },
+      "java": {
+        "archivo": "03-arrays-y-colecciones.java",
+        "titulo": "03 · Arrays y colecciones"
+      },
+      "python": {
+        "archivo": "02-listas-y-colecciones.py",
+        "titulo": "02 · Listas, dicts y colecciones"
+      },
+      "ejercicios": [
+        {
+          "php": "agruparPor",
+          "java": "agruparPor",
+          "python": "agrupar_por",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": false
+        },
+        {
+          "php": "topPalabras",
+          "java": "topPalabras",
+          "python": "top_palabras",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "aplanar",
+          "java": "aplanar",
+          "python": "aplanar",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "Coleccion",
+          "java": "Coleccion",
+          "python": "Coleccion",
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "unicos",
+          "java": "unicos",
+          "python": "unicos",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "php": "interseccion",
+          "java": "interseccion",
+          "python": "interseccion",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "php": "transponer",
+          "java": "transponer",
+          "python": "transponer",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        }
+      ]
+    },
+    {
+      "id": "recursion",
+      "tema": "Recursión",
+      "php": {
+        "archivo": "04-recursion.php",
+        "titulo": "04 · Recursión"
+      },
+      "java": {
+        "archivo": "04-recursion.java",
+        "titulo": "04 · Recursión"
+      },
+      "python": {
+        "archivo": "03-recursion.py",
+        "titulo": "03 · Recursión"
+      },
+      "ejercicios": [
+        {
+          "php": "factorial",
+          "java": "factorial",
+          "python": "factorial",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "mcd",
+          "java": "mcd",
+          "python": "mcd",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "fibonacci",
+          "java": "fibonacci",
+          "python": "fibonacci",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "php": "potencia",
+          "java": "potencia",
+          "python": "potencia",
+          "tipo": "function",
+          "bigo": "log",
+          "medir": true
+        },
+        {
+          "php": "esPalindromo",
+          "java": "esPalindromo",
+          "python": "es_palindromo",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "permutaciones",
+          "java": "permutaciones",
+          "python": "permutaciones",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "subconjuntos",
+          "java": "subconjuntos",
+          "python": "subconjuntos",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "hanoi",
+          "java": "hanoi",
+          "python": "hanoi",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        }
+      ]
+    },
+    {
+      "id": "ordenacion",
+      "tema": "Ordenación",
+      "php": {
+        "archivo": "05-ordenacion.php",
+        "titulo": "05 · Ordenación"
+      },
+      "java": {
+        "archivo": "05-ordenacion.java",
+        "titulo": "05 · Ordenación"
+      },
+      "python": {
+        "archivo": "04-ordenacion.py",
+        "titulo": "04 · Ordenación"
+      },
+      "ejercicios": [
+        {
+          "php": "burbuja",
+          "java": "burbuja",
+          "python": "burbuja",
+          "tipo": "function",
+          "bigo": "n2",
+          "medir": true
+        },
+        {
+          "php": "insercion",
+          "java": "insercion",
+          "python": "insercion",
+          "tipo": "function",
+          "bigo": "n2",
+          "medir": true
+        },
+        {
+          "php": "mergeSort",
+          "java": "mergeSort",
+          "python": "merge_sort",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "php": "quickSort",
+          "java": "quickSort",
+          "python": "quick_sort",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "php": "countingSort",
+          "java": "countingSort",
+          "python": "counting_sort",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "php": "ordenarPersonas",
+          "java": "ordenarPersonas",
+          "python": "ordenar_personas",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "ordenarPorFrecuencia",
+          "java": "ordenarPorFrecuencia",
+          "python": "ordenar_por_frecuencia",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        }
+      ]
+    },
+    {
+      "id": "busqueda",
+      "tema": "Búsqueda y técnicas",
+      "php": {
+        "archivo": "06-busqueda-y-tecnicas.php",
+        "titulo": "06 · Búsqueda y técnicas"
+      },
+      "java": {
+        "archivo": "06-busqueda-y-tecnicas.java",
+        "titulo": "06 · Búsqueda y técnicas"
+      },
+      "python": {
+        "archivo": "05-busqueda-y-tecnicas.py",
+        "titulo": "05 · Búsqueda y técnicas"
+      },
+      "ejercicios": [
+        {
+          "php": "busquedaBinaria",
+          "java": "busquedaBinaria",
+          "python": "busqueda_binaria",
+          "tipo": "function",
+          "bigo": "log",
+          "medir": true
+        },
+        {
+          "php": "limiteInferior",
+          "java": "limiteInferior",
+          "python": "limite_inferior",
+          "tipo": "function",
+          "bigo": "log",
+          "medir": false
+        },
+        {
+          "php": "parSuma",
+          "java": "parSuma",
+          "python": "par_suma",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "php": "dosSumas",
+          "java": "dosSumas",
+          "python": "dos_sumas",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "php": "sumaMaximaVentana",
+          "java": "sumaMaximaVentana",
+          "python": "suma_maxima_ventana",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "php": "subcadenaSinRepetir",
+          "java": "subcadenaSinRepetir",
+          "python": "subcadena_sin_repetir",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "php": "agruparAnagramas",
+          "java": "agruparAnagramas",
+          "python": "agrupar_anagramas",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "SumasPrefijas",
+          "java": "SumasPrefijas",
+          "python": "SumasPrefijas",
+          "tipo": "type",
+          "bigo": "1",
+          "medir": true
+        }
+      ]
+    },
+    {
+      "id": "estructuras",
+      "tema": "Estructuras de datos",
+      "php": {
+        "archivo": "07-estructuras-de-datos.php",
+        "titulo": "07 · Estructuras de datos"
+      },
+      "java": {
+        "archivo": "07-estructuras-de-datos.java",
+        "titulo": "07 · Estructuras de datos"
+      },
+      "python": {
+        "archivo": "06-estructuras-de-datos.py",
+        "titulo": "06 · Estructuras de datos"
+      },
+      "ejercicios": [
+        {
+          "php": "parentesisBalanceados",
+          "java": "parentesisBalanceados",
+          "python": "parentesis_balanceados",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "php": "ColaConDosPilas",
+          "java": "ColaConDosPilas",
+          "python": "ColaConDosPilas",
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "invertirLista",
+          "java": "invertirLista",
+          "python": "invertir_lista",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": false
+        },
+        {
+          "php": "tieneCiclo",
+          "java": "tieneCiclo",
+          "python": "tiene_ciclo",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": false
+        },
+        {
+          "php": "ArbolBinarioBusqueda",
+          "java": "ArbolBinarioBusqueda",
+          "python": "ArbolBinarioBusqueda",
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "MinHeap",
+          "java": "MinHeap",
+          "python": "MinHeap",
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "ordenarConMonticulo",
+          "java": "ordenarConMonticulo",
+          "python": "ordenar_con_monticulo",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "php": "CacheLRU",
+          "java": "CacheLRU",
+          "python": "CacheLRU",
+          "tipo": "type",
+          "bigo": "1",
+          "medir": true
+        },
+        {
+          "php": "topK",
+          "java": "topK",
+          "python": "top_k",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        }
+      ]
+    },
+    {
+      "id": "grafos-dp",
+      "tema": "Grafos y programación dinámica",
+      "php": {
+        "archivo": "08-grafos-y-dp.php",
+        "titulo": "08 · Grafos y programación dinámica"
+      },
+      "java": {
+        "archivo": "08-grafos-y-dp.java",
+        "titulo": "08 · Grafos y programación dinámica"
+      },
+      "python": {
+        "archivo": "07-grafos-y-dp.py",
+        "titulo": "07 · Grafos y programación dinámica"
+      },
+      "ejercicios": [
+        {
+          "php": "construirGrafo",
+          "java": "construirGrafo",
+          "python": "construir_grafo",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "bfsCaminoMasCorto",
+          "java": "bfsCaminoMasCorto",
+          "python": "bfs_camino_mas_corto",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "contarIslas",
+          "java": "contarIslas",
+          "python": "contar_islas",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "php": "ordenTopologico",
+          "java": "ordenTopologico",
+          "python": "orden_topologico",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "php": "dijkstra",
+          "java": "dijkstra",
+          "python": "dijkstra",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "php": "escaleras",
+          "java": "escaleras",
+          "python": "escaleras",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "php": "cambioMonedas",
+          "java": "cambioMonedas",
+          "python": "cambio_monedas",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "php": "mochila",
+          "java": "mochila",
+          "python": "mochila",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "php": "lcs",
+          "java": "lcs",
+          "python": "lcs",
+          "tipo": "function",
+          "bigo": "n2",
+          "medir": true
+        },
+        {
+          "php": "distanciaEdicion",
+          "java": "distanciaEdicion",
+          "python": "distancia_edicion",
+          "tipo": "function",
+          "bigo": "n2",
+          "medir": true
+        }
+      ]
+    },
+    {
+      "id": "numpy",
+      "tema": "NumPy y matplotlib",
+      "python": {
+        "archivo": "08-numpy-y-matplotlib.py",
+        "titulo": "08 · NumPy y matplotlib"
+      },
+      "ejercicios": [
+        {
+          "python": "normalizar",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "python": "distancias_por_pares",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "media_movil",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "python": "histograma",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "softmax",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "regresion_lineal",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        }
+      ]
+    },
+    {
+      "id": "audio",
+      "tema": "Audio con librosa",
+      "python": {
+        "archivo": "09-audio-con-librosa.py",
+        "titulo": "09 · Audio con librosa (solo lectura)",
+        "soloLectura": true,
+        "requiere": [
+          "librosa"
+        ]
+      },
+      "ejercicios": []
+    }
+  ],
+  "paridad": [
+    {
+      "lenguaje": "python",
+      "leccion": "poo",
+      "ejercicio": "Contenedor",
+      "motivo": "Python 01 funde las lecciones 01 y 02 en una más corta; el contenedor de inyección con autowiring por reflexión no aporta a DSA/IA y se omite."
+    },
+    {
+      "lenguaje": "python",
+      "leccion": "fundamentos",
+      "motivo": "Lecciones 01 y 02 de PHP fundidas en una sola, resumida y centrada en lo propio de Python."
+    },
+    {
+      "lenguaje": "python",
+      "leccion": "recursion",
+      "ejercicio": "factorial",
+      "motivo": "Los int de Python no desbordan: no hay OverflowError a partir de 21; se prueba el valor exacto de factorial(30)."
+    }
+  ]
+}

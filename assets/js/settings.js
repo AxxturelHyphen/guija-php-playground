@@ -3,6 +3,7 @@ import { el, $ } from './util.js';
 import { state, setSetting, DEFAULT_SETTINGS } from './state.js';
 import { ctx } from './ctx.js';
 import { infoDialog } from './dialog.js';
+import { LANG } from './lang.js';
 
 export function applySettings() {
   const s = state.settings;
@@ -33,7 +34,7 @@ const KEYS = [
   ['Ctrl + Enter', 'Ejecutar'],
   ['Ctrl + Alt + Enter', 'Ejecutar y medir con medir()'],
   ['Ctrl + Shift + Enter', 'Comparar tu rendimiento con la solución'],
-  ['Ctrl + S', 'Guardar en practicas/ (de un ejemplo guarda una copia)'],
+  ['Ctrl + S', `Guardar en practicas/${LANG.id}/ (de un ejemplo guarda una copia)`],
   ['Alt + Enter', 'Arreglo rápido en el error o aviso bajo el cursor'],
   ['Ctrl + Espacio', 'Autocompletado (plantillas: fore, func, class, prueba, medir…)'],
   ['Ctrl + D', 'Duplicar línea'],
@@ -53,14 +54,14 @@ export function openHelp() {
     el('h3', {}, 'Atajos'), grid,
     el('h3', {}, 'Pruebas en tus ejercicios'),
     el('p', {}, 'Las funciones del playground están disponibles en cualquier archivo:'),
-    pre("prueba('suma', [\n    'básico' => [[2, 3], 5],\n    'negativos' => [[-1, 1], 0],\n]);          // casos: [argumentos, esperado]\n\ncomprueba('saldo inicial', fn() => $c->saldo(), 0.0);\nlanza('no admite negativos', fn() => new Dinero(-1), InvalidArgumentException::class);"),
-    el('p', {}, el('code', {}, 'pendiente();'), ' marca un ejercicio sin resolver (cuenta como pendiente, no como fallo).'),
+    pre(LANG.help.tests),
+    el('p', {}, el('code', {}, LANG.help.pendiente), ' marca un ejercicio sin resolver (cuenta como pendiente, no como fallo).'),
     el('h3', {}, 'Medir la complejidad'),
-    pre("medir('buscarDuplicados', fn(int $n): array => [range(1, $n)]);\n// n = 64, 128, 256…  → estima O(n), O(n²)…\n// Pulsa «Medir» (Ctrl+Alt+Enter) para que se ejecute."),
+    pre(LANG.help.medir),
     el('h3', {}, 'Qué te dice el análisis'),
     el('p', {}, el('b', {}, 'Ciclomática'), ': caminos distintos de la función (cuántas pruebas necesitas). ', el('b', {}, 'Cognitiva'), ': lo difícil que es de leer (el anidamiento pesa). ',
       el('b', {}, 'O()'), ': estimación de lo que crece el coste con la entrada; «Medir» la confirma con tiempos reales.'),
     el('h3', {}, 'Soluciones'),
     el('p', {}, 'Si un ejercicio tiene solución, aparece la pestaña «Solución»: explicación, diferencias con tu código y una comparación de rendimiento con gráfica. Está oculta tras un aviso para que lo intentes antes.'));
-  return infoDialog('Guija PHP Playground · Ayuda', body);
+  return infoDialog(`Guija ${LANG.name} Playground · Ayuda`, body);
 }

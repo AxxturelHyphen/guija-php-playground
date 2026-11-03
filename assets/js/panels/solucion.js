@@ -7,6 +7,7 @@ import { api } from '../api.js';
 import { registerPanel } from '../panels.js';
 import { confirmDialog } from '../dialog.js';
 import { renderChart } from '../chart.js';
+import { LANG } from '../lang.js';
 
 let unlocked = false;
 try { unlocked = sessionStorage.getItem('pg:spoiler') === '1'; } catch { /* nada */ }
@@ -116,7 +117,7 @@ function itemCard(item, tab) {
       e.currentTarget.textContent = shown ? 'Ocultar diferencias' : item.mine ? 'Ver diferencias con la mía' : 'Ver el código de la solución';
       if (shown && !diffHost.dataset.ready) {
         diffHost.dataset.ready = '1';
-        disposers.push(ctx.editor.diff(diffHost, item.mine?.code ?? '// (todavía no has escrito esta función)\n', item.solution.code));
+        disposers.push(ctx.editor.diff(diffHost, item.mine?.code ?? LANG.unwritten, item.solution.code));
       }
     } }, item.mine ? 'Ver diferencias con la mía' : 'Ver el código de la solución'));
   } else {

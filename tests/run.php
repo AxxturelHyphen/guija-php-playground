@@ -9,13 +9,17 @@ declare(strict_types=1);
  *
  * Secciones: sintaxis de todos los .php · métricas · script de pistas y de explicaciones · harness (errores, timeout,
  * memoria, stdin, pruebas) · soluciones (splice) · contenido 01-08 · seguridad HTTP real contra `php -S`.
+ * Después, las mismas comprobaciones para Python y Java (tests/python/run.php, tests/java/run.php) y la paridad
+ * del temario entre los tres (tests/paridad.php), si existen.
  * Código de salida 1 si algo falla.
  */
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once __DIR__ . '/content_check.php';
 
-use Playground\{Api, Explainer, Report, Runner, Solutions};
-use Playground\Analysis\{Metrics, Parser, Source};
+use Playground\Core\{Api, Languages, Report};
+use Playground\Lang\Php\Analysis\{Metrics, Parser, Source};
+
+$php = Languages::get('php');
 
 $fast = in_array('--rapido', $argv, true);
 $pass = 0;
@@ -42,8 +46,8 @@ function check(string $label, bool $ok, string $detail = ''): void
 
 function runCode(string $code, array $opts = []): array
 {
-    $src = new Source($code);
-    return Report::build((new Runner())->run($code, 'tu_codigo.php', $opts + ['timeout' => 10]), new Explainer($src, new Parser($src)));
+    $php = Languages::get('php');
+    return Report::build($php->run($code, 'tu_codigo.php', $opts + ['timeout' => 10]), $php->explainer($code));
 }
 
 function phpBinary(): string
@@ -53,7 +57,8 @@ function phpBinary(): string
 
 // ═══════════════════════════════════════ 1. sintaxis de todos los PHP ═══════════════════════════════════════
 section('Sintaxis (php -l) de todos los archivos');
-$dirs = ['app', 'app/Analysis', 'app/data', 'ejemplos', 'soluciones', 'tests'];
+$dirs = ['app', 'app/Core', 'app/Lang/Php', 'app/Lang/Php/Analysis', 'app/Lang/Php/data', 'app/Lang/Python', 'app/Lang/Java', 'app/Lang/Java/Analysis',
+    'contenido/php/ejemplos', 'contenido/php/soluciones', 'tests', 'tests/python', 'tests/java'];
 $all = [PG_ROOT . '/index.php', PG_ROOT . '/pg.php'];
 foreach ($dirs as $d) {
     foreach (glob(PG_ROOT . "/{$d}/*.php") ?: [] as $f) {
@@ -61,14 +66,22 @@ foreach ($dirs as $d) {
     }
 }
 $bad = [];
+$skippedSyntax = [];
 foreach ($all as $f) {
+    if (str_contains(str_replace('\\', '/', $f), '/contenido/php/') && ($why = content_skip('php', basename($f))) !== null) {
+        $skippedSyntax[] = basename($f) . ": {$why}";
+        continue;
+    }
     $out = [];
     exec(escapeshellarg(phpBinary()) . ' -l ' . escapeshellarg($f) . ' 2>&1', $out, $rc);
     if ($rc !== 0) {
         $bad[] = basename($f) . ': ' . trim($out[0] ?? '');
     }
 }
-check(count($all) . ' archivos sin errores de sintaxis', $bad === [], implode('; ', $bad));
+check((count($all) - count($skippedSyntax)) . ' archivos sin errores de sintaxis', $bad === [], implode('; ', $bad));
+foreach ($skippedSyntax as $w) {
+    echo "  \e[33m! omitido {$w}\e[0m\n";
+}
 
 // ═══════════════════════════════════════ 2. métricas ═══════════════════════════════════════
 section('Métricas: ciclomática, cognitiva y O() sobre fragmentos conocidos');
@@ -181,15 +194,19 @@ check('medir(): puntos y modelo O(n)', $b !== null && $b['status'] === 'ok' && c
 $r = runCode("<?php\nfunction suma(array \$xs): int { return array_sum(\$xs); }\nmedir('suma', fn(int \$n): array => [range(1, \$n)]);\n");
 check('medir() sin «Medir» se omite (no ralentiza ejecutar)', ($r['benches'][0]['status'] ?? '') === 'skipped');
 
-$syntax = Runner::syntaxError("<?php\n\$x = 1\necho \$x;\n");
+$syntax = $php->syntaxError("<?php\n\$x = 1\necho \$x;\n");
 check('error de sintaxis detectado sin lanzar el programa', $syntax !== null && $syntax['line'] >= 2);
 
 // ═══════════════════════════════════════ 5. contenido ═══════════════════════════════════════
 if (!$fast) {
     section('Contenido: ejemplos 01–08 y sus soluciones');
-    $failures = content_check(null, false);
-    $examples = glob(PG_EJEMPLOS . '/*.php') ?: [];
-    check(count($examples) . ' ejemplos: sin errores, soluciones con 100 % de pruebas y O() medido = @bigo', $failures === [], implode(' | ', array_map(static fn($f) => mb_substr($f, 0, 140), array_slice($failures, 0, 3))));
+    $skippedContent = [];
+    $failures = content_check(null, false, 'php', $skippedContent);
+    $examples = glob($php->examplesDir() . '/*.php') ?: [];
+    check((count($examples) - count($skippedContent)) . ' ejemplos: sin errores, soluciones con 100 % de pruebas y O() medido = @bigo', $failures === [], implode(' | ', array_map(static fn($f) => mb_substr($f, 0, 140), array_slice($failures, 0, 3))));
+    foreach ($skippedContent as $w) {
+        echo "  \e[33m! omitido {$w}\e[0m\n";
+    }
 } else {
     section('Contenido (omitido con --rapido)');
 }
@@ -253,33 +270,51 @@ if ($up) {
     $r = http($port, 'GET', '/api?action=run');
     check('acción de escritura por GET → 405', $r['status'] === 405);
 
-    foreach (['/app/Api.php', '/app/harness.php', '/assets/../app/Api.php', '/assets/%2e%2e/app/Api.php', '/practicas/t.php', '/ejemplos/01-java-a-php.php', '/index.php', '/tests/run.php', '/assets/js/../../pg.php', '/.git/config'] as $url) {
+    foreach (['/app/Core/Api.php', '/app/Lang/Php/harness.php', '/assets/../app/Core/Api.php', '/assets/%2e%2e/app/Core/Api.php', '/practicas/t.php', '/practicas/php/t.php',
+        '/contenido/php/ejemplos/01-java-a-php.php', '/contenido/temario.json', '/var/langs.json', '/index.php', '/tests/run.php', '/assets/js/../../pg.php', '/.git/config',
+        '/php/../app/Core/Api.php', '/ruby'] as $url) {
         $r = http($port, 'GET', $url);
         check("GET {$url} → 404 y sin código fuente", $r['status'] === 404 && !str_contains($r['body'], '<?php'), "status {$r['status']}");
     }
     $r = http($port, 'GET', '/assets/css/app.css');
     check('GET /assets/css/app.css → 200 (estático permitido)', $r['status'] === 200 && str_contains($r['headers'], 'text/css'));
     $r = http($port, 'GET', '/');
-    check('GET / → interfaz con Content-Security-Policy', $r['status'] === 200 && str_contains($r['headers'], 'Content-Security-Policy') && str_contains($r['headers'], "frame-ancestors 'none'"));
+    check('GET / → selector de lenguaje con Content-Security-Policy', $r['status'] === 200 && str_contains($r['headers'], 'Content-Security-Policy') && str_contains($r['headers'], "frame-ancestors 'none'") && str_contains($r['body'], 'lang-card'));
+    foreach (['php', 'python', 'java'] as $l) {
+        $r = http($port, 'GET', "/{$l}");
+        check("GET /{$l} → IDE de ese lenguaje con CSP", $r['status'] === 200 && str_contains($r['headers'], "frame-ancestors 'none'") && str_contains($r['body'], "data-lang=\"{$l}\""));
+    }
+    $r = http($port, 'GET', '/api?action=langs');
+    $langs = json_decode($r['body'], true)['langs'] ?? [];
+    check('GET /api?action=langs → los 3 lenguajes con su estado', $r['status'] === 200 && array_column($langs, 'id') === ['php', 'python', 'java']);
+    foreach (['ruby', '..%2F..%2Fapp', '', 'PHP'] as $badLang) {
+        $r = http($port, 'GET', "/api?lang={$badLang}&action=tree");
+        check("lang «{$badLang}» desconocido → 404", $badLang === '' ? $r['status'] === 404 || $r['status'] === 200 : $r['status'] === 404, "status {$r['status']}");
+    }
+    $r = http($port, 'POST', '/api?lang=python&action=save', $ok, $json(['name' => 'x.php', 'code' => 'print(1)']));
+    check('guardar un .php en practicas/python/ → 400 (extensión de otro lenguaje)', $r['status'] === 400);
+    $r = http($port, 'GET', '/api?lang=java&action=file&dir=ejemplos&name=..%2F..%2Fphp%2Fejemplos%2F04-recursion.php');
+    check('leer otro lenguaje con ../ desde java → 404', $r['status'] === 404);
 
     // Escritura de archivos
     $name = 'zz-autotest-' . bin2hex(random_bytes(2)) . '.php';
     $r = $post('save', ['name' => $name, 'code' => "<?php\necho 1;\n"]);
-    check('guardar en practicas/ → 200 y el archivo existe', $r['status'] === 200 && is_file(PG_PRACTICAS . '/' . $name));
+    check('guardar en practicas/php/ → 200 y el archivo existe', $r['status'] === 200 && is_file($php->practiceDir() . '/' . $name));
     $r = $post('save', ['name' => $name, 'code' => '<?php echo 2;']);
     check('guardar sobre uno existente sin overwrite → 409', $r['status'] === 409);
     $r = $post('save', ['name' => $name, 'code' => "<?php\necho 3;\n", 'overwrite' => true]);
-    check('guardar con overwrite → 200', $r['status'] === 200 && str_contains((string) file_get_contents(PG_PRACTICAS . '/' . $name), 'echo 3'));
-    $before = md5_file(PG_EJEMPLOS . '/01-java-a-php.php');
+    check('guardar con overwrite → 200', $r['status'] === 200 && str_contains((string) file_get_contents($php->practiceDir() . '/' . $name), 'echo 3'));
+    $ej01 = $php->examplesDir() . '/01-java-a-php.php';
+    $before = md5_file($ej01);
     foreach (['../ejemplos/01-java-a-php.php', '..\\ejemplos\\01-java-a-php.php', '../app/Api.php', 'x.txt', 'sin-extension', '.htaccess.php', str_repeat('a', 90) . '.php', 'a/b.php', "a\0b.php"] as $bad) {
         $r = $post('save', ['name' => $bad, 'code' => '<?php echo "pwned";', 'overwrite' => true, 'dir' => 'ejemplos']);
         check('guardar «' . addcslashes(mb_substr($bad, 0, 30), "\0") . '» se rechaza', $r['status'] === 400, "status {$r['status']}");
     }
-    check('los ejemplos siguen intactos tras los ataques', md5_file(PG_EJEMPLOS . '/01-java-a-php.php') === $before);
+    check('los ejemplos siguen intactos tras los ataques', md5_file($ej01) === $before);
     $r = $post('delete', ['name' => '../ejemplos/01-java-a-php.php']);
-    check('borrar fuera de practicas/ → 404', $r['status'] === 404 && is_file(PG_EJEMPLOS . '/01-java-a-php.php'));
+    check('borrar fuera de practicas/ → 404', $r['status'] === 404 && is_file($ej01));
     $r = $post('delete', ['name' => $name]);
-    check('borrar de practicas/ → 200', $r['status'] === 200 && !is_file(PG_PRACTICAS . '/' . $name));
+    check('borrar de practicas/ → 200', $r['status'] === 200 && !is_file($php->practiceDir() . '/' . $name));
     $r = http($port, 'GET', '/api?action=file&dir=app&name=Api.php');
     check('leer app/Api.php por la API (dir no permitido) → 404', $r['status'] === 404);
     $r = http($port, 'GET', '/api?action=file&dir=ejemplos&name=..%2Fapp%2FApi.php');
@@ -303,6 +338,21 @@ if (is_resource($proc)) {
     proc_close($proc);
 }
 @unlink(sys_get_temp_dir() . '/pg_http.log');
+
+// ═══════════════════════════════════════ 7. Python, Java y paridad ═══════════════════════════════════════
+// Cada lenguaje tiene su propio autotest con la misma estructura; aquí se lanzan y se cuenta su resultado.
+foreach (['tests/python/run.php' => 'Python', 'tests/java/run.php' => 'Java', 'tests/paridad.php' => 'Paridad del temario (PHP · Python · Java)'] as $script => $label) {
+    if (!is_file(PG_ROOT . '/' . $script)) {
+        continue;
+    }
+    section($label);
+    $out = [];
+    exec(escapeshellarg(phpBinary()) . ' ' . escapeshellarg(PG_ROOT . '/' . $script) . ($fast ? ' --rapido' : '') . ' 2>&1', $out, $rc);
+    foreach ($out as $line) {
+        echo '  ', $line, "\n";
+    }
+    check($label . ': todo en verde', $rc === 0, "exit {$rc}");
+}
 
 // ═══════════════════════════════════════ resumen ═══════════════════════════════════════
 echo "\n" . str_repeat('═', 60) . "\n";

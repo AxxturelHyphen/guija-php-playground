@@ -32,12 +32,22 @@ export function md(text) {
     .replace(/\n/g, '<br>');
 }
 
+/**
+ * localStorage con un espacio por lenguaje: en Python, 'pg:session' se guarda como 'pg:python:session', así las
+ * pestañas y los cambios sin guardar de cada lenguaje no se mezclan. PHP conserva las claves de siempre, y los
+ * ajustes de la interfaz (tamaño de letra, paneles) son comunes.
+ */
+const SHARED = new Set(['pg:settings', 'pg:side', 'pg:tool', 'pg:sidebar', 'pg:lastLang']);
+const PAGE_LANG = document.documentElement.dataset.lang || 'php';
+const nsKey = k => (PAGE_LANG === 'php' || SHARED.has(k) || !k.startsWith('pg:') ? k : 'pg:' + PAGE_LANG + ':' + k.slice(3));
+
 export const store = {
-  get(k, fallback = null) { try { const v = localStorage.getItem(k); return v === null ? fallback : v; } catch { return fallback; } },
-  set(k, v) { try { localStorage.setItem(k, v); } catch { /* modo privado o sin espacio */ } },
-  del(k) { try { localStorage.removeItem(k); } catch { /* nada */ } },
-  json(k, fallback) { try { const v = localStorage.getItem(k); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
+  get(k, fallback = null) { try { const v = localStorage.getItem(nsKey(k)); return v === null ? fallback : v; } catch { return fallback; } },
+  set(k, v) { try { localStorage.setItem(nsKey(k), v); } catch { /* modo privado o sin espacio */ } },
+  del(k) { try { localStorage.removeItem(nsKey(k)); } catch { /* nada */ } },
+  json(k, fallback) { try { const v = localStorage.getItem(nsKey(k)); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
 };
+export const sessionKey = nsKey;
 
 export const debounce = (fn, ms) => {
   let t;

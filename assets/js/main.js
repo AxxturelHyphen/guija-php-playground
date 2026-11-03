@@ -9,6 +9,7 @@ import { createRunner } from './run.js';
 import { initPanels } from './panels.js';
 import { initStatusbar } from './statusbar.js';
 import { applySettings, openSettings, openHelp } from './settings.js';
+import { LANG } from './lang.js';
 import './panels/salida.js';
 import './panels/problemas.js';
 import './panels/pruebas.js';
@@ -68,7 +69,9 @@ async function boot() {
     $('#editor').replaceChildren(Object.assign(document.createElement('div'), { className: 'loading', textContent: e.message }));
     return;
   }
-  $('#php-version').textContent = 'PHP ' + state.meta.php;
+  $('#php-version').textContent = LANG.name + ' ' + (state.meta.version ?? '');
+  store.set('pg:lastLang', LANG.id);
+  if (!state.meta.ok) toast(`${LANG.name} no está listo en este PC: ${(state.meta.missing ?? []).map(m => m.what).join(', ')}. Vuelve a la pantalla de inicio para ver cómo instalarlo.`, 'error', 9000);
 
   // El catálogo (autocompletado/hover) llega en paralelo: no bloquea el editor
   api('catalog').then(c => { state.catalog = c; }).catch(() => {});
