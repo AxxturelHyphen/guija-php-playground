@@ -31,6 +31,8 @@ final class JavaLanguage extends Language
     private ?array $info = null;
     /** 'residente' | 'javac': cómo se hizo la última compilación (para los tests). */
     public string $ultimaVia = '';
+    /** @var ?array{k:string,dir:string,diags:list<array<string,mixed>>} última compilación sin errores, a la espera de run() */
+    private ?array $precompilado = null;
 
     public function id(): string
     {
@@ -366,6 +368,13 @@ final class JavaLanguage extends Language
         if (!is_array($info) || !isset($info['port'], $info['token'])) {
             return null;
         }
+        // Residente de una versión anterior del motor (PgJavac.class recompilado después de arrancarlo): se para y se relanza
+        $clase = self::dirJava() . DIRECTORY_SEPARATOR . 'motor' . DIRECTORY_SEPARATOR . 'PgJavac.class';
+        if (is_file($clase) && @filemtime($clase) > @filemtime(self::rutaResidente())) {
+            self::pararResidente();
+            @unlink(self::rutaResidente());
+            return null;
+        }
         $fp = @stream_socket_client('tcp://127.0.0.1:' . (int) $info['port'], $errno, $errstr, min(0.3, $espera));
         if (!$fp) {
             return null;
@@ -471,14 +480,36 @@ final class JavaLanguage extends Language
             return null;
         }
         $dir = Process::makeTempDir('pgj_');
+        $conservar = false;
         try {
             [$file] = self::nombres($code);
             $r = $this->compilar($code, $dir, $file);
             $errs = $r === null ? null : array_values(array_filter($r['diags'], static fn($d) => $d['kind'] === 'error'));
+            if ($r !== null && $errs === []) {
+                // Compila sin errores: se guardan las clases para que run() no compile otra vez (Ctrl+Enter = syntaxError + run)
+                $this->limpiarPrecompilado();
+                $this->precompilado = ['k' => $k, 'dir' => $dir, 'diags' => $r['diags']];
+                $conservar = true;
+                static $registrado = false;
+                if (!$registrado) {
+                    $registrado = true;
+                    register_shutdown_function(fn() => $this->limpiarPrecompilado());
+                }
+            }
         } finally {
-            Process::rmTree($dir);
+            if (!$conservar) {
+                Process::rmTree($dir);
+            }
         }
         return $memo[$k] = $errs;
+    }
+
+    private function limpiarPrecompilado(): void
+    {
+        if ($this->precompilado !== null) {
+            Process::rmTree($this->precompilado['dir']);
+            $this->precompilado = null;
+        }
     }
 
     public function syntaxError(string $code): ?array
@@ -502,7 +533,7 @@ final class JavaLanguage extends Language
             [$file] = self::nombres($code);
             $src = self::PREFIJO . $code;
             file_put_contents($dir . DIRECTORY_SEPARATOR . $file, $src);
-            $r = $this->hablarResidente(['op' => 'compile', 'name' => $file, 'src' => $src, 'cp' => self::dirHarness(), 'out' => $dir], $limiteMs / 1000);
+            $r = $this->hablarResidente(['op' => 'compile', 'name' => $file, 'src' => $src, 'cp' => self::dirHarness(), 'out' => $dir, 'solo' => '1'], $limiteMs / 1000);
             if (!is_array($r) || !isset($r['diags']) || !is_array($r['diags'])) {
                 return null;
             }
@@ -563,10 +594,16 @@ final class JavaLanguage extends Language
             return $falla('No se encontró un JDK 21 o superior.');
         }
         [$file, $main] = self::nombres($code);
-        $dir = Process::makeTempDir('pgj_');
+        $pre = $this->precompilado;
+        $this->precompilado = null;
+        $reutiliza = $pre !== null && $pre['k'] === md5($code) && is_dir($pre['dir']);
+        if ($pre !== null && !$reutiliza) {
+            Process::rmTree($pre['dir']);
+        }
+        $dir = $reutiliza ? $pre['dir'] : Process::makeTempDir('pgj_');
         try {
             $t0 = hrtime(true);
-            $c = $this->compilar($code, $dir, $file);
+            $c = $reutiliza ? ['ok' => true, 'diags' => $pre['diags']] : $this->compilar($code, $dir, $file);
             if ($c === null) {
                 return $falla('No se pudo preparar el harness de Java.');
             }

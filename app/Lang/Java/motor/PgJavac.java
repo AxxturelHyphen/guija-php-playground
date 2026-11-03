@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
  * Este proceso escucha SOLO en 127.0.0.1 (puerto aleatorio) y publica {port, token, pid} en el JSON que recibe
  * como argumento. Protocolo: UNA línea JSON por petición, con el token; contesta UNA línea JSON.
  *
- *   {"token":"…","op":"compile","name":"Clase.java","src":"…","cp":"ruta1:ruta2","out":"carpeta"}
+ *   {"token":"…","op":"compile","name":"Clase.java","src":"…","cp":"ruta1:ruta2","out":"carpeta"[,"solo":"1"]}   (solo = sin generar clases)
  *   {"token":"…","op":"ping"}  ·  {"token":"…","op":"parar"}
  *
  * Seguridad: nunca habla HTTP (lo que no empiece por «{» se cierra sin contestar), exige el token y NUNCA ejecuta código:
@@ -29,6 +29,7 @@ public final class PgJavac {
     private static final long INACTIVIDAD_MS = 30 * 60 * 1000L;
     private static final int MAX_PETICION = 16 << 20;
     private static volatile long ultimoUso = System.currentTimeMillis();
+    private static final ThreadLocal<StandardJavaFileManager> GESTOR = new ThreadLocal<>();
     private static String token;
     private static Path archivoInfo;
 
@@ -137,22 +138,47 @@ public final class PgJavac {
         }
         DiagnosticCollector<JavaFileObject> dc = new DiagnosticCollector<>();
         boolean ok;
-        try (StandardJavaFileManager fm = jc.getStandardFileManager(dc, Locale.ROOT, StandardCharsets.UTF_8)) {
-            fm.setLocation(StandardLocation.CLASS_OUTPUT, List.of(new File(out)));
+        boolean solo = "1".equals(q.get("solo"));
+        StandardJavaFileManager fm = null;
+        try {
             List<File> cp = new ArrayList<>();
             for (String p : q.getOrDefault("cp", "").split(File.pathSeparator)) {
                 if (!p.isEmpty()) cp.add(new File(p));
             }
-            fm.setLocation(StandardLocation.CLASS_PATH, cp);
             JavaFileObject fuente = new SimpleJavaFileObject(URI.create("string:///" + name), JavaFileObject.Kind.SOURCE) {
                 @Override
                 public CharSequence getCharContent(boolean ignoreEncodingErrors) {
                     return src;
                 }
             };
-            List<String> opts = List.of("--release", "21", "-proc:none", "-encoding", "UTF-8", "-g", "-Xlint:none");
-            ok = jc.getTask(null, fm, dc, opts, null, List.of(fuente)).call();
+            JavaCompiler.CompilationTask tarea;
+            if (solo) {
+                // Solo diagnósticos (el análisis en vivo): sin generar los .class, sin --release (ct.sym es lento de leer)
+                // y con el gestor de archivos de cada hilo reutilizado, que ya tiene el classpath indexado.
+                fm = GESTOR.get();
+                if (fm == null) {
+                    fm = jc.getStandardFileManager(null, Locale.ROOT, StandardCharsets.UTF_8);
+                    GESTOR.set(fm);
+                }
+                fm.setLocation(StandardLocation.CLASS_PATH, cp);
+                tarea = jc.getTask(null, fm, dc, List.of("-proc:none", "-encoding", "UTF-8", "-Xlint:none"), null, List.of(fuente));
+                if (tarea instanceof com.sun.source.util.JavacTask jt) {
+                    jt.parse();
+                    jt.analyze();
+                    ok = dc.getDiagnostics().stream().noneMatch(d -> d.getKind() == Diagnostic.Kind.ERROR);
+                } else {
+                    ok = tarea.call();
+                }
+            } else {
+                try (StandardJavaFileManager fm2 = jc.getStandardFileManager(dc, Locale.ROOT, StandardCharsets.UTF_8)) {
+                    fm2.setLocation(StandardLocation.CLASS_OUTPUT, List.of(new File(out)));
+                    fm2.setLocation(StandardLocation.CLASS_PATH, cp);
+                    List<String> opts = List.of("--release", "21", "-proc:none", "-encoding", "UTF-8", "-g", "-Xlint:none");
+                    ok = jc.getTask(null, fm2, dc, opts, null, List.of(fuente)).call();
+                }
+            }
         } catch (IOException | RuntimeException e) {
+            GESTOR.remove();
             return "{\"error\":" + cadena(String.valueOf(e)) + "}";
         }
 

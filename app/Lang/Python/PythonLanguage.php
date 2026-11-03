@@ -236,6 +236,12 @@ final class PythonLanguage extends Language
         if (!is_array($info) || !isset($info['port'], $info['token'])) {
             return null;
         }
+        // Analizador arrancado con una versión anterior de pg_analisis.py: se para y se relanza
+        if (@filemtime(__DIR__ . '/motor/pg_analisis.py') > @filemtime(self::rutaResidente())) {
+            self::pararResidente();
+            @unlink(self::rutaResidente());
+            return null;
+        }
         $fp = @stream_socket_client('tcp://127.0.0.1:' . (int) $info['port'], $errno, $errstr, 0.3);
         if (!$fp) {
             return null;
@@ -385,8 +391,12 @@ final class PythonLanguage extends Language
         if (isset($opts['benchBudgetMs'])) {
             $env['PG_BENCH_BUDGET_MS'] = (string) (int) $opts['benchBudgetMs'];
         }
-        // -X utf8: entrada/salida en UTF-8 también en Windows · -E: ignora PYTHON* · -B: sin .pyc · -P: sin la carpeta del script en sys.path
-        $cmd = [...$i['cmd'], '-X', 'utf8', '-E', '-B', '-P', __DIR__ . DIRECTORY_SEPARATOR . 'motor' . DIRECTORY_SEPARATOR . 'pg_harness.py', $file];
+        // -X utf8: entrada/salida en UTF-8 también en Windows · -E: ignora PYTHON* · -P: sin la carpeta del script en sys.path
+        // El harness se importa (no se ejecuta como script) para que su .pyc se reutilice: compilarlo en cada ejecución costaba ~15 ms.
+        // Los .pyc van a var/pyc (pycache_prefix), no junto al código del usuario ni al del proyecto.
+        $arranque = "import sys;d=sys.argv.pop(1);sys.path.insert(0,d);import pg_harness;sys.path.remove(d);sys.exit(pg_harness._main())";
+        $cmd = [...$i['cmd'], '-X', 'utf8', '-E', '-P', '-X', 'pycache_prefix=' . PG_VAR . DIRECTORY_SEPARATOR . 'pyc', '-c', $arranque,
+            __DIR__ . DIRECTORY_SEPARATOR . 'motor', $file];
         $res = Process::run($cmd, [
             'stdin' => (string) ($opts['stdin'] ?? ''), 'timeout' => $timeout, 'grace' => 2,
             'env' => $env, 'cwd' => PG_PRACTICAS . '/python',

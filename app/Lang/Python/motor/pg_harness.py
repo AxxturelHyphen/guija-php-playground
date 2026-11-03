@@ -25,7 +25,6 @@ funciones de la API y la excepción PorHacer.
 """
 import builtins
 import gc
-import json
 import os
 import sys
 import threading
@@ -79,12 +78,51 @@ sys.stderr = sys.stdout
 
 # ═══════════════════════════════════════ eventos ═══════════════════════════════════════
 
+try:
+    from _json import encode_basestring_ascii as _esc     # el escapador en C del módulo json, sin cargar json (ni re, ni enum: ~8 ms)
+except ImportError:                                       # pragma: no cover
+    _esc = None
+
+
+def _enc(v) -> str:
+    """JSON mínimo para los tipos simples de los eventos; cualquier otra cosa lanza TypeError y se usa json."""
+    t = type(v)
+    if t is str:
+        return _esc(v)
+    if t is bool:
+        return 'true' if v else 'false'
+    if v is None:
+        return 'null'
+    if t is int:
+        return int.__repr__(v)
+    if t is float:
+        if v != v or v in (float('inf'), float('-inf')):
+            raise ValueError('NaN')
+        return float.__repr__(v)
+    if t is dict:
+        partes = []
+        for k, x in v.items():
+            if type(k) is not str:
+                raise TypeError('clave no str')
+            partes.append(_esc(k) + ':' + _enc(x))
+        return '{' + ','.join(partes) + '}'
+    if t is list or t is tuple:
+        return '[' + ','.join([_enc(x) for x in v]) + ']'
+    raise TypeError('tipo no simple')
+
+
 def emit(ev: dict) -> None:
     """Escribe un evento del protocolo. JSON en ASCII puro: nunca rompe la codificación ni el JSON de PHP."""
     try:
-        texto = json.dumps(ev, ensure_ascii=True, allow_nan=False, default=str)
-    except (TypeError, ValueError):
-        texto = json.dumps(_limpio(ev), ensure_ascii=True, default=str)
+        if _esc is None:
+            raise TypeError('sin _json')
+        texto = _enc(ev)
+    except (TypeError, ValueError, RecursionError):
+        import json
+        try:
+            texto = json.dumps(ev, ensure_ascii=True, allow_nan=False, default=str)
+        except (TypeError, ValueError):
+            texto = json.dumps(_limpio(ev), ensure_ascii=True, default=str)
     with _E.lock:
         try:
             _SALIDA.write(_START + texto + _END)
