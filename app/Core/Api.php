@@ -169,12 +169,21 @@ final class Api
             return [200, Report::syntaxOnly($explainer->explain($syntax))];
         }
         $opts = [
-            'timeout' => !empty($b['bench']) ? 60 : $this->timeout($b, 30, 5),   // medir() necesita más tiempo que una ejecución normal
+            'timeout' => !empty($b['bench']) ? 60 : max($this->timeout($b, 30, 5), self::minTimeout($code)),   // medir() necesita más tiempo
             'stdin' => substr((string) ($b['stdin'] ?? ''), 0, self::MAX_STDIN),
             'bench' => !empty($b['bench']),
         ];
         $raw = $lang->run($code, $lang->displayName('tu_codigo'), $opts);
         return [200, Report::build($raw, $explainer)];
+    }
+
+    /**
+     * Una lección puede pedir más tiempo con «pg: limite=30» en su cabecera (p. ej. la de librosa, que tarda en arrancar).
+     * Como mucho 30 s; nunca reduce lo que el usuario eligió.
+     */
+    private static function minTimeout(string $code): int
+    {
+        return preg_match('/pg:\s*limite\s*=\s*(\d+)/', substr($code, 0, 3000), $m) ? min(30, (int) $m[1]) : 0;
     }
 
     private function timeout(array $b, int $max, int $default): int
