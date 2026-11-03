@@ -20,7 +20,7 @@ final class Process
 
     /**
      * @param list<string> $cmd
-     * @param array{stdin?:string, timeout?:int, grace?:int, env?:array<string,string>, cwd?:string, maxOutput?:int} $o
+     * @param array{stdin?:string, timeout?:int, grace?:int, env?:array<string,?string>, cwd?:string, maxOutput?:int} $o
      *        timeout: segundos de reloj; grace: margen extra (el propio harness corta antes con un error bonito)
      * @return array{raw:string, exit:int, killed:?string, wallMs:int, truncated:bool}
      */
@@ -101,8 +101,8 @@ final class Process
     }
 
     /**
-     * Entorno heredado + variables extra.
-     * @param array<string,string> $extra
+     * Entorno heredado + variables extra (una variable a null se quita del entorno del hijo).
+     * @param array<string,?string> $extra
      * @return array<string,string>
      */
     public static function env(array $extra = []): array
@@ -114,7 +114,11 @@ final class Process
             }
         }
         foreach ($extra as $k => $v) {
-            $env[$k] = $v;
+            if ($v === null) {
+                unset($env[$k]);
+            } else {
+                $env[$k] = $v;
+            }
         }
         return $env;
     }
