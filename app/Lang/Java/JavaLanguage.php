@@ -538,7 +538,8 @@ final class JavaLanguage extends Language
         $res = $mt->compute();
         $ex = $this->explainer($code);
         $diags = [];
-        $errs = $this->erroresRapidos($code, 120) ?? [];
+        // Un archivo de soluciones usa tipos de su lección y solo compila empalmado: sin errores de javac al leerlo
+        $errs = preg_match('/^\s*(?:final\s+)?class\s+Soluciones\b/m', $code) ? [] : ($this->erroresRapidos($code, 120) ?? []);
         foreach (array_slice($errs, 0, 20) as $d) {
             $diags[] = $ex->explain(self::evParse($d));
         }
