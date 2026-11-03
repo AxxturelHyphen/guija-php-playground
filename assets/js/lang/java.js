@@ -44,11 +44,13 @@ export default {
     ['prueba', 'prueba("${1:nombreMetodo}",\n\tcaso("${2:caso básico}", ${3:esperado}, ${4:args}));', 'prueba() con casos'],
     ['comprueba', 'comprueba("${1:descripción}", () -> ${2}, ${3:true});', 'comprueba() una condición'],
     ['lanza', 'lanza("${1:descripción}", () -> ${2}, ${3:IllegalArgumentException}.class);', 'lanza(): espera una excepción'],
-    ['medir', 'medir("${1:nombreMetodo}", n -> args(${2:lista(n)}));', 'medir() la complejidad'],
+    ['medir', 'medir("${1:nombreMetodo}", n -> args(${2:numeros(n)}));', 'medir() un método por su nombre'],
+    ['medirt', 'medir("${1:etiqueta}", n -> ${2:aleatorios(n, 1000, 1)}, ${3:a} -> ${4:ordenar}(${3:a}));', 'medir() tipado: entrada nueva en cada repetición'],
+    ['sinorden', 'pruebaSinOrden("${1:nombreMetodo}",\n\tcaso("${2:caso básico}", ${3:esperado}, ${4:args}));', 'prueba() sin importar el orden de listas'],
   ],
   help: {
-    tests: 'prueba("suma",\n    caso("básico", 5, 2, 3),\n    caso("negativos", 0, -1, 1));   // caso(descripción, esperado, argumentos...)\n\ncomprueba("saldo inicial", () -> c.saldo(), 0.0);\nlanza("no admite negativos", () -> new Dinero(-1), IllegalArgumentException.class);',
-    pendiente: 'return pendiente();',
-    medir: 'medir("buscarDuplicados", n -> args(lista(n)));\n// n = 64, 128, 256…  → estima O(n), O(n²)…\n// Pulsa «Medir» (Ctrl+Alt+Enter) para que se ejecute.',
+    tests: 'prueba("suma",                    // método static, por su nombre\n    caso("básico", 5, 2, 3),     // caso(descripción, esperado, argumentos...)\n    caso("negativos", 0, -1, 1));\n\ncomprueba("saldo inicial", () -> c.saldo(), 0.0);   // sin esperado: debe dar true\nlanza("no admite negativos", () -> new Dinero(-1), IllegalArgumentException.class);\n\n// Variantes: pruebaSinOrden(...), compruebaSinOrden(...), pruebaCon("m", (obtenido, esperado) -> ..., caso(...))\n// Tipos exactos: Integer ≠ Long (5 ≠ 5L); los decimales se comparan con tolerancia.',
+    pendiente: 'return pendiente();      // o «pendiente();» en un método void',
+    medir: 'medir("buscarDuplicados", n -> args(numeros(n)));\n// n = 64, 128, 256…  → estima O(n), O(n²)…\n// Si el método modifica su entrada (ordenar en el sitio), usa la variante tipada:\n// medir("ordenar", n -> aleatorios(n, 1000, 1), a -> ordenar(a));\n// Ayudas: numeros(n) [1..n] · lista(n) · aleatorios(n, max, semilla) · rango(desde, hasta, paso)\n// Pulsa «Medir» (Ctrl+Alt+Enter) para que se ejecute.',
   },
 };
