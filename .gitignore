@@ -1,0 +1,6 @@
+# Lo que guarda cada usuario y los artefactos de ejecución: no van al repositorio
+/practicas/
+/var/
+/.venv/
+__pycache__/
+*.pyc

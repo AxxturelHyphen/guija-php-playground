@@ -1,6 +1,7 @@
 // Carga de Monaco y funciones del IDE sobre él: completado, hover, ayuda de firma, CodeLens y arreglos rápidos.
-import { registerPhp } from './monaco-lang.js';
+import { registerTheme } from './monaco-theme.js';
 import { state } from './state.js';
+import { LANG } from './lang.js';
 
 const MONACO = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min';
 
@@ -21,29 +22,8 @@ export function loadMonaco() {
   });
 }
 
-/** Plantillas en vivo (como las de JetBrains): escribe la abreviatura y Tab. */
-const TEMPLATES = [
-  ['fore', 'foreach (\\$${1:items} as \\$${2:item}) {\n\t$0\n}', 'foreach sobre un array'],
-  ['forek', 'foreach (\\$${1:items} as \\$${2:clave} => \\$${3:valor}) {\n\t$0\n}', 'foreach con clave y valor'],
-  ['forr', 'for (\\$${1:i} = 0; \\$${1:i} < ${2:\\$n}; \\$${1:i}++) {\n\t$0\n}', 'for clásico'],
-  ['fn', 'fn(\\$${1:x}) => ${2:\\$x}', 'función flecha'],
-  ['func', 'function ${1:nombre}(${2:int \\$x}): ${3:int}\n{\n\t$0\n}', 'función con tipos'],
-  ['pubf', 'public function ${1:nombre}(${2}): ${3:void}\n{\n\t$0\n}', 'método público'],
-  ['class', 'final class ${1:Nombre}\n{\n\tpublic function __construct(\n\t\tprivate readonly ${2:int} \\$${3:valor},\n\t) {\n\t}\n\n\t$0\n}', 'clase con constructor promocionado'],
-  ['iface', 'interface ${1:Nombre}\n{\n\tpublic function ${2:metodo}(): ${3:void};\n}', 'interfaz'],
-  ['enum', 'enum ${1:Nombre}: string\n{\n\tcase ${2:Uno} = \'${3:uno}\';\n}', 'enum con valores'],
-  ['tryc', 'try {\n\t$0\n} catch (${1:Exception} \\$${2:e}) {\n\techo \\$${2:e}->getMessage();\n}', 'try / catch'],
-  ['match', 'match (${1:\\$valor}) {\n\t${2:1} => ${3:\'uno\'},\n\tdefault => ${4:\'otro\'},\n}', 'match'],
-  ['strict', 'declare(strict_types=1);', 'activar tipos estrictos'],
-  ['prueba', "prueba('${1:nombreFuncion}', [\n\t'${2:caso básico}' => [[${3}], ${4}],\n]);", 'prueba() con casos'],
-  ['comprueba', "comprueba('${1:descripción}', fn() => ${2}, ${3:true});", 'comprueba() una condición'],
-  ['lanza', "lanza('${1:descripción}', fn() => ${2}, ${3:InvalidArgumentException}::class);", 'lanza(): espera una excepción'],
-  ['medir', "medir('${1:nombreFuncion}', fn(int \\$n): array => [range(1, \\$n)]);", 'medir() la complejidad'],
-];
-
-const KEYWORDS = ['abstract', 'and', 'array', 'as', 'break', 'case', 'catch', 'class', 'clone', 'const', 'continue', 'declare', 'default', 'do', 'echo', 'else', 'elseif',
-  'enum', 'extends', 'final', 'finally', 'fn', 'for', 'foreach', 'function', 'if', 'implements', 'instanceof', 'interface', 'match', 'namespace', 'new', 'private', 'protected',
-  'public', 'readonly', 'return', 'self', 'static', 'switch', 'throw', 'trait', 'try', 'use', 'while', 'yield', 'null', 'true', 'false', 'parent', 'isset', 'unset', 'empty'];
+const TEMPLATES = LANG.templates;
+const KEYWORDS = LANG.keywords;
 
 const lensListeners = new Set();
 export const refreshLenses = () => lensListeners.forEach(l => l());
@@ -51,16 +31,19 @@ export const refreshLenses = () => lensListeners.forEach(l => l());
 const mdLines = (...parts) => ({ value: parts.filter(Boolean).join('\n\n'), isTrusted: false, supportHtml: false });
 const sigText = (name, f) => `${name}(${f.p.join(', ')})${f.ret}`;
 
-/** Nombre sin tipo ni $ para el hueco del snippet: "?int $length = null" -> "length" */
-const slotName = p => (p.match(/\$(\w+)/)?.[1] ?? 'x');
+/** Nombre sin tipo ni $ para el hueco del snippet: "?int $length = null" -> "length", "key=None" -> "key", "int n" -> "n" */
+const slotName = p => (p.match(/\$(\w+)/)?.[1] ?? p.replace(/[=:].*$/, '').trim().split(/\s+/).pop()?.replace(/^\*+|[^\w]/g, '') ?? 'x') || 'x';
+/** Busca en el catálogo (PHP no distingue mayúsculas en nombres de función). */
+const catFn = (cat, name) => cat?.functions?.[LANG.caseInsensitiveFns ? name.toLowerCase() : name];
 
 export function registerIde(monaco, { onCommand }) {
-  registerPhp(monaco);
-  const lang = 'phpx';
+  registerTheme(monaco);
+  LANG.register?.(monaco);
+  const lang = LANG.monaco;
 
   // ── Autocompletado ───────────────────────────────────────────────
   monaco.languages.registerCompletionItemProvider(lang, {
-    triggerCharacters: ['$', '>', ':', '\\'],
+    triggerCharacters: LANG.triggerCharacters,
     provideCompletionItems(model, position) {
       const w = model.getWordUntilPosition(position);
       const range = { startLineNumber: position.lineNumber, endLineNumber: position.lineNumber, startColumn: w.startColumn, endColumn: w.endColumn };
@@ -71,11 +54,11 @@ export function registerIde(monaco, { onCommand }) {
 
       // Tras -> o :: solo tendría sentido ofrecer miembros; sin análisis de tipos, se ofrece lo mínimo útil.
       const before = model.getValueInRange({ startLineNumber: position.lineNumber, startColumn: Math.max(1, w.startColumn - 2), endLineNumber: position.lineNumber, endColumn: w.startColumn });
-      if (before === '->' || before === '?>') return { suggestions: [] };
+      if (LANG.noCompletionAfter.includes(before)) return { suggestions: [] };
 
       const seen = new Set();
       const text = model.getValue();
-      for (const m of text.matchAll(/\$[A-Za-z_]\w*/g)) {
+      for (const m of LANG.varRe ? text.matchAll(LANG.varRe) : []) {
         if (seen.has(m[0])) continue;
         seen.add(m[0]);
         out.push({ label: m[0], kind: K.Variable, insertText: m[0], range, sortText: '0' + m[0], detail: 'variable' });
@@ -90,11 +73,11 @@ export function registerIde(monaco, { onCommand }) {
         out.push({
           label: { label: name, detail: `(${f.p.map(slotName).join(', ')})` }, kind: K.Function, range, sortText: (f.pg ? '2' : '3') + name,
           insertText: `${name}(${slots})`, insertTextRules: SNIP, detail: sigText(name, f),
-          documentation: mdLines(f.d, f.o ? `Coste: **${f.o}**` : '', f.j ? `Java: \`${f.j}\`` : ''),
+          documentation: mdLines(f.d, f.o ? `Coste: **${f.o}**` : '', f.j && LANG.showJava ? `Java: \`${f.j}\`` : ''),
         });
       }
       for (const [name, c] of Object.entries(cat?.classes ?? {})) {
-        out.push({ label: name, kind: K.Class, insertText: name, range, sortText: '4' + name, documentation: mdLines(c.d, c.j ? `Java: \`${c.j}\`` : '') });
+        out.push({ label: name, kind: K.Class, insertText: name, range, sortText: '4' + name, documentation: mdLines(c.d, c.j && LANG.showJava ? `Java: \`${c.j}\`` : '') });
       }
       for (const k of KEYWORDS) out.push({ label: k, kind: K.Keyword, insertText: k, range, sortText: '5' + k });
       for (const [label, body, desc] of TEMPLATES) {
@@ -105,7 +88,7 @@ export function registerIde(monaco, { onCommand }) {
   });
 
   // ── Hover ────────────────────────────────────────────────────────
-  const OPS = ['<=>', '??=', '??', '?->', '...', '==='];
+  const OPS = LANG.ops;
   monaco.languages.registerHoverProvider(lang, {
     provideHover(model, position) {
       const contents = [];
@@ -122,19 +105,19 @@ export function registerIde(monaco, { onCommand }) {
       if (w && !w.word.startsWith('$')) {
         range = { startLineNumber: position.lineNumber, endLineNumber: position.lineNumber, startColumn: w.startColumn, endColumn: w.endColumn };
         const lower = w.word.toLowerCase();
-        const f = cat?.functions?.[lower];
+        const f = catFn(cat, w.word);
         const user = (state.analysis?.units ?? []).find(u => u.name === w.word && u.kind !== 'main');
         if (user) {
           contents.push(mdLines(
-            `\`\`\`php\n${user.kind === 'method' ? user.qname : 'function ' + user.name}\n\`\`\``,
+            `\`\`\`${LANG.fence}\n${user.kind === 'method' ? user.qname : LANG.fnPrefix + user.name}\n\`\`\``,
             `Definida en tu código · complejidad ciclomática **${user.cc}** (${user.grade}) · cognitiva **${user.cognitive}**${user.bigO ? ` · estimación **${user.bigO}**` : ''}`));
         } else if (f) {
-          contents.push(mdLines('```php\n' + sigText(w.word, f) + '\n```', f.d, f.o ? `Coste: **${f.o}**` : '', f.j ? `Equivalente en Java: \`${f.j}\`` : ''));
+          contents.push(mdLines('```' + LANG.fence + '\n' + sigText(w.word, f) + '\n```', f.d, f.o ? `Coste: **${f.o}**` : '', f.j && LANG.showJava ? `Equivalente en Java: \`${f.j}\`` : ''));
         } else if (cat?.classes?.[w.word]) {
           const c = cat.classes[w.word];
-          contents.push(mdLines(`**${w.word}**`, c.d, c.j ? `Equivalente en Java: \`${c.j}\`` : ''));
-        } else if (cat?.keywords?.[lower]) {
-          contents.push(mdLines(`**${lower}**`, cat.keywords[lower]));
+          contents.push(mdLines(`**${w.word}**`, c.d, c.j && LANG.showJava ? `Equivalente en Java: \`${c.j}\`` : ''));
+        } else if (cat?.keywords?.[w.word] ?? cat?.keywords?.[lower]) {
+          contents.push(mdLines(`**${w.word}**`, cat.keywords[w.word] ?? cat.keywords[lower]));
         }
       }
       if (!contents.length) {
@@ -173,13 +156,14 @@ export function registerIde(monaco, { onCommand }) {
         } else if (c === ',' && depth === 0) commas++;
       }
       if (i < 0) return null;
-      const m = text.slice(0, i).match(/([A-Za-z_][\w\\]*)\s*$/);
+      const m = text.slice(0, i).match(LANG.identRe);
       if (!m) return null;
-      const name = m[1];
-      const f = state.catalog?.functions?.[name.toLowerCase()];
+      const full = m[1];
+      const name = full.includes('.') ? full.slice(full.lastIndexOf('.') + 1) : full;
+      const f = catFn(state.catalog, full) ?? catFn(state.catalog, name);
       let params, label, doc;
       if (f) {
-        params = f.p; label = sigText(name, f); doc = f.d;
+        params = f.p; label = sigText(f === catFn(state.catalog, full) ? full : name, f); doc = f.d;
       } else {
         const u = (state.analysis?.units ?? []).find(x => x.name === name && x.kind !== 'main');
         if (!u) return null;

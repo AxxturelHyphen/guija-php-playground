@@ -457,14 +457,14 @@ function medir(string|callable $fn, callable $entrada, string $escala = 'geometr
         }
     }
 
-    $fit = PgBench::fit($points, $escala);
+    // Solo los puntos: el ajuste del modelo (O(n), O(n²)…) lo hace el servidor (Core\Bench::fit), igual para todos los lenguajes.
     PgHarness::emit([
         't' => 'bench', 'name' => $name, 'status' => 'ok', 'scale' => $escala, 'stopped' => $stopped,
         'points' => array_map(static fn($p) => [$p[0], round($p[1], 6)], $points),
-    ] + $fit);
+    ]);
 }
 
-/** Cronometraje y ajuste de modelos de complejidad. */
+/** Cronometraje (el ajuste de modelos está en el servidor: Core\Bench). */
 final class PgBench
 {
     /** Milisegundos por llamada (mínimo de varias tandas, para filtrar el ruido). */
@@ -495,60 +495,5 @@ final class PgBench
             $best = min($best, (hrtime(true) - $t0) / 1e6 / $k);
         }
         return $best;
-    }
-
-    /**
-     * Elige el modelo (1, log n, n, n log n, n², n³, 2ⁿ) cuyo cociente t/f(n) es más constante.
-     *
-     * @param list<array{0:int,1:float}> $points [n, ms]
-     * @return array{model:?string, label:?string, sd:?float, slope:?float}
-     */
-    public static function fit(array $points, string $escala = 'geometrica'): array
-    {
-        $pts = array_values(array_filter($points, static fn($p) => $p[0] >= 2));
-        if (count($pts) < 3) {
-            return ['model' => null, 'label' => null, 'sd' => null, 'slope' => null];
-        }
-        $models = [
-            '1' => ['O(1)', static fn(float $n) => 0.0],
-            'log' => ['O(log n)', static fn(float $n) => log(log($n))],
-            'n' => ['O(n)', static fn(float $n) => log($n)],
-            'nlogn' => ['O(n log n)', static fn(float $n) => log($n) + log(log($n))],
-            'n2' => ['O(n²)', static fn(float $n) => 2 * log($n)],
-            'n3' => ['O(n³)', static fn(float $n) => 3 * log($n)],
-            'exp' => ['O(2ⁿ)', static fn(float $n) => $n * M_LN2],
-        ];
-        $best = null;
-        $bestSd = INF;
-        foreach ($models as $key => [$label, $lf]) {
-            $r = [];
-            foreach ($pts as [$n, $t]) {
-                $r[] = log(max($t, 1e-7)) - $lf((float) $n);
-            }
-            $mean = array_sum($r) / count($r);
-            $sd = sqrt(array_sum(array_map(static fn($x) => ($x - $mean) ** 2, $r)) / count($r));
-            // Un modelo más complejo debe ajustar claramente mejor para ganar
-            if ($best === null || $sd < $bestSd * 0.85) {
-                $best = $key;
-                $bestSd = $sd;
-            }
-        }
-
-        // Pendiente log-log: el exponente aproximado
-        $xs = array_map(static fn($p) => log((float) $p[0]), $pts);
-        $ys = array_map(static fn($p) => log(max($p[1], 1e-7)), $pts);
-        $mx = array_sum($xs) / count($xs);
-        $my = array_sum($ys) / count($ys);
-        $num = $den = 0.0;
-        foreach ($xs as $i => $x) {
-            $num += ($x - $mx) * ($ys[$i] - $my);
-            $den += ($x - $mx) ** 2;
-        }
-        $slope = $den > 0 ? $num / $den : null;
-
-        return [
-            'model' => $best, 'label' => $models[$best][0], 'sd' => round($bestSd, 3),
-            'slope' => $slope !== null ? round($slope, 2) : null,
-        ];
     }
 }

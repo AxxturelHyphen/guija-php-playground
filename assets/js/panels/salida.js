@@ -3,6 +3,7 @@ import { $, el, fmtMs, fmtBytes } from '../util.js';
 import { state, on } from '../state.js';
 import { registerPanel } from '../panels.js';
 import { diagCard } from '../diagcard.js';
+import { LANG } from '../lang.js';
 
 const root = () => $('#panel-salida');
 
@@ -35,6 +36,11 @@ function render() {
     } else if (seg.t === 'note') {
       pre = null;
       host.append(el('div', { class: 'out-note' }, seg.text));
+    } else if (seg.t === 'img') {
+      // Gráficas (matplotlib en Python): llegan como PNG/SVG en base64 y se muestran donde se dibujaron
+      pre = null;
+      host.append(el('figure', { class: 'out-img' }, el('img', { src: `data:${seg.mime};base64,${seg.data}`, alt: seg.title || 'gráfica', loading: 'lazy' }),
+        seg.title ? el('figcaption', {}, seg.title) : null));
     }
   }
   if (!r.segments.length) host.append(el('div', { class: 'placeholder' }, '(el programa terminó sin imprimir nada)'));
@@ -42,7 +48,7 @@ function render() {
 }
 
 function stdinBox() {
-  const ta = el('textarea', { rows: 3, placeholder: 'Una línea por cada fgets(STDIN) / readline()', 'aria-label': 'Entrada estándar', spellcheck: 'false' });
+  const ta = el('textarea', { rows: 3, placeholder: LANG.stdinHint, 'aria-label': 'Entrada estándar', spellcheck: 'false' });
   ta.value = state.stdin;
   ta.addEventListener('input', () => { state.stdin = ta.value; });
   return el('details', { class: 'stdin-box', open: state.stdin ? true : null }, el('summary', {}, 'Entrada (STDIN)'), ta);

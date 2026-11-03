@@ -3,19 +3,32 @@ declare(strict_types=1);
 
 defined('PG_ROOT') or exit;
 
+/** @var \Playground\Core\Language $pgLang  lo fija index.php según la URL (/php, /python, /java) */
+$langId = $pgLang->id();
+$langName = $pgLang->name();
+// Marca de cada lenguaje: texto del logo, degradado y color del icono de archivo
+[$logo, $colA, $colB, $icon] = [
+    'php' => ['PHP', '#8892BF', '#4F5B93', '#7A86B8'],
+    'python' => ['PY', '#4B8BBE', '#306998', '#4B8BBE'],
+    'java' => ['JAVA', '#E76F00', '#5382A1', '#C77B3A'],
+][$langId];
+$h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+
 // Versión de los assets en la URL: al editar un archivo el navegador no se queda con el viejo.
 $v = static function (string $rel): string {
     $f = PG_ROOT . '/assets/' . $rel;
     return '/assets/' . $rel . '?v=' . (is_file($f) ? (string) filemtime($f) : '0');
 };
+$favicon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='" . rawurlencode($colB)
+    . "'/%3E%3Ctext x='16' y='21' font-family='monospace' font-size='" . (strlen($logo) > 3 ? '10' : '13') . "' font-weight='700' text-anchor='middle' fill='white'%3E{$logo}%3C/text%3E%3C/svg%3E";
 ?>
 <!doctype html>
-<html lang="es">
+<html lang="es" data-lang="<?= $h($langId) ?>" style="--logo-a: <?= $colA ?>; --logo-b: <?= $colB ?>; --file-icon: <?= $icon ?>">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Guija PHP Playground</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236A74AE'/%3E%3Ctext x='16' y='21' font-family='monospace' font-size='13' font-weight='700' text-anchor='middle' fill='white'%3EPHP%3C/text%3E%3C/svg%3E">
+<title>Guija <?= $h($langName) ?> Playground</title>
+<link rel="icon" href="<?= $favicon ?>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
@@ -31,8 +44,8 @@ addEventListener('unhandledrejection', e => { if (e.reason && (e.reason.name ===
   <button id="btn-sidebar" class="btn btn-icon" title="Proyecto (Alt+1)" aria-label="Mostrar u ocultar el panel Proyecto">
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 3.5h13M1.5 8h13M1.5 12.5h13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
   </button>
-  <div class="brand"><span class="logo">PHP</span><span class="brand-name">Guija PHP Playground</span></div>
-  <span class="pill" id="php-version">PHP</span>
+  <a class="brand" href="/" title="Cambiar de lenguaje (PHP, Python, Java)"><span class="logo"><?= $h($logo) ?></span><span class="brand-name">Guija <?= $h($langName) ?> Playground</span></a>
+  <span class="pill" id="php-version"><?= $h($langName) ?></span>
   <div class="spacer"></div>
 
   <label class="select-wrap hide-sm" title="Tiempo máximo de ejecución">
@@ -41,7 +54,7 @@ addEventListener('unhandledrejection', e => { if (e.reason && (e.reason.name ===
       <option value="5">5 s</option><option value="10">10 s</option><option value="30">30 s</option>
     </select>
   </label>
-  <button id="btn-save" class="btn" title="Guardar en practicas/ (Ctrl+S)">
+  <button id="btn-save" class="btn" title="Guardar en practicas/<?= $h($langId) ?>/ (Ctrl+S)">
     <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 2.5h9l2 2v9h-11z M5 2.5v4h5v-4 M5 13.5v-4h6v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
     <span class="hide-sm">Guardar</span>
   </button>
@@ -71,7 +84,7 @@ addEventListener('unhandledrejection', e => { if (e.reason && (e.reason.name ===
     <div class="island-head">
       <span class="island-title">Proyecto</span>
       <div class="spacer"></div>
-      <button id="btn-new" class="btn btn-sm" title="Nuevo archivo en practicas/">+ Nuevo</button>
+      <button id="btn-new" class="btn btn-sm" title="Nuevo archivo en practicas/<?= $h($langId) ?>/">+ Nuevo</button>
     </div>
     <nav id="tree" class="tree" aria-label="Archivos"></nav>
   </aside>
@@ -121,7 +134,7 @@ addEventListener('unhandledrejection', e => { if (e.reason && (e.reason.name ===
   <span id="st-save" class="st-item"></span>
   <span id="st-pos" class="st-item">Ln 1, Col 1</span>
   <span class="st-item hide-sm">UTF-8</span>
-  <span class="st-item hide-sm" id="st-php">PHP</span>
+  <span class="st-item hide-sm" id="st-php"><?= $h($langName) ?></span>
 </footer>
 
 <div id="toasts" class="toasts" aria-live="polite"></div>

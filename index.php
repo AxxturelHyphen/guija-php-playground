@@ -4,15 +4,17 @@ declare(strict_types=1);
 /**
  * Router del servidor integrado:  php -S 127.0.0.1:8000 index.php
  *
- *   /                 la interfaz (app/shell.php)
- *   /assets/...       CSS y JS (se sirven a mano: nada más de esta carpeta es accesible por URL)
- *   /api?action=...   la API (app/Api.php)
- *   cualquier otra    404   (así app/*.php, practicas/*.php... nunca se ejecutan ni se leen pidiéndolos por URL)
+ *   /                          pantalla de inicio: eliges PHP, Python o Java (app/landing.php)
+ *   /php  /python  /java       el IDE de ese lenguaje (app/shell.php)
+ *   /assets/...                CSS y JS (se sirven a mano: nada más de esta carpeta es accesible por URL)
+ *   /api?lang=…&action=...     la API (app/Core/Api.php)
+ *   cualquier otra             404   (así app/*.php, contenido/, practicas/, var/... nunca se ejecutan ni se leen por URL)
  */
 
 require __DIR__ . '/app/bootstrap.php';
 
-use Playground\Api;
+use Playground\Core\Api;
+use Playground\Core\Languages;
 
 $path = rawurldecode((string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH));
 $method = (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET');
@@ -35,6 +37,10 @@ function pg_json(int $status, array $data): never
     $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR);
     pg_send($status, 'application/json; charset=utf-8', $json === false ? '{"error":"JSON no válido"}' : $json, ['Cache-Control' => 'no-store']);
 }
+
+const PG_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; "
+    . "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
+    . "img-src 'self' data:; worker-src 'self' blob: data:; connect-src 'self'; frame-ancestors 'none'";
 
 // ── API ─────────────────────────────────────────────────────────────────
 if ($path === '/api') {
@@ -71,18 +77,18 @@ if (str_starts_with($path, '/assets/') && in_array($method, ['GET', 'HEAD'], tru
 }
 
 // ── Interfaz ────────────────────────────────────────────────────────────
-if ($path === '/' && in_array($method, ['GET', 'HEAD'], true)) {
+if (in_array($method, ['GET', 'HEAD'], true) && ($path === '/' || preg_match('#^/(php|python|java)/?$#', $path, $m))) {
     if ($error = Api::authorize($_SERVER)) {
         pg_send(403, 'text/plain; charset=utf-8', $error);
     }
     ob_start();
-    require __DIR__ . '/app/shell.php';
-    pg_send(200, 'text/html; charset=utf-8', (string) ob_get_clean(), [
-        'Cache-Control' => 'no-store',
-        'Content-Security-Policy' => "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; "
-            . "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
-            . "img-src 'self' data:; worker-src 'self' blob: data:; connect-src 'self'; frame-ancestors 'none'",
-    ]);
+    if ($path === '/') {
+        require __DIR__ . '/app/landing.php';
+    } else {
+        $pgLang = Languages::get($m[1]);
+        require __DIR__ . '/app/shell.php';
+    }
+    pg_send(200, 'text/html; charset=utf-8', (string) ob_get_clean(), ['Cache-Control' => 'no-store', 'Content-Security-Policy' => PG_CSP]);
 }
 
 pg_send(404, 'text/plain; charset=utf-8', 'No encontrado');

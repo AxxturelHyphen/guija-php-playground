@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Playground;
+namespace Playground\Lang\Php;
 
-use Playground\Analysis\Hints;
-use Playground\Analysis\Parser;
-use Playground\Analysis\Source;
+use Playground\Lang\Php\Analysis\Hints;
+use Playground\Lang\Php\Analysis\Parser;
+use Playground\Lang\Php\Analysis\Source;
 
 defined('PG_ROOT') or exit;
 
@@ -21,7 +21,7 @@ defined('PG_ROOT') or exit;
  *   {source, severity, code, line, col, endLine, endCol, title, message, explain, hint?,
  *    suggestions?:list<string>, fixes?:list<Fix>, trace?:list}
  */
-final class Explainer
+final class Explainer implements \Playground\Core\Explains
 {
     /** Nombre Java -> función PHP equivalente (se usa para "¿quisiste decir…?"). */
     private const JAVA_FN = [
@@ -54,7 +54,7 @@ final class Explainer
 
         $r = match ($kind) {
             'parse' => $this->parseError($msg, $line),
-            'timeout' => $this->timeout($line),
+            'timeout' => $this->timeout($line, (int) ($ev['limit'] ?? 5)),
             'memory' => $this->memory($msg, $line),
             default => $this->runtimeError($kind, $cls, $msg, $line, $ev),
         };
@@ -691,13 +691,13 @@ final class Explainer
         ];
     }
 
-    private function timeout(int $line): array
+    private function timeout(int $line, int $limit = 5): array
     {
         $text = trim($this->src->lineText($line));
         return [
             'code' => 'timeout',
             'title' => 'Tiempo agotado: el programa no termina',
-            'explain' => sprintf('Tu código lleva más de 5 segundos ejecutándose y el playground lo ha parado. Casi siempre es un **bucle infinito** o una recursión sin fin. Se cortó en la línea %d%s.', $line, $text !== '' ? ': `' . $this->short($text, 80) . '`' : ''),
+            'explain' => sprintf('Tu código lleva más de %d segundo%s ejecutándose y el playground lo ha parado. Casi siempre es un **bucle infinito** o una recursión sin fin. Se cortó en la línea %d%s.', $limit, $limit === 1 ? '' : 's', $line, $text !== '' ? ': `' . $this->short($text, 80) . '`' : ''),
             'hint' => 'Revisa la condición del `while`/`for` más cercano: ¿la variable que comprueba cambia dentro del bucle? ¿El incremento (`$i++`) está donde debe? Si es un cálculo muy pesado, prueba con una entrada más pequeña.',
             'line' => $line,
         ];
@@ -725,7 +725,7 @@ final class Explainer
 
     // ───────────────────────────── utilidades ─────────────────────────────
 
-    private function callsItself(\Playground\Analysis\Unit $unit): bool
+    private function callsItself(\Playground\Lang\Php\Analysis\Unit $unit): bool
     {
         for ($i = $unit->open + 1; $i < $unit->close; $i++) {
             $t = $this->src->tokens[$i];

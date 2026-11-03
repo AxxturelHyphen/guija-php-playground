@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Playground;
+namespace Playground\Lang\Php;
 
-use Playground\Analysis\Metrics;
+use Playground\Lang\Php\Analysis\Metrics;
 
 defined('PG_ROOT') or exit;
 

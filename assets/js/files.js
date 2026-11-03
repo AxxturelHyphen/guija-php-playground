@@ -1,11 +1,13 @@
 // Proyecto (árbol de archivos), pestañas, guardado en disco y copia de seguridad de lo no guardado.
-import { $, el, store, toast, debounce } from './util.js';
+import { $, el, store, toast, debounce, sessionKey } from './util.js';
 import { state, emit, on, activeTab } from './state.js';
 import { api } from './api.js';
 import { confirmDialog, promptDialog } from './dialog.js';
+import { LANG } from './lang.js';
 
-const NAME_RE = /^[A-Za-z0-9_-]{1,80}\.php$/;
-const TEMPLATE = '<?php\ndeclare(strict_types=1);\n\n';
+const NAME_RE = LANG.nameRe;
+const TEMPLATE = LANG.template;
+const EXT = '.' + LANG.ext;
 const GROUPS = [
   { dir: 'ejemplos', title: 'Ejemplos', icon: '' },
   { dir: 'practicas', title: 'Prácticas', icon: 'prac' },
@@ -18,7 +20,7 @@ export function createFiles(editor) {
   const restoreBtn = $('#btn-restore');
   const open = new Set(store.json('pg:groups', ['ejemplos', 'practicas']));
   let spoilerOk = false;
-  try { spoilerOk = sessionStorage.getItem('pg:spoiler') === '1'; } catch { /* nada */ }
+  try { spoilerOk = sessionStorage.getItem(sessionKey('pg:spoiler')) === '1'; } catch { /* nada */ }
 
   const idOf = (dir, name) => `${dir}/${name}`;
   const tabById = id => state.tabs.find(t => t.id === id);
@@ -59,11 +61,12 @@ export function createFiles(editor) {
     const dirty = isDirty(tabById(id));
     const btn = el('div', {
       class: 'tree-item' + (id === state.active ? ' active' : ''), role: 'button', tabindex: '0', title: f.name + (f.solution ? ' (tiene solución de referencia)' : ''),
+      dataset: { name: f.name },
       onclick: () => openFile(g.dir, f.name),
       onkeydown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openFile(g.dir, f.name); } if (e.key === 'Delete' && g.dir === 'practicas') removeFile(f.name); },
     },
-    el('span', { class: 'file-icon ' + g.icon }, 'PHP'),
-    el('span', { class: 'name' }, f.name),
+    el('span', { class: 'file-icon ' + g.icon }, LANG.logo),
+    el('span', { class: 'name' }, f.title ?? f.name),
     dirty ? el('span', { class: 'badge', style: 'color:var(--blue)' }, '●') : null,
     f.solution ? el('span', { class: 'badge', title: 'Tiene solución de referencia' }, '★') : null,
     g.dir === 'practicas' ? el('button', { class: 'del', title: 'Borrar', 'aria-label': 'Borrar ' + f.name, onclick: e => { e.stopPropagation(); removeFile(f.name); } }, '×') : null);
@@ -74,7 +77,7 @@ export function createFiles(editor) {
     const ok = await confirmDialog('Ver soluciones', 'Las soluciones de referencia **destripan** los ejercicios. ¿Seguro que quieres mostrarlas?', { ok: 'Mostrarlas' });
     if (!ok) return;
     spoilerOk = true;
-    try { sessionStorage.setItem('pg:spoiler', '1'); } catch { /* nada */ }
+    try { sessionStorage.setItem(sessionKey('pg:spoiler'), '1'); } catch { /* nada */ }
     open.add('soluciones');
     renderTree();
   }
@@ -89,7 +92,7 @@ export function createFiles(editor) {
         onkeydown: e => { if (e.key === 'Enter') activate(t.id); },
         onauxclick: e => { if (e.button === 1) { e.preventDefault(); close(t.id); } },
       },
-      el('span', { class: 'file-icon ' + (t.dir === 'soluciones' ? 'sol' : t.dir === 'practicas' ? 'prac' : '') }, 'PHP'),
+      el('span', { class: 'file-icon ' + (t.dir === 'soluciones' ? 'sol' : t.dir === 'practicas' ? 'prac' : '') }, LANG.logo),
       el('span', {}, t.name),
       dirty ? el('span', { class: 'dirty', title: 'Sin guardar' }) : null,
       el('button', { class: 'close', title: 'Cerrar', 'aria-label': 'Cerrar ' + t.name, onclick: e => { e.stopPropagation(); close(t.id); } }, '×'));
@@ -179,7 +182,7 @@ export function createFiles(editor) {
         await api('save', { body: { name: tab.name, code: text, overwrite: true } });
         tab.saved = text;
         store.del(bufKey(tab.id));
-        toast(`Guardado en practicas/${tab.name}`, 'ok');
+        toast(`Guardado en practicas/${LANG.id}/${tab.name}`, 'ok');
         renderTabs();
         await refreshTree();
         emit('saved', { id: tab.id });
@@ -188,7 +191,7 @@ export function createFiles(editor) {
       // Un ejemplo no se toca: se guarda una copia en practicas/ y se cambia a ella
       const exists = (state.tree.practicas ?? []).some(f => f.name === tab.name);
       if (exists) {
-        const ok = await confirmDialog('Sobrescribir', `Ya existe **practicas/${tab.name}**. ¿Quieres reemplazarla por esta versión?`, { ok: 'Sobrescribir' });
+        const ok = await confirmDialog('Sobrescribir', `Ya existe **practicas/${LANG.id}/${tab.name}**. ¿Quieres reemplazarla por esta versión?`, { ok: 'Sobrescribir' });
         if (!ok) return false;
       }
       await api('save', { body: { name: tab.name, code: text, overwrite: true } });
@@ -203,7 +206,7 @@ export function createFiles(editor) {
       store.del(bufKey(tab.id));
       state.tabs.splice(state.tabs.indexOf(tab), 1);
       editor.closeDoc(tab.id);
-      toast(`Copia guardada en practicas/${tab.name} (el ejemplo original no cambia)`, 'ok');
+      toast(`Copia guardada en practicas/${LANG.id}/${tab.name} (el ejemplo original no cambia)`, 'ok');
       activate(copyId);
       await refreshTree();
       emit('saved', { id: copyId });
@@ -215,22 +218,22 @@ export function createFiles(editor) {
   }
 
   async function newFile() {
-    const name = await promptDialog('Nuevo archivo', 'Nombre del archivo en `practicas/`:', 'mi-ejercicio.php', {
+    const name = await promptDialog('Nuevo archivo', `Nombre del archivo en \`practicas/${LANG.id}/\`:`, LANG.newName, {
       ok: 'Crear',
-      validate: v => (NAME_RE.test(v.endsWith('.php') ? v : v + '.php') ? '' : 'Usa letras, números, guion y guion bajo (máx. 80).'),
+      validate: v => (NAME_RE.test(v.endsWith(EXT) ? v : v + EXT) ? '' : 'Usa letras, números, guion y guion bajo (máx. 80).'),
     });
     if (!name) return;
-    const file = name.endsWith('.php') ? name : name + '.php';
+    const file = name.endsWith(EXT) ? name : name + EXT;
     const res = await api('save', { body: { name: file, code: TEMPLATE }, raw: true });
-    if (res.status === 409) { toast(`practicas/${file} ya existe: se abre.`); }
+    if (res.status === 409) { toast(`practicas/${LANG.id}/${file} ya existe: se abre.`); }
     else if (!res.ok) { toast(res.data?.error ?? 'No se pudo crear', 'error'); return; }
     await refreshTree();
     await openFile('practicas', file);
-    editor.reveal(3);
+    editor.reveal(LANG.templateLine);
   }
 
   async function removeFile(name) {
-    const ok = await confirmDialog('Borrar archivo', `¿Borrar **practicas/${name}** del disco? No se puede deshacer.`, { ok: 'Borrar' });
+    const ok = await confirmDialog('Borrar archivo', `¿Borrar **practicas/${LANG.id}/${name}** del disco? No se puede deshacer.`, { ok: 'Borrar' });
     if (!ok) return;
     try {
       await api('delete', { body: { name } });

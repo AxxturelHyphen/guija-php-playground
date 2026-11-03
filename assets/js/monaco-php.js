@@ -1,4 +1,4 @@
-// Lenguaje "phpx" (resaltado Monarch) y tema Islands Dark de JetBrains para Monaco.
+// Lenguaje "phpx" (resaltado Monarch de PHP) para Monaco. El tema está en monaco-theme.js.
 
 export function registerPhp(monaco) {
   monaco.languages.register({ id: 'phpx' });
@@ -92,64 +92,6 @@ export function registerPhp(monaco) {
         [/\]/, 'annotation', '@pop'],
         [/[^\]]+/, 'annotation'],
       ],
-    },
-  });
-
-  monaco.editor.defineTheme('islands-dark', {
-    base: 'vs-dark',
-    inherit: true,
-    rules: [
-      { token: '', foreground: 'BCBEC4' },
-      { token: 'keyword', foreground: 'CF8E6D' },
-      { token: 'metatag', foreground: 'CF8E6D' },
-      { token: 'string', foreground: '6AAB73' },
-      { token: 'string.escape', foreground: 'CF8E6D' },
-      { token: 'number', foreground: '2AACB8' },
-      { token: 'comment', foreground: '7A7E85' },
-      { token: 'comment.doc', foreground: '5F826B', fontStyle: 'italic' },
-      { token: 'comment.doc.tag', foreground: '67A37C', fontStyle: 'italic bold' },
-      { token: 'function.decl', foreground: '56A8F5' },
-      { token: 'function.call', foreground: '57AAF7' },
-      { token: 'method.call', foreground: '57AAF7' },
-      { token: 'field', foreground: 'C77DBB' },
-      { token: 'constant', foreground: 'C77DBB', fontStyle: 'italic' },
-      { token: 'variable', foreground: 'BCBEC4' },
-      { token: 'type', foreground: 'BCBEC4' },
-      { token: 'identifier', foreground: 'BCBEC4' },
-      { token: 'annotation', foreground: 'B3AE60' },
-      { token: 'operator', foreground: 'BCBEC4' },
-      { token: 'delimiter', foreground: 'BCBEC4' },
-    ],
-    colors: {
-      'editor.background': '#1E1F22',
-      'editor.foreground': '#BCBEC4',
-      'editorLineNumber.foreground': '#4B5059',
-      'editorLineNumber.activeForeground': '#A1A3AB',
-      'editor.lineHighlightBackground': '#26282E',
-      'editor.lineHighlightBorder': '#00000000',
-      'editor.selectionBackground': '#214283',
-      'editor.inactiveSelectionBackground': '#21428380',
-      'editor.selectionHighlightBackground': '#37373D',
-      'editor.wordHighlightBackground': '#37373D',
-      'editorCursor.foreground': '#CED0D6',
-      'editorIndentGuide.background1': '#2E3034',
-      'editorIndentGuide.activeBackground1': '#4B5059',
-      'editorBracketMatch.background': '#43454A',
-      'editorBracketMatch.border': '#00000000',
-      'editorError.foreground': '#F75464',
-      'editorWarning.foreground': '#E0BB65',
-      'editorInfo.foreground': '#868A91',
-      'editorWidget.background': '#2B2D30',
-      'editorWidget.border': '#393B40',
-      'editorSuggestWidget.background': '#2B2D30',
-      'editorSuggestWidget.border': '#393B40',
-      'editorSuggestWidget.selectedBackground': '#2E436E',
-      'editorHoverWidget.background': '#2B2D30',
-      'editorHoverWidget.border': '#393B40',
-      'scrollbarSlider.background': '#4B505955',
-      'scrollbarSlider.hoverBackground': '#4B5059AA',
-      'scrollbarSlider.activeBackground': '#5A5D63AA',
-      'editorOverviewRuler.border': '#00000000',
     },
   });
 }

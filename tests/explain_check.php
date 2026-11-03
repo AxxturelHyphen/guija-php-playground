@@ -4,8 +4,7 @@ declare(strict_types=1);
 // Ejecuta errores reales de PHP a través de Runner + Explainer y comprueba el código de diagnóstico.
 require dirname(__DIR__) . '/app/bootstrap.php';
 
-use Playground\Analysis\{Parser, Source};
-use Playground\{Explainer, Report, Runner};
+use Playground\Core\{Languages, Report};
 
 $S = 'declare(strict_types=1);';
 $cases = [
@@ -58,17 +57,15 @@ $cases = [
 ];
 
 $fail = 0;
-$runner = new Runner();
+$php = Languages::get('php');
 foreach ($cases as [$name, $code, $expect, $mustContain]) {
-    $src = new Source($code);
-    $parser = new Parser($src);
-    $ex = new Explainer($src, $parser);
-    $raw = $runner->run($code, 'tu_codigo.php', ['timeout' => 2]);
+    $ex = $php->explainer($code);
+    $raw = $php->run($code, 'tu_codigo.php', ['timeout' => 2]);
     $rep = Report::build($raw, $ex);
     $p = $rep['problems'][0] ?? null;
 
     // Lo mismo por el camino de la comprobación en vivo (solo errores de sintaxis)
-    $syntax = Runner::syntaxError($code);
+    $syntax = $php->syntaxError($code);
     $liveCode = $syntax !== null ? $ex->explain($syntax)['code'] : '-';
 
     $got = $p['code'] ?? '(sin problema)';

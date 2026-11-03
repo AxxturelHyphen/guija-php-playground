@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Playground\Analysis;
+namespace Playground\Lang\Php\Analysis;
 
 use PhpToken;
 
