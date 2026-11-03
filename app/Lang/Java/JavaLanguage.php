@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Playground\Lang\Java;
 
 use Playground\Core\Explains;
+use Playground\Lang\Java\Analysis\{JavaCode, JavaHints, JavaMetrics};
 use Playground\Core\Language;
 use Playground\Core\Process;
 use Playground\Core\Protocol;
@@ -140,9 +141,30 @@ final class JavaLanguage extends Language
         return ['version' => $i['version'], 'ok' => $missing === [], 'missing' => $missing, 'notes' => []];
     }
 
+    /** Catálogo del editor (data/catalogo.json), cacheado en memoria y en var/java-catalog.json. */
     public function catalog(): array
     {
-        return ['functions' => [], 'classes' => [], 'keywords' => []];
+        static $memo = null;
+        if ($memo !== null) {
+            return $memo;
+        }
+        $fuente = __DIR__ . '/data/catalogo.json';
+        $cache = PG_VAR . '/java-catalog.json';
+        if (is_file($cache) && (int) @filemtime($cache) >= (int) @filemtime($fuente)) {
+            $c = json_decode((string) @file_get_contents($cache), true);
+            if (is_array($c) && isset($c['functions'])) {
+                return $memo = $c;
+            }
+        }
+        $c = json_decode((string) @file_get_contents($fuente), true);
+        if (!is_array($c) || !isset($c['functions'])) {
+            return ['functions' => [], 'classes' => [], 'keywords' => []];
+        }
+        if (!is_dir(PG_VAR)) {
+            @mkdir(PG_VAR, 0777, true);
+        }
+        @file_put_contents($cache, json_encode($c, JSON_UNESCAPED_UNICODE), LOCK_EX);
+        return $memo = $c;
     }
 
     // ───────────────────────────── harness y compilador compilados ─────────────────────────────
@@ -338,17 +360,17 @@ final class JavaLanguage extends Language
     }
 
     /** @param array<string,mixed> $pet @return ?array<string,mixed> */
-    private function hablarResidente(array $pet): ?array
+    private function hablarResidente(array $pet, float $espera = 60.0): ?array
     {
         $info = json_decode((string) @file_get_contents(self::rutaResidente()), true);
         if (!is_array($info) || !isset($info['port'], $info['token'])) {
             return null;
         }
-        $fp = @stream_socket_client('tcp://127.0.0.1:' . (int) $info['port'], $errno, $errstr, 0.3);
+        $fp = @stream_socket_client('tcp://127.0.0.1:' . (int) $info['port'], $errno, $errstr, min(0.3, $espera));
         if (!$fp) {
             return null;
         }
-        stream_set_timeout($fp, 60);
+        stream_set_timeout($fp, (int) $espera, (int) (fmod($espera, 1.0) * 1_000_000));
         fwrite($fp, json_encode(['token' => $info['token']] + $pet, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) . "\n");
         $linea = stream_get_line($fp, 64_000_000, "\n");
         fclose($fp);
@@ -465,13 +487,67 @@ final class JavaLanguage extends Language
         return $e === null || $e === [] ? null : self::evParse($e[0]);
     }
 
+    /**
+     * Errores de javac SOLO si el compilador residente ya está en marcha y responde dentro de $limiteMs: el análisis
+     * mientras se escribe no puede esperar a un arranque en frío ni al javac de la línea de comandos (0,6 s).
+     * @return ?list<array<string,mixed>> null = no hay respuesta a tiempo (esa ronda va sin errores de compilación)
+     */
+    private function erroresRapidos(string $code, int $limiteMs): ?array
+    {
+        if (getenv('PG_COMPILADOR') === '0' || !is_file(self::rutaResidente()) || !$this->jdk()['ok'] || !$this->preparar()) {
+            return null;
+        }
+        $dir = Process::makeTempDir('pgj_');
+        try {
+            [$file] = self::nombres($code);
+            $src = self::PREFIJO . $code;
+            file_put_contents($dir . DIRECTORY_SEPARATOR . $file, $src);
+            $r = $this->hablarResidente(['op' => 'compile', 'name' => $file, 'src' => $src, 'cp' => self::dirHarness(), 'out' => $dir], $limiteMs / 1000);
+            if (!is_array($r) || !isset($r['diags']) || !is_array($r['diags'])) {
+                return null;
+            }
+            $quita = strlen(self::PREFIJO);
+            $errs = [];
+            foreach ($r['diags'] as $d) {
+                if (($d['kind'] ?? '') !== 'error') {
+                    continue;
+                }
+                $d['line'] = max(1, (int) ($d['line'] ?? 1));
+                $d['col'] = max(1, (int) ($d['col'] ?? 1) - ($d['line'] === 1 ? $quita : 0));
+                $d['endLine'] = max($d['line'], (int) ($d['endLine'] ?? $d['line']));
+                $d['endCol'] = max(1, (int) ($d['endCol'] ?? $d['col'] + 1) - ($d['endLine'] === 1 ? $quita : 0));
+                if ($d['endLine'] === $d['line'] && $d['endCol'] <= $d['col']) {
+                    $d['endCol'] = $d['col'] + 1;
+                }
+                $errs[] = $d;
+            }
+            return $errs;
+        } finally {
+            Process::rmTree($dir);
+        }
+    }
+
+    /**
+     * Análisis estático en PHP (sin JVM, unos pocos ms): métricas por método, O() y pistas. Los errores de compilación
+     * de javac se añaden solo si el compilador residente contesta en menos de 120 ms.
+     */
     public function analyse(string $code): array
     {
-        $errs = $this->errores($code) ?? [];
-        $loc = count(array_filter(preg_split('/\R/', $code) ?: [], static fn($l) => trim($l) !== '' && !str_starts_with(trim($l), '//')));
+        $jc = new JavaCode($code);
+        $mt = new JavaMetrics($jc);
+        $res = $mt->compute();
         $ex = $this->explainer($code);
-        return ['syntax' => $errs === [], 'diagnostics' => array_map(static fn($d) => $ex->explain(self::evParse($d)), array_slice($errs, 0, 20)), 'units' => [],
-            'summary' => ['loc' => $loc, 'functions' => 0, 'ccTotal' => 0, 'ccMax' => 0, 'ccAvg' => 0, 'grade' => 'A', 'worst' => null, 'maxNesting' => 0]];
+        $diags = [];
+        $errs = $this->erroresRapidos($code, 120) ?? [];
+        foreach (array_slice($errs, 0, 20) as $d) {
+            $diags[] = $ex->explain(self::evParse($d));
+        }
+        foreach ((new JavaHints($jc, $mt))->all() as $h) {
+            $diags[] = $h;
+        }
+        $loc = count(array_filter(preg_split('/\R/', $code) ?: [], static fn($l) => trim($l) !== '' && !str_starts_with(trim($l), '//')));
+        $res['summary']['loc'] = max($res['summary']['loc'], $loc);
+        return ['syntax' => $errs !== [], 'diagnostics' => $diags, 'units' => $res['units'], 'summary' => $res['summary']];
     }
 
     // ───────────────────────────── ejecución ─────────────────────────────

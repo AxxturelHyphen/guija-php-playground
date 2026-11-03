@@ -13,6 +13,8 @@ require_once dirname(__DIR__, 2) . '/app/bootstrap.php';
 
 use Playground\Core\{Languages, Report, Process, Solutions};
 use Playground\Lang\Java\JavaLanguage;
+use Playground\Lang\Java\Analysis\{JavaCode, JavaMetrics};
+use Playground\Lang\Php\Analysis\Metrics as PhpMetrics;
 
 $java = Languages::get('java');
 $fast = in_array('--rapido', $argv, true);
@@ -258,7 +260,7 @@ putenv('PG_COMPILADOR');
 check('el respaldo (javac por línea de comandos) da la misma posición, y entiende tabuladores', $e2 !== null && $e2['col'] === $esp && $e2['code'] === $e['code'] && $e3 !== null && $e3['line'] === 3 && $e3['col'] === 20, json_encode([$e2, $e3]));
 check('código correcto → null', $java->syntaxError("class A { }") === null && $java->syntaxError("class A { }") === null);
 $a = $java->analyse($bad);
-check('analyse(): syntax=false con diagnósticos explicados', $a['syntax'] === false && count($a['diagnostics']) === 2 && !empty($a['diagnostics'][0]['title']));
+check('analyse(): syntax=true (hay errores de compilación) con diagnósticos explicados', $a['syntax'] === true && count($a['diagnostics']) >= 2 && !empty($a['diagnostics'][0]['title']));
 $e = $java->syntaxError("class A {\n    void f() {\n        int x = 1\n    }\n}\n");
 check('falta un «;»: se señala en la línea correcta', $e !== null && $e['line'] === 3 && $e['code'] === 'compiler.err.expected', json_encode($e));
 
@@ -386,6 +388,280 @@ check('compare() después: todo implemented y same', $cmp2 !== [] && !in_array(f
 $doc = $byKey['function:fibonacci']['doc'];
 check('el Javadoc documenta la solución: @complejidad, @explicacion (varias líneas), @alternativas, @bigo', ($doc['bigo'] ?? '') === 'n' && str_starts_with($doc['complejidad'] ?? '', 'Tiempo O(n)')
     && str_contains($doc['explicacion'] ?? '', "dos\núltimos") && ($doc['text'] ?? '') === 'Fibonacci iterativo.', json_encode($doc, JSON_UNESCAPED_UNICODE));
+
+// ═══════════════════════════════════════ 6b. análisis estático (métricas, pistas, explicaciones) ═══════════════════════════════════════
+section('Métricas: los 12 fragmentos de tests/run.php portados a Java (mismo CC, cognitiva y clave O())');
+$fixturesM = [
+    // nombre => [método f, CC, cognitiva, clave O()]
+    'sin decisiones' => ['static int f() { return 1; }', 1, 0, '1'],
+    'if + && + else if' => ['static int f(int x) { if (x > 0 && x < 10) { return 1; } else if (x < 0) { return 2; } return 3; }', 4, null, '1'],
+    'bucles anidados con if' => ['static void f(List<Integer> xs) { for (int x : xs) { if (x > 0) { while (x-- > 0) { System.out.println(1); } } } }', 4, 6, null],
+    'switch-expresión con default' => ['static int f(int x) { return switch (Integer.signum(x)) { case -1 -> -1; case 1 -> 1; default -> 0; }; }', 3, null, '1'],
+    'dos ternarios' => ['static int f(Integer a, boolean b) { return a != null ? a : (b ? 1 : 2); }', 3, null, '1'],
+    'dos catch' => ['static void f() { try { g(); } catch (IllegalStateException e) { System.out.println(1); } catch (RuntimeException e) { System.out.println(2); } }', 3, null, '1'],
+    'switch clásico' => ['static int f(int x) { switch (x) { case 1: return 1; case 2: return 2; default: return 0; } }', 3, null, '1'],
+    'dos bucles anidados' => ['static void f(int[] xs) { for (int a : xs) { for (int b : xs) { System.out.println(a + b); } } }', 3, null, 'n2'],
+    'un bucle' => ['static int f(int[] xs) { int s = 0; for (int x : xs) { s += x; } return s; }', 2, null, 'n'],
+    'contains de ArrayList dentro de un bucle' => ['static List<Integer> f(int[] xs) { List<Integer> r = new ArrayList<>(); for (int x : xs) { if (!r.contains(x)) { r.add(x); } } return r; }', 3, null, 'n2'],
+    'fibonacci ingenuo' => ['static int f(int n) { return n < 2 ? n : f(n - 1) + f(n - 2); }', 2, null, 'exp'],
+    'búsqueda binaria' => ['static int f(int[] a, int x) { int lo = 0; int hi = a.length - 1; while (lo <= hi) { int m = (lo + hi) / 2; if (a[m] == x) { return m; } if (a[m] < x) { lo = m + 1; } else { hi = m - 1; } } return -1; }', 4, null, 'log'],
+];
+foreach ($fixturesM as $name => [$body, $cc, $cog, $key]) {
+    $code = "import java.util.*;\nclass T {\n{$body}\nstatic void g() { }\n}\n";
+    $res = (new JavaMetrics(new JavaCode($code)))->compute();
+    $u = current(array_filter($res['units'], static fn($x) => $x['name'] === 'f')) ?: null;
+    if ($u === null) {
+        check($name, false, 'no se encontró el método f');
+        continue;
+    }
+    $p = [];
+    if ($u['cc'] !== $cc) {
+        $p[] = "CC {$u['cc']} (esperada {$cc})";
+    }
+    if ($cog !== null && $u['cognitive'] !== $cog) {
+        $p[] = "cognitiva {$u['cognitive']} (esperada {$cog})";
+    }
+    if ($key !== null && $u['bigOKey'] !== $key) {
+        $p[] = "O() {$u['bigOKey']} (esperado {$key})";
+    }
+    check($name . '  [CC ' . $u['cc'] . ', cog ' . $u['cognitive'] . ', ' . $u['bigO'] . ']', $p === [], implode(', ', $p));
+}
+check('nota A–F: 5→A, 10→B, 20→C, 30→D, 40→E, 41→F', array_map([PhpMetrics::class, 'grade'], [5, 10, 20, 30, 40, 41]) === ['A', 'B', 'C', 'D', 'E', 'F']);
+$res = (new JavaMetrics(new JavaCode("class A {\n  A() { }\n  int g(int n) { return n <= 1 ? 1 : n * g(n - 1); }\n  static int h(int n) { int t = 0; for (int i = 1; i < n; i *= 2) { t++; } return t; }\n  static int k(java.util.TreeMap<Integer,Integer> m, int n) { int t = 0; for (int i = 0; i < n; i++) { t += m.get(i); } return t; }\n  static void s(java.util.List<Integer> l, int n) { for (int i = 0; i < n; i++) { java.util.Collections.sort(l); } }\n}\n")))->compute();
+$por = array_column($res['units'], null, 'name');
+check('constructores y métodos con qname Clase.método; recursión lineal O(n); i *= 2 → O(log n); TreeMap.get en bucle → O(n log n); sort en bucle → O(n² log n)',
+    ($por['A']['qname'] ?? '') === 'A.A' && $por['g']['bigOKey'] === 'n' && $por['g']['recursive'] === true && $por['h']['bigOKey'] === 'log' && $por['k']['bigOKey'] === 'nlogn'
+    && $por['s']['bigO'] === 'O(n² log n)', json_encode(array_column($res['units'], 'bigO', 'qname'), JSON_UNESCAPED_UNICODE));
+$r = (new JavaMetrics(new JavaCode("import java.util.*;\nclass M {\n static Map<Integer,Long> memo = new HashMap<>();\n static long f(int n) { if (n < 2) return n; if (memo.containsKey(n)) return memo.get(n); long v = f(n - 1) + f(n - 2); memo.put(n, v); return v; }\n}\n")))->compute();
+check('memoización con Map: fibonacci con memo → O(n), no exponencial', $r['units'][0]['bigOKey'] === 'n', $r['units'][0]['bigO']);
+
+section('Pistas: ~25 casos, y cada arreglo automático deja código que compila');
+/** Aplica los edits de un fix (rangos 1-based, ASCII) al código. */
+function aplicaFix(string $code, array $fix): string
+{
+    $ini = [0];
+    foreach (explode("\n", $code) as $l) {
+        $ini[] = end($ini) + strlen($l) + 1;
+    }
+    $edits = $fix['edits'];
+    usort($edits, static fn($a, $b) => [$b['range']['sl'], $b['range']['sc']] <=> [$a['range']['sl'], $a['range']['sc']]);
+    foreach ($edits as $e) {
+        $r = $e['range'];
+        $a = $ini[$r['sl'] - 1] + $r['sc'] - 1;
+        $b = $ini[$r['el'] - 1] + $r['ec'] - 1;
+        $code = substr($code, 0, $a) . $e['text'] . substr($code, $b);
+    }
+    return $code;
+}
+function diag(array $a, string $code): ?array
+{
+    foreach ($a['diagnostics'] as $d) {
+        if ($d['code'] === $code) {
+            return $d;
+        }
+    }
+    return null;
+}
+$pistas = [
+    // [nombre, miembros, cuerpo de main, código esperado, ¿con arreglo que compile?]
+    ['== entre dos String', '', '        String a = "x"; String b = "y";' . "\n" . '        if (a == b) { System.out.println(1); }', 'eq.string', true],
+    ['== con un literal', '', '        String a = "x";' . "\n" . '        if (a == "x") { System.out.println(1); }', 'eq.string', true],
+    ['!= entre String', '', '        String a = "x"; String b = "y";' . "\n" . '        if (a != b) { System.out.println(1); }', 'eq.string', true],
+    ['== entre Integer', '', '        Integer a = 1000; Integer b = 1000;' . "\n" . '        if (a == b) { System.out.println(1); }', 'eq.wrapper', false],
+    ['contains de ArrayList en un bucle', '', '        List<Integer> v = new ArrayList<>(); int[] xs = {1, 2};' . "\n" . '        for (int x : xs) { if (!v.contains(x)) { v.add(x); } }', 'perf.in-array-loop', false],
+    ['remove(0) en un bucle', '', '        List<Integer> v = new ArrayList<>(List.of(1, 2, 3));' . "\n" . '        while (!v.isEmpty()) { v.remove(0); }', 'perf.shift-loop', false],
+    ['add(0, x) en un bucle', '', '        List<Integer> v = new ArrayList<>();' . "\n" . '        for (int i = 0; i < 5; i++) { v.add(0, i); }', 'perf.shift-loop', false],
+    ['String += en un bucle', '', '        String s = "";' . "\n" . '        for (int i = 0; i < 5; i++) { s += i; }' . "\n" . '        System.out.println(s);', 'perf.concat-loop', false],
+    ['LinkedList.get(i) en un bucle', '', '        LinkedList<Integer> v = new LinkedList<>(List.of(1, 2));' . "\n" . '        for (int i = 0; i < v.size(); i++) { System.out.println(v.get(i)); }', 'perf.get-loop', false],
+    ['sort dentro de un bucle', '', '        List<Integer> v = new ArrayList<>(List.of(3, 1));' . "\n" . '        for (int i = 0; i < 3; i++) { Collections.sort(v); }', 'perf.sort-loop', false],
+    ['recursión exponencial sin memo', '    static int fib(int n) { return n < 2 ? n : fib(n - 1) + fib(n - 2); }', '        System.out.println(fib(5));', 'perf.recursion', false],
+    ['catch vacío', '', '        try { Integer.parseInt("x"); } catch (NumberFormatException e) { }', 'flow.empty-catch', false],
+    ['else tras return', '    static int f(int x) { if (x > 0) { return 1; } else { System.out.println("no"); return 2; } }', '        System.out.println(f(1));', 'flow.else-after-return', true],
+    ['variable sin usar', '', '        int sinUsar = 5;' . "\n" . '        System.out.println(1);', 'unused.var', false],
+    ['parámetro sin usar (método privado/static)', '    static int f(int a, int b) { return a; }', '        System.out.println(f(1, 2));', 'unused.param', false],
+    ['tipo crudo', '', '        List xs = new ArrayList();' . "\n" . '        xs.add(1);', 'types.raw', false],
+    ['complejidad ciclomática alta', '    static int f(int x) { ' . str_repeat('if (x == 1) { x++; } ', 12) . 'return x; }', '        System.out.println(f(1));', 'cx.cyclomatic', false],
+    ['complejidad cognitiva alta', '    static int f(int x) { for (int i = 0; i < x; i++) { if (i > 1) { for (int j = 0; j < i; j++) { if (j > 1) { for (int k = 0; k < j; k++) { if (k > 1) { x++; } } } } } } return x; }', '        System.out.println(f(1));', 'cx.cognitive', false],
+    ['anidamiento profundo', '    static int f(int x) { if (x > 0) { if (x > 1) { if (x > 2) { if (x > 3) { x++; } } } } return x; }', '        System.out.println(f(1));', 'cx.nesting', false],
+    ['demasiados parámetros', '    static int f(int a, int b, int c, int d, int e, int g) { return a + b + c + d + e + g; }', '        System.out.println(f(1, 2, 3, 4, 5, 6));', 'cx.params', false],
+    ['método largo', '    static int f(int x) {' . str_repeat("\n  x++;", 55) . "\n  return x; }", '        System.out.println(f(1));', 'cx.length', false],
+];
+foreach ($pistas as [$nombre, $miembros, $cuerpo, $codigo, $conFix]) {
+    $src = mainJ($cuerpo, $miembros);
+    $a = $java->analyse($src);
+    $d = diag($a, $codigo);
+    $p = [];
+    if ($d === null) {
+        $p[] = 'no sale ' . $codigo . ' (hay: ' . implode(',', array_column($a['diagnostics'], 'code')) . ')';
+    } elseif ($d['explain'] === '' || $d['line'] < 1) {
+        $p[] = 'sin explicación o sin línea';
+    }
+    if ($d !== null && $conFix) {
+        if (empty($d['fixes'])) {
+            $p[] = 'sin arreglo';
+        } elseif ($java->syntaxError($src) !== null) {
+            $p[] = 'el original no compila';
+        } else {
+            $e = $java->syntaxError(aplicaFix($src, $d['fixes'][0]));
+            if ($e !== null) {
+                $p[] = 'tras el arreglo no compila: ' . $e['msg'];
+            }
+        }
+    }
+    check($nombre . " → {$codigo}" . ($conFix ? ' (+ arreglo que compila)' : ''), $p === [], implode('; ', $p));
+}
+// que no haya falsos positivos
+$nada = [
+    ['HashSet.contains en un bucle no es O(n²)', '        Set<Integer> v = new HashSet<>(); int[] xs = {1};' . "\n" . '        for (int x : xs) { if (!v.contains(x)) { v.add(x); } }', 'perf.in-array-loop'],
+    ['equals() entre String', '        String a = "x"; String b = "y";' . "\n" . '        if (a.equals(b)) { System.out.println(1); }', 'eq.string'],
+    ['un catch con comentario es intencionado', '        try { Integer.parseInt("x"); } catch (NumberFormatException e) { /* se ignora a propósito */ }', 'flow.empty-catch'],
+    ['list.remove(list.size() - 1) en un bucle es O(1)', '        List<Integer> v = new ArrayList<>(List.of(1, 2));' . "\n" . '        while (!v.isEmpty()) { v.remove(v.size() - 1); }', 'perf.shift-loop'],
+    ['StringBuilder.append en un bucle está bien', '        StringBuilder s = new StringBuilder();' . "\n" . '        for (int i = 0; i < 5; i++) { s.append(i); }', 'perf.concat-loop'],
+    ['else if encadenado no se toca', '        int x = 1;' . "\n" . '        if (x > 0) { return; } else if (x < 0) { System.out.println(1); } else { System.out.println(2); }', 'flow.else-after-return'],
+];
+foreach ($nada as [$nombre, $cuerpo, $codigo]) {
+    check($nombre, diag($java->analyse(mainJ($cuerpo)), $codigo) === null);
+}
+
+section('Errores explicados en español: ~50 casos reales (compilación y ejecución)');
+$sinImport = "class Main {\n    public static void main(String[] args) {\n        ArrayList<Integer> a = new ArrayList<>();\n    }\n}\n";
+$compila = [
+    // [nombre, código, código de diagnóstico, texto que debe aparecer en título/explicación/sugerencias, ¿arreglo que compile?]
+    ['variable mal escrita', mainJ('        int total = 0;' . "\n" . '        System.out.println(totl);'), 'undefined-variable', 'total', true],
+    ['método de String mal escrito', mainJ('        String s = "a";' . "\n" . '        int n = s.lenght();'), 'undefined-method', 'length', true],
+    ['falta el import', $sinImport, 'class-not-found', 'import java.util.ArrayList', true],
+    ['clase mal escrita', mainJ('        Strng s = "a";'), 'class-not-found', 'String', false],
+    ['Math.sqroot', mainJ('        double d = Math.sqroot(4);'), 'undefined-method', 'sqrt', false],
+    ['length() en un array', mainJ('        int[] a = {1};' . "\n" . '        int n = a.length();'), 'undefined-method', 'sin paréntesis', false],
+    ['length en un String', mainJ('        String s = "a";' . "\n" . '        int n = s.length;'), 'undefined-property', 'length()', false],
+    ['falta un punto y coma', mainJ('        int x = 1'), 'parse.semicolon', 'punto y coma', true],
+    ['falta cerrar una llave', "class Main {\n    public static void main(String[] args) {\n        int x = 1;\n", 'parse.eof', 'llave', false],
+    ['pérdida de precisión double→int', mainJ('        int x = 3.5 * 2;'), 'lossy-conversion', 'trunca', true],
+    ['String → int', mainJ('        int x = "5";'), 'type-mismatch', 'parseInt', true],
+    ['int → String', mainJ('        String s = 5 + 1;'), 'type-mismatch', 'valueOf', true],
+    ['falta el return', mainJ('', '    static int f(int a) { if (a > 0) return 1; }'), 'missing-return', 'return', false],
+    ['variable sin inicializar', mainJ('        int x;' . "\n" . '        System.out.println(x);'), 'uninitialized-variable', 'inicial', false],
+    ['variable ya definida', mainJ('        int x = 1;' . "\n" . '        int x = 2;'), 'redeclare', 'ya está definido', false],
+    ['argumentos que no encajan (Math.max)', mainJ('        int n = Math.max(1);'), 'argument-type', 'max', false],
+    ['faltan argumentos en un método propio', mainJ('        int n = f();', '    static int f(int a) { return a; }'), 'too-few-arguments', 'espera', false],
+    ['excepción comprobada sin tratar', mainJ('        Thread.sleep(10);'), 'unreported-exception', 'throws', true],
+    ['expresión que no es sentencia', mainJ('        5;'), 'parse.not-stmt', '=', false],
+    ['inicio de expresión ilegal', mainJ('        int x = ;'), 'parse.syntax', 'expresión', false],
+    ['método no estático desde main', mainJ('        saluda();', '    void saluda() { }'), 'non-static-ref', 'static', true],
+    ['no implementa el método abstracto', "class A implements Runnable { }\nclass Main { public static void main(String[] a) { } }\n", 'abstract-not-implemented', 'run', false],
+    ['código inalcanzable', mainJ('        return;' . "\n" . '        System.out.println(1);'), 'unreachable', 'nunca', false],
+    ['int no tiene métodos', mainJ('        int x = 1;' . "\n" . '        int y = x.length();'), 'cant-deref', 'primitivo', false],
+    ['operador con tipos que no encajan', mainJ('        boolean b = true;' . "\n" . '        int x = b + 1;'), 'operand-types', 'operador', false],
+    ['variable no final en una lambda', mainJ('        int x = 0;' . "\n" . '        Runnable r = () -> System.out.println(x);' . "\n" . '        x++;'), 'effectively-final', 'efectivamente', false],
+    ['List<int>', mainJ('        List<int> a = null;'), 'type-mismatch', 'Integer', true],
+    ['entero demasiado grande', mainJ('        long x = 3000000000;'), 'overflow', 'L', true],
+    ['reasignar un final', mainJ('        final int x = 1;' . "\n" . '        x = 2;'), 'immutable', 'final', false],
+    ['else sin if', mainJ('        int x = 1;' . "\n" . '        else { x = 2; }'), 'parse.else-if', 'else', false],
+];
+foreach ($compila as [$nombre, $src, $codigo, $texto, $conFix]) {
+    $ev = $java->syntaxError($src);
+    $d = $ev === null ? null : $java->explainer($src)->explain($ev);
+    $p = [];
+    if ($d === null) {
+        $p[] = 'compila sin errores';
+    } else {
+        if ($d['code'] !== $codigo) {
+            $p[] = "código {$d['code']} (esperado {$codigo})";
+        }
+        $todo = $d['title'] . ' ' . $d['explain'] . ' ' . implode(' ', $d['suggestions'] ?? []) . ' ' . json_encode($d['fixes'] ?? []);
+        if (!str_contains($todo, $texto)) {
+            $p[] = "no menciona «{$texto}»";
+        }
+        if ($d['explain'] === '' || str_contains($d['title'], 'compiler.err')) {
+            $p[] = 'sin explicación en español';
+        }
+        if ($conFix) {
+            $e = empty($d['fixes']) ? ['msg' => 'sin arreglo'] : $java->syntaxError(aplicaFix($src, $d['fixes'][0]));
+            if ($e !== null) {
+                $p[] = 'tras el arreglo: ' . $e['msg'];
+            }
+        }
+    }
+    check("compilación: {$nombre} → {$codigo}", $p === [], implode('; ', $p));
+}
+$runtime = [
+    // [nombre, miembros, cuerpo, stdin, código, texto]
+    ['NullPointerException al llamar a un método', '', '        String s = null;' . "\n" . '        System.out.println(s.length());', '', 'member-on-null', '`s`'],
+    ['NullPointerException en un array sin crear', '', '        int[] a = null;' . "\n" . '        System.out.println(a[0]);', '', 'member-on-null', 'array'],
+    ['NullPointerException al desempaquetar', '', '        Map<String, Integer> m = new HashMap<>();' . "\n" . '        int n = m.get("x");', '', 'member-on-null', 'desempaquetar'],
+    ['índice fuera de rango en un array', '', '        int[] a = new int[3];' . "\n" . '        System.out.println(a[3]);', '', 'index-out-of-range', '0 a 2'],
+    ['índice fuera de rango en un String', '', '        System.out.println("hola".charAt(9));', '', 'index-out-of-range', 'Posición'],
+    ['substring fuera de rango', '', '        System.out.println("hola".substring(2, 10));', '', 'index-out-of-range', 'substring'],
+    ['índice fuera de rango en una lista', '', '        List<Integer> l = new ArrayList<>();' . "\n" . '        System.out.println(l.get(0));', '', 'index-out-of-range', 'vacía'],
+    ['división entre cero', '', '        int z = 0;' . "\n" . '        System.out.println(5 / z);', '', 'division-by-zero', 'entero'],
+    ['multiplyExact desborda', '', '        System.out.println(Math.multiplyExact(100000, 100000));', '', 'overflow', 'long'],
+    ['ClassCastException', '', '        Object o = "hola";' . "\n" . '        Integer i = (Integer) o;', '', 'class-cast', 'String'],
+    ['NumberFormatException', '', '        System.out.println(Integer.parseInt("abc"));', '', 'invalid-number', 'abc'],
+    ['ConcurrentModificationException', '', '        List<Integer> l = new ArrayList<>(List.of(1, 2, 3));' . "\n" . '        for (int x : l) { if (x == 1) l.remove(0); }', '', 'mutate-iter', 'removeIf'],
+    ['UnsupportedOperationException (List.of)', '', '        List<Integer> l = List.of(1, 2);' . "\n" . '        l.add(3);', '', 'immutable', 'ArrayList'],
+    ['NoSuchElementException (Optional vacío)', '', '        Optional<String> o = Optional.empty();' . "\n" . '        System.out.println(o.get());', '', 'empty-sequence', 'Optional'],
+    ['NoSuchElementException (Scanner sin datos)', '', '        Scanner sc = new Scanner(System.in);' . "\n" . '        System.out.println(sc.nextLine());', '', 'no-such-element', 'Entrada'],
+    ['InputMismatchException', '', '        Scanner sc = new Scanner(System.in);' . "\n" . '        System.out.println(sc.nextInt());', "hola\n", 'input-mismatch', 'hasNextInt'],
+    ['IllegalArgumentException', '', '        System.out.println(new Random().nextInt(0));', '', 'argument-value', 'bound must be positive'],
+    ['IllegalStateException', '', '        throw new IllegalStateException("estado raro");', '', 'illegal-state', 'estado raro'],
+    ['NegativeArraySizeException', '', '        int n = -1;' . "\n" . '        int[] a = new int[n];', '', 'argument-value', 'negativo'],
+    ['excepción propia: genérico que conserva el original', '    static class Boom extends RuntimeException { Boom(String m) { super(m); } }', '        throw new Boom("algo raro");', '', 'generic', 'algo raro'],
+];
+foreach ($runtime as [$nombre, $miembros, $cuerpo, $stdin, $codigo, $texto]) {
+    $r = runJ(mainJ($cuerpo, $miembros), ['stdin' => $stdin]);
+    $e = $r['problems'][0] ?? null;
+    $p = [];
+    if ($e === null) {
+        $p[] = 'no hay error';
+    } else {
+        if ($e['code'] !== $codigo) {
+            $p[] = "código {$e['code']} (esperado {$codigo})";
+        }
+        if (!str_contains($e['title'] . ' ' . $e['explain'] . ' ' . ($e['hint'] ?? '') . ' ' . $e['original'], $texto)) {
+            $p[] = "no menciona «{$texto}»";
+        }
+        if ($e['explain'] === '' || $e['line'] < 1) {
+            $p[] = 'sin explicación o sin línea';
+        }
+    }
+    check("ejecución: {$nombre} → {$codigo}", $p === [], implode('; ', $p));
+}
+
+section('Lint sin JVM: archivo de ~500 líneas, p50 ≤ 15 ms');
+$grande = (string) file_get_contents(__DIR__ . '/fixtures/Medio400.java');
+putenv('PG_COMPILADOR=0');                                   // sin residente: solo el análisis en PHP
+$ts = [];
+for ($i = 0; $i < 15; $i++) {
+    $t0 = hrtime(true);
+    $aa = $java->analyse($grande . "\n// {$i}\n");
+    $ts[] = (hrtime(true) - $t0) / 1e6;
+}
+putenv('PG_COMPILADOR');
+sort($ts);
+$p50l = $ts[intdiv(count($ts), 2)];
+echo sprintf("  %d líneas, %d métodos, %d pistas: p50 %.1f ms (mín %.1f, máx %.1f)\n", substr_count($grande, "\n"), count($aa['units']), count($aa['diagnostics']), $p50l, $ts[0], end($ts));
+check('lint de ' . substr_count($grande, "\n") . ' líneas sin JVM: p50 ≤ 15 ms', $p50l <= 15, sprintf('%.1f ms', $p50l));
+check('el análisis del fixture da métodos con CC, O() y nota', $aa['units'] !== [] && isset($aa['units'][0]['bigO'], $aa['units'][0]['grade']) && $aa['summary']['functions'] === count($aa['units']));
+$java->syntaxError('class Calentar { }');
+$tc = [];
+for ($i = 0; $i < 7; $i++) {
+    $t0 = hrtime(true);
+    $java->analyse($grande . "\n// c{$i}\n");
+    $tc[] = (hrtime(true) - $t0) / 1e6;
+}
+sort($tc);
+echo sprintf("  con el residente caliente (análisis + errores de javac si contesta en < 120 ms): p50 %.0f ms\n", $tc[3]);
+$bajoErr = $java->analyse(mainJ('        int x = "a";'));
+check('con el residente caliente, los errores de javac se añaden al análisis (syntax=true)', $bajoErr['syntax'] === true && ($bajoErr['diagnostics'][0]['source'] ?? '') === 'syntax');
+$catalogo = $java->catalog();
+check('catálogo: funciones con firma, descripción y O(); API del playground (pg) y palabras clave', count($catalogo['functions']) > 100 && isset($catalogo['functions']['contains']['o']) && ($catalogo['functions']['prueba']['pg'] ?? false) === true
+    && isset($catalogo['keywords']['static'], $catalogo['classes']['ArrayList']) && !str_contains(json_encode($catalogo, JSON_UNESCAPED_UNICODE), 'Equivalente en Java'));
+if (is_dir($java->examplesDir())) {
+    require_once dirname(__DIR__) . '/content_check.php';
+    $saltadas = [];
+    $fallos = content_check(null, false, 'java', $saltadas);
+    check('contenido de Java: ejemplos y soluciones (content_check)', $fallos === [], implode('; ', array_slice($fallos, 0, 3)));
+}
 
 // ═══════════════════════════════════════ 7. compilador residente ═══════════════════════════════════════
 section('Compilador residente: arranque, protocolo, seguridad, respaldo y velocidad');

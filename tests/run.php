@@ -57,7 +57,7 @@ function phpBinary(): string
 
 // ═══════════════════════════════════════ 1. sintaxis de todos los PHP ═══════════════════════════════════════
 section('Sintaxis (php -l) de todos los archivos');
-$dirs = ['app', 'app/Core', 'app/Lang/Php', 'app/Lang/Php/Analysis', 'app/Lang/Php/data', 'app/Lang/Python', 'app/Lang/Java',
+$dirs = ['app', 'app/Core', 'app/Lang/Php', 'app/Lang/Php/Analysis', 'app/Lang/Php/data', 'app/Lang/Python', 'app/Lang/Java', 'app/Lang/Java/Analysis',
     'contenido/php/ejemplos', 'contenido/php/soluciones', 'tests', 'tests/python', 'tests/java'];
 $all = [PG_ROOT . '/index.php', PG_ROOT . '/pg.php'];
 foreach ($dirs as $d) {
