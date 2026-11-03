@@ -164,65 +164,198 @@ final class PythonLanguage extends Language
         return ['version' => $i['version'], 'ok' => $missing === [], 'missing' => $missing, 'notes' => $notes];
     }
 
+    /** Catálogo del editor: firmas de la biblioteca estándar + data/catalogo.json. Se cachea en var/python-catalog.json. */
     public function catalog(): array
     {
-        return ['functions' => [], 'classes' => [], 'keywords' => []];
+        $cache = PG_VAR . '/python-catalog.json';
+        $mtime = max((int) @filemtime(__DIR__ . '/data/catalogo.json'), (int) @filemtime(__DIR__ . '/motor/pg_analisis.py'));
+        if (is_file($cache) && (int) @filemtime($cache) >= $mtime) {
+            $c = json_decode((string) file_get_contents($cache), true);
+            if (is_array($c) && isset($c['functions'])) {
+                return $c;
+            }
+        }
+        $c = $this->analizador('catalog', '');
+        if (!is_array($c) || !isset($c['functions'])) {
+            return ['functions' => [], 'classes' => [], 'keywords' => []];
+        }
+        if (!is_dir(PG_VAR)) {
+            @mkdir(PG_VAR, 0777, true);
+        }
+        @file_put_contents($cache, json_encode($c, JSON_UNESCAPED_UNICODE), LOCK_EX);
+        return $c;
     }
 
-    // ───────────────────────────── análisis (el completo es el encargo 2) ─────────────────────────────
+    // ───────────────────────────── análisis: analizador residente ─────────────────────────────
+    //
+    // Todo el análisis estático lo hace motor/pg_analisis.py (con `ast`, sin ejecutar el código). Arrancar Python
+    // cuesta ~25 ms por petición, demasiado para un lint mientras se escribe; por eso hay un analizador RESIDENTE:
+    // un proceso Python que escucha en 127.0.0.1 (puerto aleatorio, con token) y contesta en ~1 ms. Se arranca bajo
+    // demanda, desacoplado de PHP, y se cierra solo tras 30 min sin uso. Si no responde se usa un proceso por petición.
 
-    public function analyse(string $code): array
+    private const RESIDENTE_ESPERA_MS = 2500;
+
+    /** @return string ruta del JSON {port, token, pid} del analizador residente */
+    private static function rutaResidente(): string
     {
-        $syntax = $this->syntaxError($code);
-        $diags = $syntax !== null ? [$this->explainer($code)->explain($syntax)] : [];
-        $loc = count(array_filter(preg_split('/\R/', $code) ?: [], static fn($l) => trim($l) !== '' && !str_starts_with(trim($l), '#')));
-        return ['syntax' => $syntax !== null, 'diagnostics' => $diags, 'units' => [],
-            'summary' => ['loc' => $loc, 'functions' => 0, 'ccTotal' => 0, 'ccMax' => 0, 'ccAvg' => 0, 'grade' => 'A', 'worst' => null, 'maxNesting' => 0]];
+        return PG_VAR . DIRECTORY_SEPARATOR . 'python' . DIRECTORY_SEPARATOR . 'analizador.json';
     }
 
-    /** `ast.parse` en un proceso corto (sin ejecutar el código). Cachea por hash del código. */
-    public function syntaxError(string $code): ?array
+    /** Ejecuta un modo de pg_analisis.py y devuelve su JSON decodificado (o null si algo falla). Cachea por hash en la petición. */
+    private function analizador(string $modo, string $code): ?array
     {
         static $memo = [];
-        $h = md5($code);
-        if (array_key_exists($h, $memo)) {
-            return $memo[$h];
+        $k = $modo . md5($code);
+        if (array_key_exists($k, $memo)) {
+            return $memo[$k];
         }
+        $r = null;
+        if (getenv('PG_ANALIZADOR') !== '0') {
+            $r = $this->viaResidente($modo, $code);
+        }
+        $r ??= $this->viaProceso($modo, $code);
+        return $memo[$k] = $r;
+    }
+
+    /** Una petición al analizador residente; lo arranca si hace falta. */
+    private function viaResidente(string $modo, string $code): ?array
+    {
+        $r = $this->hablarResidente($modo, $code);
+        if ($r !== null) {
+            return $r;
+        }
+        if (!$this->arrancarResidente()) {
+            return null;
+        }
+        return $this->hablarResidente($modo, $code);
+    }
+
+    private function hablarResidente(string $modo, string $code): ?array
+    {
+        $info = json_decode((string) @file_get_contents(self::rutaResidente()), true);
+        if (!is_array($info) || !isset($info['port'], $info['token'])) {
+            return null;
+        }
+        $fp = @stream_socket_client('tcp://127.0.0.1:' . (int) $info['port'], $errno, $errstr, 0.3);
+        if (!$fp) {
+            return null;
+        }
+        stream_set_timeout($fp, 10);
+        fwrite($fp, json_encode(['token' => $info['token'], 'modo' => $modo, 'codigo' => $code], JSON_UNESCAPED_UNICODE) . "\n");
+        $linea = stream_get_line($fp, 64_000_000, "\n");
+        fclose($fp);
+        $j = is_string($linea) ? json_decode($linea, true) : null;
+        return is_array($j) && !is_string($j['error'] ?? null) ? $j : null;
+    }
+
+    /** Lanza el analizador residente desacoplado de este proceso y espera a que publique su puerto. */
+    private function arrancarResidente(): bool
+    {
         $i = $this->info();
         if ($i['cmd'] === null || !$i['ok311']) {
-            return null;       // sin intérprete no se puede comprobar
+            return false;
         }
-        $dir = PG_VAR . '/sintaxis';
-        $archivo = "{$dir}/{$h}.json";
-        if (is_file($archivo)) {
-            $c = json_decode((string) @file_get_contents($archivo), true);
-            if (is_array($c) && array_key_exists('err', $c)) {
-                return $memo[$h] = $c['err'];
-            }
-        }
-        $r = Process::run([...$i['cmd'], '-X', 'utf8', '-I', '-B', '-S', __DIR__ . '/motor/pg_sintaxis.py'], ['stdin' => $code, 'timeout' => 10, 'grace' => 5]);
-        $salida = trim($r['raw']);
-        $err = null;
-        if ($salida !== 'ok') {
-            $ev = json_decode($salida, true);
-            if (!is_array($ev)) {
-                return $memo[$h] = null;       // el proceso falló por otra cosa: no es un error del usuario
-            }
-            $err = $ev;
-        }
+        $dir = PG_VAR . DIRECTORY_SEPARATOR . 'python';
         if (!is_dir($dir)) {
             @mkdir($dir, 0777, true);
         }
-        // Se conservan las últimas 200 comprobaciones
-        $viejos = glob($dir . '/*.json') ?: [];
-        if (count($viejos) > 200) {
-            usort($viejos, static fn($a, $b) => filemtime($a) <=> filemtime($b));
-            foreach (array_slice($viejos, 0, 100) as $f) {
-                @unlink($f);
-            }
+        $fallo = $dir . DIRECTORY_SEPARATOR . 'analizador.fallo';
+        if (is_file($fallo) && time() - (int) @filemtime($fallo) < 60) {
+            return false;              // falló hace poco: no se insiste en cada pulsación
         }
-        @file_put_contents($archivo, json_encode(['err' => $err]));
-        return $memo[$h] = $err;
+        // Con un cerrojo, dos peticiones simultáneas no lanzan dos analizadores
+        $lock = @fopen($dir . DIRECTORY_SEPARATOR . 'analizador.lock', 'c');
+        if ($lock === false || !flock($lock, LOCK_EX)) {
+            return false;
+        }
+        try {
+            if ($this->hablarResidente('ping', '') !== null) {
+                return true;           // otro proceso lo acaba de arrancar
+            }
+            @unlink(self::rutaResidente());
+            $script = __DIR__ . DIRECTORY_SEPARATOR . 'motor' . DIRECTORY_SEPARATOR . 'pg_analisis.py';
+            $py = $i['cmd'];
+            if (DIRECTORY_SEPARATOR === '\\') {
+                // pythonw.exe no abre ventana de consola; `start /B` + popen desacopla el proceso de PHP
+                $exe = $py[0];
+                $w = preg_replace('/python\.exe$/i', 'pythonw.exe', $exe);
+                $exe = is_string($w) && is_file($w) ? $w : $exe;
+                $args = array_slice($py, 1);
+                $cmd = 'start "" /B "' . $exe . '" ' . implode(' ', array_map(static fn($a) => '"' . $a . '"', $args)) . ' -X utf8 -I -B -S "' . $script . '" --servidor "' . self::rutaResidente() . '"';
+                $h = @popen($cmd, 'r');
+                if (is_resource($h)) {
+                    pclose($h);
+                }
+            } else {
+                $pre = Process::which('setsid') !== null ? 'setsid ' : '';
+                $cmd = $pre . 'nohup ' . implode(' ', array_map('escapeshellarg', [...$py, '-X', 'utf8', '-I', '-B', '-S', $script, '--servidor', self::rutaResidente()]))
+                    . ' </dev/null >/dev/null 2>&1 &';
+                @exec($cmd);
+            }
+            $fin = hrtime(true) + self::RESIDENTE_ESPERA_MS * 1_000_000;
+            while (hrtime(true) < $fin) {
+                usleep(15_000);
+                if (is_file(self::rutaResidente()) && $this->hablarResidente('ping', '') !== null) {
+                    return true;
+                }
+            }
+            @touch($fallo);
+            return false;
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+        }
+    }
+
+    /** Respaldo: un proceso Python por petición (el código va por stdin, nunca por la línea de comandos). */
+    private function viaProceso(string $modo, string $code): ?array
+    {
+        $i = $this->info();
+        if ($i['cmd'] === null || !$i['ok311']) {
+            return null;
+        }
+        $r = Process::run([...$i['cmd'], '-X', 'utf8', '-I', '-B', '-S', __DIR__ . '/motor/pg_analisis.py', $modo],
+            ['stdin' => json_encode(['codigo' => $code], JSON_UNESCAPED_UNICODE), 'timeout' => 20, 'grace' => 5]);
+        $j = json_decode(trim($r['raw']), true);
+        return is_array($j) ? $j : null;
+    }
+
+    /** Para los tests: cierra el analizador residente si hay uno. */
+    public static function pararResidente(): void
+    {
+        $info = json_decode((string) @file_get_contents(self::rutaResidente()), true);
+        if (!is_array($info) || !isset($info['port'], $info['token'])) {
+            return;
+        }
+        $fp = @stream_socket_client('tcp://127.0.0.1:' . (int) $info['port'], $e, $s, 0.3);
+        if ($fp) {
+            stream_set_timeout($fp, 2);
+            fwrite($fp, json_encode(['token' => $info['token'], 'modo' => 'parar']) . "\n");
+            stream_get_line($fp, 100, "\n");
+            fclose($fp);
+        }
+    }
+
+    public function analyse(string $code): array
+    {
+        $r = $this->analizador('analyse', $code);
+        if ($r === null) {       // sin Python no hay análisis, pero el editor sigue funcionando
+            $loc = count(array_filter(preg_split('/\R/', $code) ?: [], static fn($l) => trim($l) !== '' && !str_starts_with(trim($l), '#')));
+            return ['syntax' => false, 'diagnostics' => [], 'units' => [],
+                'summary' => ['loc' => $loc, 'functions' => 0, 'ccTotal' => 0, 'ccMax' => 0, 'ccAvg' => 0, 'grade' => 'A', 'worst' => null, 'maxNesting' => 0]];
+        }
+        if (!empty($r['error'])) {
+            $r['diagnostics'] = [$this->explainer($code)->explain($r['error'])];
+        }
+        unset($r['error']);
+        return $r;
+    }
+
+    /** `ast.parse` sin ejecutar nada. */
+    public function syntaxError(string $code): ?array
+    {
+        $r = $this->analizador('syntax', $code);
+        return is_array($r) && !empty($r['error']) ? $r['error'] : null;
     }
 
     // ───────────────────────────── ejecución ─────────────────────────────
@@ -267,51 +400,23 @@ final class PythonLanguage extends Language
         return ['items' => $items, 'exit' => $res['exit'], 'killed' => $res['killed'], 'wallMs' => $res['wallMs'], 'truncated' => $res['truncated'], 'timeout' => $timeout];
     }
 
-    // ───────────────────────────── explicador (provisional) ─────────────────────────────
+    // ───────────────────────────── explicador y soluciones ─────────────────────────────
 
     public function explainer(string $code): Explains
     {
-        return new class implements Explains {
-            private const TITULOS = [
-                'timeout' => 'El programa tardó demasiado y se cortó',
-                'memory' => 'El programa gastó demasiada memoria',
-                'stack' => 'Recursión demasiado profunda',
-                'parse' => 'Error de sintaxis',
-                'warning' => 'Aviso',
-                'deprecated' => 'Función obsoleta',
-            ];
-
-            public function explain(array $ev): array
-            {
-                $kind = (string) ($ev['kind'] ?? 'exception');
-                $line = max(1, (int) ($ev['line'] ?? 1));
-                $cls = (string) ($ev['cls'] ?? '');
-                $msg = (string) ($ev['msg'] ?? 'Error');
-                $warn = in_array($kind, ['warning', 'deprecated'], true);
-                $title = self::TITULOS[$kind] ?? '';
-                if ($kind === 'exception' || $title === '') {
-                    $title = ($cls !== '' ? $cls . ': ' : '') . $msg;
-                } elseif ($kind === 'parse' || $warn) {
-                    $title .= ': ' . $msg;
-                } elseif ($kind === 'timeout') {
-                    $title .= ' (límite: ' . (int) ($ev['limit'] ?? 5) . ' s)';
-                }
-                $d = ['source' => $kind === 'parse' ? 'syntax' : 'runtime', 'severity' => $warn ? 'warning' : 'error', 'code' => $kind === 'exception' && $cls !== '' ? 'py.' . $cls : $kind,
-                    'line' => $line, 'col' => (int) ($ev['col'] ?? 1), 'endLine' => (int) ($ev['endLine'] ?? $line), 'endCol' => (int) ($ev['endCol'] ?? 1000),
-                    'title' => $title, 'message' => $msg, 'explain' => '', 'original' => ($cls !== '' ? $cls . ': ' : '') . $msg];
-                if (!empty($ev['trace'])) {
-                    $d['trace'] = $ev['trace'];
-                }
-                return $d;
-            }
-        };
+        return new PyExplainer($code, $this);
     }
 
-    // ───────────────────────────── soluciones ─────────────────────────────
 
+    /**
+     * Declaraciones de primer nivel (funciones y clases) con la clave `function:<nombre en minúsculas>` o `type:<clase>`.
+     * start/end son bytes UTF-8 e incluyen los decoradores y los comentarios `#` pegados encima.
+     * El docstring de una solución documenta el ejercicio:  Resumen. / @complejidad / @explicacion / @alternativas / @bigo
+     */
     public function declarations(string $code): array
     {
-        return [];       // el analizador completo es el encargo 2
+        $r = $this->analizador('decls', $code);
+        return is_array($r) ? $r : [];
     }
 
     /**
