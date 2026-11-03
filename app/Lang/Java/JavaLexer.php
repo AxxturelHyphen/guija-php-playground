@@ -178,8 +178,14 @@ final class JavaLexer
             return ['kind' => 'type', 'name' => $nombre, 'type' => $anotacion ? 'annotation' : ($esRecord ? 'record' : $x), 'start' => $start,
                 'end' => $T[$cierre][2] + 1, 'open' => $T[$j][2], 'openTok' => $j, 'public' => $public, 'ti' => $first, 'tj' => $cierre, 'next' => $cierre + 1];
         }
+        $ang = 0;                                          // profundidad de <...>: las comas de «Map<K, V>» no son campos
         for ($j = $i; $j < $lim; $j++) {
             $y = $T[$j][1];
+            if ($y === '<') {
+                $ang++;
+            } elseif ($y === '>' && $ang > 0) {
+                $ang--;
+            }
             if ($y === '(') {
                 if ($j === $i || $T[$j - 1][0] !== 'w' || !isset($M[$j])) {
                     break;
@@ -214,7 +220,7 @@ final class JavaLexer
                 return ['kind' => 'method', 'name' => $T[$j - 1][1], 'static' => $static, 'start' => $start, 'end' => $T[$cierre][2] + 1,
                     'ti' => $first, 'tj' => $cierre, 'params' => $hay ? $params + 1 : 0, 'next' => $cierre + 1];
             }
-            if ($y === '=' || $y === ';' || $y === ',') {  // campo (o constantes de enum): hasta el ';' de su nivel
+            if ($y === '=' || $y === ';' || ($y === ',' && $ang === 0)) {  // campo (o constantes de enum): hasta el ';' de su nivel
                 while ($j < $lim && $T[$j][1] !== ';') {
                     $j = (in_array($T[$j][1], ['(', '{', '['], true) && isset($M[$j])) ? $M[$j] + 1 : $j + 1;
                 }
