@@ -33,7 +33,7 @@ api('langs').then(r => render(r.langs)).catch(e => {
 
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
-  const id = ['php', 'python', 'java'][Number(e.key) - 1];
+  const id = ['php', 'python', 'java', 'cpp'][Number(e.key) - 1];
   if (id) { store.set('pg:lastLang', id); location.href = '/' + id; }
 });
 for (const [id, c] of Object.entries(cards)) c.addEventListener('click', () => store.set('pg:lastLang', id));

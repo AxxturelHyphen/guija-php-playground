@@ -6,10 +6,10 @@ namespace Playground\Core;
 defined('PG_ROOT') or exit;
 
 /**
- * Un lenguaje del playground (PHP, Python, Java). La API, el Report, las soluciones y la interfaz son comunes;
- * cada lenguaje solo aporta esto. Contrato de datos (idéntico en los tres):
+ * Un lenguaje del playground (PHP, Python, Java, C++). La API, el Report, las soluciones y la interfaz son comunes;
+ * cada lenguaje solo aporta esto. Contrato de datos (idéntico en los cuatro):
  *
- *  - analyse(): {syntax:bool, diagnostics:list<Diag>, units:list<Unit>, summary:Summary}
+ *  - analyse(): {syntax:bool, diagnostics:list<Diag>, units:list<Unit>, summary:Summary} (C++ añade symbols:list)
  *      Unit    = {name, qname, kind:'function'|'method'|'main', class:?string, startLine, endLine, loc, params,
  *                 signature:list<string>, cc, cognitive, nesting, returns, grade:'A'..'F', bigO:?string,
  *                 bigOWhy:list<string>, bigOKey:?string ('1'|'log'|'n'|'nlogn'|'n2'|'n3'|'exp'), recursive:bool}
@@ -18,6 +18,7 @@ defined('PG_ROOT') or exit;
  *      {items:list<{t:'out',text}|{t:'ev',ev}>, exit:int, killed:?'timeout'|'output', wallMs:int, truncated:bool, timeout:int}
  *    Los eventos los emite el harness del lenguaje por stdout como "\x1ePG{json}\x1f" (ver Protocol):
  *      err {kind,msg,line,...} · todo {msg,line,trace} · test {group,name,status,...} ·
+ *      (C++ añade kinds propios: asan/ubsan {cls,…} de los sanitizers, leak (aviso), segfault, stack, fpe, abort) ·
  *      bench {name,status,scale,stopped,points:[[n,ms]]} (el ajuste O() lo hace Report/Bench, igual para todos) ·
  *      img {mime,data(base64)} · end {ms,mem,peak}
  *  - declarations(): declaraciones de primer nivel que las soluciones pueden sustituir:
@@ -26,10 +27,10 @@ defined('PG_ROOT') or exit;
  */
 abstract class Language
 {
-    /** 'php' | 'python' | 'java' */
+    /** 'php' | 'python' | 'java' | 'cpp' */
     abstract public function id(): string;
 
-    /** Nombre para mostrar: 'PHP', 'Python', 'Java'. */
+    /** Nombre para mostrar: 'PHP', 'Python', 'Java', 'C++'. */
     abstract public function name(): string;
 
     /** Extensión de los archivos, sin punto. */

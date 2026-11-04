@@ -5,10 +5,10 @@ declare(strict_types=1);
  * Playground en la terminal: ejecuta un archivo con el mismo motor que el editor web
  * (errores explicados, pruebas, análisis de complejidad y comparación con la solución de referencia).
  *
- *   php pg.php archivo.(php|py|java) [--lang=php|python|java] [--analisis] [--medir] [--comparar] [--timeout=N] [--sin-color]
+ *   php pg.php archivo.(php|py|java|cpp) [--lang=php|python|java|cpp] [--analisis] [--medir] [--comparar] [--timeout=N] [--sin-color]
  *
  * El lenguaje sale de la extensión (o de --lang). El archivo puede ser una ruta o un nombre que exista en los
- * ejemplos, las prácticas o las soluciones de ese lenguaje (p. ej. 04-recursion.php, 03-recursion.py).
+ * ejemplos, las prácticas o las soluciones de ese lenguaje (p. ej. 04-recursion.php, 03-recursion.py, 04-recursion.cpp).
  * Código de salida: 0 todo bien · 1 errores, pruebas que fallan o veredicto «mejorable» · 2 uso incorrecto.
  */
 if (PHP_SAPI !== 'cli') {
@@ -32,9 +32,9 @@ foreach ($args as $a) {
 }
 if (isset($flags['ayuda']) || isset($flags['help']) || $files === []) {
     fwrite($files === [] && !isset($flags['ayuda']) && !isset($flags['help']) ? STDERR : STDOUT, <<<TXT
-    Uso: php pg.php archivo.(php|py|java) [opciones]
+    Uso: php pg.php archivo.(php|py|java|cpp) [opciones]
 
-      --lang=L        php, python o java (por defecto, según la extensión)
+      --lang=L        php, python, java o cpp (por defecto, según la extensión)
       --analisis      tabla de complejidad ciclomática, cognitiva y O() por función
       --medir         ejecuta también los medir() y dibuja las mediciones
       --comparar      compara tu código con la solución de referencia (rendimiento y pruebas)
@@ -49,7 +49,7 @@ if (isset($flags['ayuda']) || isset($flags['help']) || $files === []) {
 
 $lang = isset($flags['lang']) ? Languages::get((string) $flags['lang']) : Languages::forFile($files[0]);
 if ($lang === null) {
-    fwrite(STDERR, "No sé de qué lenguaje es «{$files[0]}»: usa una extensión .php, .py o .java, o --lang=php|python|java.\n");
+    fwrite(STDERR, "No sé de qué lenguaje es «{$files[0]}»: usa una extensión .php, .py, .java o .cpp, o --lang=php|python|java|cpp.\n");
     exit(2);
 }
 $path = resolvePath($lang, $files[0]);
