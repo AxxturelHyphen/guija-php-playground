@@ -541,7 +541,7 @@ void calentar(Fabrica& f, const std::vector<int>& tams)
 void medirGeneral(std::string_view nombre, std::string_view escala, const std::vector<int>& tamanos, Fabrica& f, int linea)
 {
     if (!modoBench) {
-        Ev("bench").s("name", nombre).s("status", "skipped").emitir();
+        Ev("bench").s("name", nombre).s("status", "skipped").i("line", linea).emitir();
         return;
     }
     bool lineal = escala == "lineal";

@@ -602,6 +602,8 @@ final class CppLanguage extends Language
         $familia = 'gcc';
         $esUsuario = static fn(string $f): bool => (bool) preg_match('~(?:^|[/\\\\])' . preg_quote(self::FUENTE, '~') . '$~', $f);
         $recs = [];
+        // gcc escribe los identificadores no ASCII como \U000000f1 (ñ)
+        $raw = (string) preg_replace_callback('/\\\\U([0-9a-fA-F]{8})|\\\\u([0-9a-fA-F]{4})/', static fn($m) => (string) mb_chr((int) hexdec($m[1] !== '' ? $m[1] : $m[2]), 'UTF-8'), $raw);
         foreach (preg_split('/\r\n|\n|\r/', $raw) ?: [] as $l) {
             if (preg_match('/^fix-it:"(.*?)":\{(\d+):(\d+)-(\d+):(\d+)\}:"(.*)"$/', $l, $m)) {
                 $recs[] = ['t' => 'fixit', 'file' => $m[1], 'sl' => (int) $m[2], 'sc' => (int) $m[3], 'el' => (int) $m[4], 'ec' => (int) $m[5],
@@ -924,11 +926,13 @@ final class CppLanguage extends Language
             if ($res['killed'] === 'launch') {
                 return $falla('No se pudo lanzar el programa compilado.');
             }
-            $items = Protocol::split($res['raw']);
-            $items = $this->completarEventos($items, $this->informesSanitizer($logs), $bin, $code, (int) $res['wallMs']);
+            [$raw, $informesSalida] = self::separarInformes($res['raw']);
+            $items = Protocol::split($raw);
+            $items = $this->completarEventos($items, $this->informesSanitizer($logs, $informesSalida), $bin, $code, (int) $res['wallMs']);
         } finally {
             Process::rmTree($logs);
         }
+        $items = Protocol::scrub($items, [$bin, basename($bin)], 'programa');    // glibc pone el nombre del ejecutable en los assert
         $needles = ['./' . self::FUENTE, '.\\' . self::FUENTE, self::FUENTE, $logs];
         $items = Protocol::scrub($items, $needles, $displayName);
         return ['items' => $items, 'exit' => $res['exit'], 'killed' => $res['killed'], 'wallMs' => $res['wallMs'], 'truncated' => $res['truncated'], 'timeout' => $timeout];
@@ -995,11 +999,14 @@ final class CppLanguage extends Language
                 && preg_match('/' . preg_quote(self::FUENTE, '/') . ':(\d+): (?:[^\n]*?: )?Assertion [`\'](.+?)\' failed\.?\s*$/', $textoPrevio, $m)) {
                 $ev['line'] = (int) $m[1];
                 $ev['cls'] = 'assert';
-                $ev['msg'] = "Assertion `{$m[2]}' failed";
+                $ev['msg'] = "assert({$m[2]}) no se cumple";
             } elseif (($ev['t'] ?? '') === 'err' && ($ev['kind'] ?? '') === 'abort'
                 && preg_match('/:\d+: (?:[^\n]*?: )?Assertion \'(.+?)\' failed\.?\s*$/', $textoPrevio, $m)) {
                 $ev['cls'] = 'glibcxx-assert';    // comprobación de la biblioteca (_GLIBCXX_ASSERTIONS): vector[i] fuera de rango…
-                $ev['msg'] = "Assertion '{$m[1]}' failed";
+                $ev['msg'] = "comprobación de la biblioteca: {$m[1]}";
+            }
+            if (isset($ev['trace']) && is_array($ev['trace'])) {
+                $ev['trace'] = self::comprimirTraza($ev['trace']);
             }
             if (in_array($ev['t'] ?? '', ['err', 'todo', 'bench'], true) && (int) ($ev['line'] ?? 0) <= 0) {
                 $ev['line'] = $lineaMain;
@@ -1055,6 +1062,31 @@ final class CppLanguage extends Language
         return $out;
     }
 
+    /**
+     * Frames repetidos seguidos (una recursión que desborda la pila) → uno solo con «(×N)».
+     * @param list<array{fn:string, line:int}> $traza
+     * @return list<array{fn:string, line:int}>
+     */
+    private static function comprimirTraza(array $traza): array
+    {
+        $out = [];
+        foreach ($traza as $f) {
+            $k = count($out) - 1;
+            if ($k >= 0 && $out[$k]['fn'] === $f['fn'] && $out[$k]['line'] === $f['line']) {
+                $out[$k]['rep'] = ($out[$k]['rep'] ?? 1) + 1;
+                continue;
+            }
+            $out[] = $f;
+        }
+        foreach ($out as &$f) {
+            if (isset($f['rep'])) {
+                $f['fn'] .= ' (×' . $f['rep'] . (count($traza) >= 12 ? '+' : '') . ')';
+                unset($f['rep']);
+            }
+        }
+        return $out;
+    }
+
     /** "buscar(std::vector<int> const&, int)" → "buscar()", "main::{lambda(int)#1}::operator()(int) const" → "main::{lambda}()". */
     private static function nombreCorto(string $fn): string
     {
@@ -1088,12 +1120,18 @@ final class CppLanguage extends Language
      * Lee los registros de ASan/UBSan/LeakSanitizer de la carpeta y los convierte en eventos `err`.
      * @return list<array<string,mixed>>
      */
-    private function informesSanitizer(string $dir): array
+    private function informesSanitizer(string $dir, string $deLaSalida = ''): array
     {
         $out = [];
         $fugas = 0;
+        $textos = [];
         foreach ([...(glob($dir . DIRECTORY_SEPARATOR . 'ubsan.*') ?: []), ...(glob($dir . DIRECTORY_SEPARATOR . 'asan.*') ?: [])] as $f) {
-            $txt = (string) @file_get_contents($f, false, null, 0, 400_000);
+            $textos[] = (string) @file_get_contents($f, false, null, 0, 400_000);
+        }
+        if ($deLaSalida !== '') {
+            $textos[] = $deLaSalida;
+        }
+        foreach ($textos as $txt) {
             if (!mb_check_encoding($txt, 'UTF-8')) {
                 $txt = mb_convert_encoding($txt, 'UTF-8', 'UTF-8');
             }
@@ -1109,6 +1147,27 @@ final class CppLanguage extends Language
             }
         }
         return $out;
+    }
+
+    /**
+     * La libubsan de GCC (aparte de libasan) no hace caso de log_path y escribe sus informes en stderr, mezclados con la
+     * salida: se sacan de ahí (la línea «…: runtime error: …» y su traza «    #N 0x… in …»), junto con los avisos
+     * «XSanitizer:DEADLYSIGNAL» que preceden a los informes que sí van al registro.
+     * @return array{0:string, 1:string} [salida sin informes, informes]
+     */
+    private static function separarInformes(string $raw): array
+    {
+        if (!str_contains($raw, 'runtime error: ') && !str_contains($raw, 'Sanitizer:DEADLYSIGNAL')) {
+            return [$raw, ''];
+        }
+        $informes = '';
+        $raw = (string) preg_replace('/^[A-Za-z]+Sanitizer:DEADLYSIGNAL\r?\n/m', '', $raw);
+        $raw = (string) preg_replace_callback('/^[^\n\x1e]*?:\d+:\d+: runtime error: [^\n]*\n(?:[ \t]+#\d+ [^\n]*\n)*(?:\r?\n)?(?:SUMMARY: UndefinedBehaviorSanitizer[^\n]*\n)?/m',
+            static function ($m) use (&$informes) {
+                $informes .= $m[0] . "\n";
+                return '';
+            }, $raw);
+        return [$raw, $informes];
     }
 
     /** @return list<string> un trozo por informe (ASan/LSan empiezan por ==PID==ERROR, UBSan por «runtime error:») */
@@ -1189,7 +1248,10 @@ final class CppLanguage extends Language
         if (!preg_match('/==\d+==ERROR: AddressSanitizer: ([\w-]+)(.*)$/m', $inf, $m)) {
             return null;    // cabecera de LeakSanitizer, resúmenes…
         }
-        $cls = $m[1];
+        $cls = str_starts_with($m[1] . $m[2], 'out of memory') ? 'out-of-memory' : $m[1];
+        if ($cls === 'out-of-memory') {
+            $m[2] = '(' . trim((string) preg_replace('/^ of memory:?/', '', $m[2])) . ')';
+        }
         $resto = trim((string) preg_replace(['/\s*\(pc 0x[0-9a-f]+.*$/', '/\s*at pc 0x[0-9a-f]+.*$/', '/ on (?:unknown )?address 0x[0-9a-f]+/'], '', $m[2]));
         // Secciones: lo que falló (hasta la primera línea en blanco), y «allocated by» / «freed by» / «previously allocated by»
         $secciones = preg_split('/\n\s*\n/', $inf) ?: [$inf];
