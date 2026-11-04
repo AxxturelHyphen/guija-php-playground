@@ -1078,6 +1078,7 @@ final class CppLanguage extends Language
             }
         }
         $fn = (string) preg_replace('/^.*?\b(?:std::)?__cxx11::/', 'std::', $fn);
+        $fn = (string) preg_replace('/\bpg_main_usuario\b/', 'main', $fn);
         return ($fn === '' ? '?' : $fn) . '()';
     }
 

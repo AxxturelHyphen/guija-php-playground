@@ -123,9 +123,8 @@ final class CppAnalysis
 
     /**
      * Dónde insertar una declaración de la solución que el usuario no tiene. C++ exige declarar antes de usar: va justo
-     * antes de la primera declaración de primer nivel que nombra a `$decl['name']`; si ninguna lo nombra, antes de la
-     * primera función con cuerpo (así queda también por delante de las funciones de la solución que la usen y de
-     * `main`); si no hay funciones, al final. Siempre al principio de una línea.
+     * antes de la primera declaración de primer nivel que nombra a `$decl['name']`; si ninguna lo nombra, antes de
+     * `int main(`; si no hay main, al final. Siempre al principio de una línea.
      * @param array<string,mixed> $decl
      */
     public static function insertionPoint(string $code, array $decl): int
@@ -142,7 +141,7 @@ final class CppAnalysis
                     }
                 }
             }
-            if ($first === null && in_array($it['kind'], ['function', 'main', 'method'], true)) {
+            if ($first === null && $it['kind'] === 'main') {
                 $first = $it;
             }
         }
