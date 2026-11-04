@@ -681,25 +681,30 @@ final class CppHints
         if ($falta === []) {
             return;
         }
-        // dónde insertar: tras el último #include (o en la línea 1)
+        foreach ($falta as $h => $i) {
+            $edit = $this->includeEdit($h);
+            $this->add('include.missing', 'info', $i, $i, sprintf('Falta #include <%s> para %s', $h, $T[$i][1]),
+                '`' . $T[$i][1] . '` se declara en `<' . $h . '>`. Aquí compila porque el playground incluye toda la biblioteca estándar por ti, pero con un compilador normal (o en un juez online sin `<bits/stdc++.h>`) daría *«\'' . $T[$i][1] . '\' was not declared in this scope»*. Añade el `#include` que corresponde: es la forma portátil de decir qué usas.',
+                [['title' => "Añadir #include <{$h}>", 'edits' => [$edit]]]);
+        }
+    }
+
+    /** Edición (de una línea) que añade `#include <$h>` tras el último #include, o en la línea 1. */
+    private function includeEdit(string $h): array
+    {
+        $c = $this->c;
         $ult = null;
         foreach ($c->pp as $p) {
             if (preg_match('~^#\s*include~', $p['text'])) {
                 $ult = $p;
             }
         }
-        foreach ($falta as $h => $i) {
-            if ($ult !== null) {
-                $fin = $ult['off'] + strlen(rtrim(explode("\n", $ult['text'])[0]));
-                $col = $c->col($fin, $ult['line']);
-                $edit = ['range' => ['sl' => $ult['line'], 'sc' => $col, 'el' => $ult['line'], 'ec' => $col], 'text' => "\n#include <{$h}>"];
-            } else {
-                $edit = ['range' => ['sl' => 1, 'sc' => 1, 'el' => 1, 'ec' => 1], 'text' => "#include <{$h}>\n"];
-            }
-            $this->add('include.missing', 'info', $i, $i, sprintf('Falta #include <%s> para %s', $h, $T[$i][1]),
-                '`' . $T[$i][1] . '` se declara en `<' . $h . '>`. Aquí compila porque el playground incluye toda la biblioteca estándar por ti, pero con un compilador normal (o en un juez online sin `<bits/stdc++.h>`) daría *«\'' . $T[$i][1] . '\' was not declared in this scope»*. Añade el `#include` que corresponde: es la forma portátil de decir qué usas.',
-                [['title' => "Añadir #include <{$h}>", 'edits' => [$edit]]]);
+        if ($ult === null) {
+            return ['range' => ['sl' => 1, 'sc' => 1, 'el' => 1, 'ec' => 1], 'text' => "#include <{$h}>\n"];
         }
+        $fin = $ult['off'] + strlen(rtrim(explode("\n", $ult['text'])[0]));
+        $col = $c->col($fin, $ult['line']);
+        return ['range' => ['sl' => $ult['line'], 'sc' => $col, 'el' => $ult['line'], 'ec' => $col], 'text' => "\n#include <{$h}>"];
     }
 
     // ───────────────────────────── C++ moderno ─────────────────────────────
@@ -759,8 +764,45 @@ final class CppHints
             }
             $porUnidad[$u] = true;
             $this->add('modern.raw-new', 'info', $i, $i, '`new` sin `delete`: esa memoria no se libera nunca',
-                'Cada `new` reserva memoria que hay que devolver con `delete` (o `delete[]`), y es fácil olvidarlo o saltárselo con un `return` o una excepción: es una fuga de memoria. En C++ moderno se usa **RAII**: un objeto dueño libera la memoria al salir de su ámbito. Para un solo objeto, `auto p = make_unique<Nodo>(…);` (`unique_ptr`, de `<memory>`); para muchos, un `vector<T>` en vez de `new T[n]`. Si de verdad necesitas punteros crudos (árboles, listas enlazadas), libera los nodos en un destructor.');
+                'Cada `new` reserva memoria que hay que devolver con `delete` (o `delete[]`), y es fácil olvidarlo o saltárselo con un `return` o una excepción: es una fuga de memoria. En C++ moderno se usa **RAII**: un objeto dueño libera la memoria al salir de su ámbito. Para un solo objeto, `auto p = make_unique<Nodo>(…);` (`unique_ptr`, de `<memory>`); para muchos, un `vector<T>` en vez de `new T[n]`. Si de verdad necesitas punteros crudos (árboles, listas enlazadas), libera los nodos en un destructor.', $this->uniqueFix($i, $u));
         }
+    }
+
+    /**
+     * Arreglo de `T* x = new T(…);` → `auto x = make_unique<T>(…);`, solo si es seguro: declaración local de una línea
+     * con un tipo de una sola ficha y `x` solo se usa después como `*x` o `x->…` (nada de pasarlo, copiarlo ni compararlo).
+     * @return list<array<string,mixed>>
+     */
+    private function uniqueFix(int $i, int $u): array
+    {
+        $c = $this->c;
+        $T = $c->t;
+        $M = $c->m;
+        if ($u < 0 || ($T[$i - 1][1] ?? '') !== '=' || ($T[$i - 2][0] ?? '') !== 'w' || ($T[$i - 3][1] ?? '') !== '*'
+            || ($T[$i - 4][0] ?? '') !== 'w' || !isset(self::INICIO[$T[$i - 5][1] ?? '']) || ($T[$i + 1][1] ?? '') !== $T[$i - 4][1]
+            || !in_array($T[$i + 2][1] ?? '', ['(', '{'], true) || !isset($M[$i + 2]) || ($T[$M[$i + 2] + 1][1] ?? '') !== ';'
+            || $T[$i - 4][3] !== $T[$M[$i + 2]][3]) {
+            return [];
+        }
+        $x = $T[$i - 2][1];
+        $close = $c->units[$u]['close'];
+        for ($k = $M[$i + 2] + 2; $k < $close; $k++) {
+            if ($T[$k][1] !== $x || $T[$k][0] !== 'w' || in_array($T[$k - 1][1], ['.', '->', '::'], true)) {
+                continue;
+            }
+            $deref = $T[$k - 1][1] === '*' && !in_array($T[$k - 2][0], ['w', 'n', 's'], true) && !in_array($T[$k - 2][1], [')', ']'], true);
+            if (!$deref && ($T[$k + 1][1] ?? '') !== '->') {
+                return [];
+            }
+        }
+        $tipo = $T[$i - 4][1];
+        $std = preg_match('~^\s*using\s+namespace\s+std\s*;~m', $c->code) ? '' : 'std::';
+        $args = $c->text($i + 3, $M[$i + 2] - 1);
+        $edits = [['range' => $c->range($i - 4, $M[$i + 2]), 'text' => "auto {$x} = {$std}make_unique<{$tipo}>(" . ($M[$i + 2] > $i + 3 ? $args : '') . ')']];
+        if (!isset($c->includes['memory']) && !isset($c->includes['bits/stdc++.h'])) {
+            $edits[] = $this->includeEdit('memory');
+        }
+        return [['title' => "Usar unique_ptr: auto {$x} = make_unique<{$tipo}>(…)", 'edits' => $edits]];
     }
 
     // ───────────────────────────── flujo ─────────────────────────────
