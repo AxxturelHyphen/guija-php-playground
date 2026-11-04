@@ -51,7 +51,7 @@ void titulo(const string& texto)
  * └────────────────────────────────────────────────────────────────────────────────────────────────────────────────
  */
 
-/** Un texto reproducible de n letras 'a'..('a' + alfabeto - 1' (con alfabeto pequeño aparecen muchas repeticiones: lo duro para el patrón). */
+/** Un texto reproducible de n letras 'a' .. 'a' + alfabeto - 1 (con alfabeto pequeño aparecen muchas repeticiones: lo duro para el patrón). */
 string textoAleatorio(int n, int alfabeto, int semilla)
 {
     vector<int> v = aleatorios(n, alfabeto - 1, semilla);
@@ -480,6 +480,7 @@ int main()
         caso("un carácter", vector<int>{0}, string("x")),
         caso("vacía", vector<int>{}, string("")),
         caso("periodo 3", vector<int>{0, 0, 0, 1, 2, 3, 4, 5, 6}, string("abcabcabc")));
+    grupo("funcionFallo (más casos)");
     comprueba("coincide con la definición en 40 cadenas aleatorias", [&] {
         for (int semilla = 1; semilla <= 40; semilla++) {
             string t = textoAleatorio(semilla * 2, 2 + semilla % 3, semilla);
@@ -498,7 +499,8 @@ int main()
         caso("patrón igual al texto", vector<int>{0}, string("hola"), string("hola")),
         caso("un carácter", vector<int>{1, 3}, string("abab"), string("b")),
         caso("texto vacío", vector<int>{}, string(""), string("a")),
-        caso("fallo y reintento", vector<int>{4}, string("aabaabaaa").substr(0, 9) == "aabaabaaa" ? string("aabaabaaab") : string(), string("aaab")));
+        caso("fallo y reintento", vector<int>{6}, string("aabaabaaab"), string("aaab")));
+    grupo("buscarKMP (más casos)");
     lanza("patrón vacío", [&] { buscarKMP("abc", ""); }, invalid_argument);
     comprueba("coincide con la búsqueda ingenua en 40 textos con alfabeto pequeño", [&] {
         long long c = 0;
@@ -522,6 +524,7 @@ int main()
         caso("un carácter", vector<int>{1}, string("z")),
         caso("vacía", vector<int>{}, string("")),
         caso("periodo 2", vector<int>{6, 0, 4, 0, 2, 0}, string("ababab")));
+    grupo("funcionZ (más casos)");
     comprueba("coincide con la definición en 40 cadenas aleatorias", [&] {
         for (int semilla = 1; semilla <= 40; semilla++) {
             string t = textoAleatorio(semilla * 3, 2 + semilla % 2, semilla);
@@ -590,6 +593,7 @@ int main()
         caso("sin palíndromos largos", string("a"), string("abcd")),
         caso("en medio de la cadena", string("geeksskeeg"), string("forgeeksskeegfor")),
         caso("dos candidatos iguales", string("aba"), string("abacdfgdcaba")));
+    grupo("palindromoMasLargo (más casos)");
     comprueba("coincide con la versión O(n²) en 60 cadenas aleatorias", [&] {
         for (int semilla = 1; semilla <= 60; semilla++) {
             string t = textoAleatorio(semilla, 2 + semilla % 2, semilla);
@@ -607,15 +611,15 @@ int main()
         Trie t;
         t.insertar("casa");
         t.insertar("cosa");
-        return vector<bool>{t.contiene("casa"), t.contiene("cosa"), t.contiene("cas"), t.contiene("casas"), t.contiene("")};
-    }, vector<bool>{true, true, false, false, false});
+        return vector<int>{t.contiene("casa"), t.contiene("cosa"), t.contiene("cas"), t.contiene("casas"), t.contiene("")};
+    }, vector<int>{true, true, false, false, false});
     comprueba("un prefijo no es palabra salvo que se inserte", [&] {
         Trie t;
         t.insertar("casas");
         bool antes = t.contiene("casa");
         t.insertar("casa");
-        return vector<bool>{antes, t.contiene("casa")};
-    }, vector<bool>{false, true});
+        return vector<int>{antes, t.contiene("casa")};
+    }, vector<int>{false, true});
     comprueba("contarConPrefijo", [&] {
         Trie t;
         for (string w : {"casa", "caso", "cosa", "casas", "mesa"}) {
@@ -673,6 +677,7 @@ int main()
         caso("mayúsculas distintas", map<string, int>{{"Sol", 1}, {"sol", 2}}, string("sol Sol sol")),
         caso("una palabra", map<string, int>{{"hola", 1}}, string("hola")),
         caso("frase", map<string, int>{{"el", 3}, {"gato", 1}, {"perro", 1}, {"sol", 1}, {"y", 2}}, string("el gato y el perro y el sol")));
+    grupo("frecuenciaPalabras (más casos)");
     comprueba("acepta un literal y un trozo de otra cadena sin copiar", [&] {
         string grande = "xx uno dos uno yy";
         return frecuenciaPalabras(string_view(grande).substr(3, 11));
@@ -687,6 +692,7 @@ int main()
         caso("vacía", 0, string("")),
         caso("sin borde", 4, string("abcd")),
         caso("un solo bloque", 6, string("abcdef")));
+    grupo("periodoMinimo (más casos)");
     comprueba("repetidas 1000 veces", [&] { return periodoMinimo(repetida("abcde", 1000)); }, 5);
 
 // ── Medir (pulsa «Medir» o Ctrl+Alt+Enter) ──────────────────────────────────

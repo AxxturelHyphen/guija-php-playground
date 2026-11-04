@@ -124,7 +124,8 @@ private:
  * @explicacion Se recorre la lista con tres punteros: `anterior` (la parte ya invertida), `actual` y `siguiente`.
  * En cada paso se guarda `actual->siguiente` (si no, se perdería el resto de la lista), se hace que `actual` apunte hacia
  * atrás y se avanza. Al terminar `anterior` es la nueva cabeza. No se crea ningún nodo.
- * @alternativas Recursiva: más corta, pero usa O(n) de pila y con listas largas la desborda.* @bigo n
+ * @alternativas Recursiva: más corta, pero usa O(n) de pila y con listas largas la desborda.
+ * @bigo n
  */
 Nodo* invertirLista(Nodo* cabeza)
 {
@@ -146,7 +147,8 @@ Nodo* invertirLista(Nodo* cabeza)
  * @explicacion La liebre avanza de dos en dos y la tortuga de uno en uno. Sin ciclo, la liebre llega antes a `nullptr`.
  * Con ciclo, ambas acaban dentro de él y la liebre va cerrando la distancia de uno en uno hasta alcanzar a la tortuga.
  * Antes de dar el segundo paso se comprueba `liebre->siguiente`: desreferenciar `nullptr` es comportamiento indefinido.
- * @alternativas Un `unordered_set` de direcciones visitadas: O(n) de tiempo pero también de memoria.* @bigo n
+ * @alternativas Un `unordered_set` de direcciones visitadas: O(n) de tiempo pero también de memoria.
+ * @bigo n
  */
 bool tieneCiclo(const Nodo* cabeza)
 {
