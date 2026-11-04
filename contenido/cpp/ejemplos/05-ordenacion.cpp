@@ -408,11 +408,9 @@ int main()
     titulo("2. Estabilidad");
 
     vector<Registro> registros;
-    for (int i = 0; i < 40; i++) {
-        registros.push_back({i % 3, static_cast<char>('A' + i % 26)});        // etiqueta creciente: A, B, C... en orden de entrada
+    for (int i = 0; i < 26; i++) {
+        registros.push_back({i % 3, static_cast<char>('A' + i)});             // etiqueta creciente: A, B, C... en orden de entrada
     }
-    // (con 40 > 26 la etiqueta vuelve a 'A' tras 'Z'; basta comprobar solo dentro de los primeros 26)
-    registros.resize(26);
     auto porClave = [](const Registro& a, const Registro& b) { return a.clave < b.clave; };
     vector<Registro> conSort = registros;
     sort(conSort.begin(), conSort.end(), porClave);
@@ -491,9 +489,9 @@ int main()
     };
     fila("aleatorios", datos(tam, 1'000'000));
     fila("ya ordenados", ordenadoN);
-    fila("al revés", invertidoN);
+    fila("invertidos", invertidoN);
     fila("todos iguales", igualesN);
-    cout << "(el ingenuo se va a ~n²/2 = " << miles(static_cast<long long>(tam) * tam / 2) << " con datos ordenados o iguales; el introsort no se inmuta)\n";
+    cout << "(el ingenuo se va a ~n²/2 = " << miles(static_cast<long long>(tam) * tam / 2) << " con datos ordenados o iguales; el introsort ni se inmuta)\n";
     // Ojo: la recursión del ingenuo con datos ordenados llega a n niveles de profundidad: con n = 10⁶ reventaría la
     // pila. El introsort acota la profundidad a O(log n) recursando primero en la parte pequeña.
 
@@ -629,5 +627,12 @@ int main()
 // ── Medir (pulsa «Medir» o Ctrl+Alt+Enter) ──────────────────────────────────
     // Verás O(n²) para burbuja e inserción y O(n log n) para merge y quick sort. Los datos son pseudoaleatorios
     // pero siempre los mismos, para que las mediciones sean comparables.
-    medir(burbuja, datos(n_, 1'000'000));
+    medir(burbuja, datos(n, 1'000'000));
+    medir(insercion, datos(n, 1'000'000));
+    medir(mergeSort, datos(n, 1'000'000));
+    medir(quickSort, datos(n, 1'000'000));
+    medir(countingSort, datos(n, 1000), 1000);
+    medir(heapSort, datos(n, 1'000'000));
+    medir(contarInversiones, datos(n, 1'000'000));
+    medir(banderaHolandesa, datos(n, 2));
 }
