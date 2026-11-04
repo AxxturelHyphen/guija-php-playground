@@ -280,13 +280,13 @@ if ($up) {
     check('GET /assets/css/app.css → 200 (estático permitido)', $r['status'] === 200 && str_contains($r['headers'], 'text/css'));
     $r = http($port, 'GET', '/');
     check('GET / → selector de lenguaje con Content-Security-Policy', $r['status'] === 200 && str_contains($r['headers'], 'Content-Security-Policy') && str_contains($r['headers'], "frame-ancestors 'none'") && str_contains($r['body'], 'lang-card'));
-    foreach (['php', 'python', 'java'] as $l) {
+    foreach (['php', 'python', 'java', 'cpp'] as $l) {
         $r = http($port, 'GET', "/{$l}");
         check("GET /{$l} → IDE de ese lenguaje con CSP", $r['status'] === 200 && str_contains($r['headers'], "frame-ancestors 'none'") && str_contains($r['body'], "data-lang=\"{$l}\""));
     }
     $r = http($port, 'GET', '/api?action=langs');
     $langs = json_decode($r['body'], true)['langs'] ?? [];
-    check('GET /api?action=langs → los 3 lenguajes con su estado', $r['status'] === 200 && array_column($langs, 'id') === ['php', 'python', 'java']);
+    check('GET /api?action=langs → los 4 lenguajes con su estado', $r['status'] === 200 && array_column($langs, 'id') === ['php', 'python', 'java', 'cpp']);
     foreach (['ruby', '..%2F..%2Fapp', '', 'PHP'] as $badLang) {
         $r = http($port, 'GET', "/api?lang={$badLang}&action=tree");
         check("lang «{$badLang}» desconocido → 404", $badLang === '' ? $r['status'] === 404 || $r['status'] === 200 : $r['status'] === 404, "status {$r['status']}");

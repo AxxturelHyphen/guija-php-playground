@@ -81,7 +81,7 @@
 // Las instancias más habituales de la STL (vector<int>, string, map<string,int>, sort, lower_bound…) se compilan UNA vez
 // en pg_main.o (que define PG_INSTANCIAR_STL); aquí se declaran «extern template» y cada programa no las vuelve a generar.
 // Es lo que más acelera la compilación de un programa típico de algoritmos. Solo con libstdc++ (g++, MinGW, clang en Linux).
-#if defined(__GLIBCXX__) && !defined(PG_SIN_STL_PRECOMPILADA)
+#if defined(__GLIBCXX__) && defined(PG_CON_STL_PRECOMPILADA)
 #if defined(PG_INSTANCIAR_STL)
 #define PG_STL template
 #else

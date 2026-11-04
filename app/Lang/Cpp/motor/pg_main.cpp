@@ -393,9 +393,16 @@ std::string pcsUltimoThrow()
 #if defined(PG_GNU) && defined(__linux__)
 // Se intercepta __cxa_throw (también los throw de dentro de libstdc++, como vector::at) para guardar DÓNDE se lanzó:
 // sin esto, al capturarla en main la pila ya se ha deshecho y no se sabe la línea. Solo copia direcciones (barato).
-extern "C" [[noreturn]] void __cxa_throw(void* obj, void* tinfo, void (*dest)(void*))
+// La firma tiene que coincidir con la que el compilador ya conoce: clang usa la de <cxxabi.h> (std::type_info*), gcc
+// la de su declaración interna (void*). noreturn al estilo GNU, como en <cxxabi.h>.
+#if defined(__clang__)
+using PgTipoThrow = std::type_info*;
+#else
+using PgTipoThrow = void*;
+#endif
+extern "C" __attribute__((noreturn)) void __cxa_throw(void* obj, PgTipoThrow tinfo, void (*dest)(void*))
 {
-    using Real = void (*)(void*, void*, void (*)(void*));
+    using Real = void (*)(void*, PgTipoThrow, void (*)(void*));
     static Real real = reinterpret_cast<Real>(dlsym(RTLD_NEXT, "__cxa_throw"));
     pg::detalle::recoger(pg::detalle::ultimoThrow, 1);
     pg::detalle::ultimoTipo = static_cast<const std::type_info*>(tinfo);

@@ -249,7 +249,10 @@ final class CppLanguage extends Language
         $f = ['-std=c++20', '-Wall', '-Wextra', '-Wshadow', '-Wno-unused-parameter', '-Werror=return-type', '-fdiagnostics-parseable-fixits', '-fmessage-length=0'];
         array_push($f, ...($gcc
             ? ['-fdiagnostics-color=never', '-fdiagnostics-column-unit=byte', '-fno-diagnostics-show-caret', '-fno-diagnostics-show-line-numbers', '-fno-diagnostics-show-labels']
-            : ['-fno-color-diagnostics', '-fno-caret-diagnostics']));
+            : ['-fno-color-diagnostics']));    // clang no escribe los fix-its sin el «caret»
+        if (!self::windows()) {
+            $f[] = '-pthread';    // también al compilar: clang rechaza un PCH hecho sin él si luego se enlaza con él
+        }
         if ($modo === 'checked') {
             array_push($f, ...($c['san']
                 ? ['-O1', '-g1', '-fsanitize=address,undefined', '-fno-sanitize-recover=undefined', '-fno-omit-frame-pointer']
@@ -927,6 +930,8 @@ final class CppLanguage extends Language
                 return $falla('No se pudo lanzar el programa compilado.');
             }
             [$raw, $informesSalida] = self::separarInformes($res['raw']);
+            // Las comprobaciones de la biblioteca (_GLIBCXX_ASSERTIONS) citan la cabecera con su ruta del sistema: solo el nombre
+            $raw = (string) preg_replace('~^/[^\s:]*/include/c\+\+/[^/\s:]+/([^\s:]+:\d+: )~m', '$1', $raw);
             $items = Protocol::split($raw);
             $items = $this->completarEventos($items, $this->informesSanitizer($logs, $informesSalida), $bin, $code, (int) $res['wallMs']);
         } finally {

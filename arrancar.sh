@@ -40,6 +40,14 @@ if ! command -v javac >/dev/null 2>&1 && [ ! -x "${JAVA_HOME:-/nonexistent}/bin/
     echo "(JDK no encontrado: la versión Java del playground no estará disponible. Instala un JDK 21+.)"
 fi
 
+# ── C++ (opcional) ─────────────────────────────────────────────────
+if command -v "${PG_CXX:-g++}" >/dev/null 2>&1 || command -v clang++ >/dev/null 2>&1; then
+    # La primera vez se precompilan el harness y sus cabeceras (unos segundos por modo): se hace ya, en segundo plano.
+    php -r 'require "app/bootstrap.php"; $l = Playground\Core\Languages::get("cpp"); if ($l && $l->meta()["ok"]) { $l->analyse("int main() {}\n"); $l->syntaxError("int main() {}\n"); }' >/dev/null 2>&1 &
+else
+    echo "(g++/clang++ no encontrado: la versión C++ del playground no estará disponible. Instala g++ 12+: sudo apt install g++)"
+fi
+
 echo ""
 echo "  Guija Playground  -  http://127.0.0.1:$PORT   (Ctrl+C para parar)"
 echo ""
