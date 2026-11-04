@@ -39,6 +39,8 @@ final class CppHints
         'make_pair' => 'utility', 'swap' => 'utility', 'move' => 'utility', 'max' => 'algorithm', 'min' => 'algorithm',
     ];
     /** Cabeceras que en la práctica llegan con cualquier otra (no se piden si ya hay algún #include). */
+    /** Fichas tras las que empieza una sentencia. */
+    private const INICIO = [';' => 1, '{' => 1, '}' => 1, ')' => 1];
     private const BLANDAS = ['utility' => 1];
     private const BLANDOS = ['max' => 1, 'min' => 1, 'swap' => 1, 'move' => 1, 'pair' => 1, 'make_pair' => 1, 'string' => 1, 'getline' => 1];
     /** Contenedores caros de copiar (paso por valor). */
@@ -478,6 +480,8 @@ final class CppHints
         $T = $this->c->t;
         $types = $info['locals']['types'];
         $esInt = static fn(?array $t): bool => $t !== null && $t['base'] === 'int' && $t['ptr'] === 0 && $t['arr'] === 0;
+        $esWide = static fn(?array $t): bool => $t !== null && $t['ptr'] === 0 && $t['arr'] === 0
+            && in_array($t['deduced'] ?? $t['base'], ['long long', 'unsigned long long', 'int64_t', 'uint64_t', 'long', 'll'], true);
         $hecho = [];
         $depth = $info['depth'];
         for ($i = $unit['open'] + 1; $i < $unit['close']; $i++) {
@@ -486,6 +490,15 @@ final class CppHints
                 continue;
             }
             $v = $T[$i][1];
+            // long long r = a * b; con a y b int: el producto se hace en int y desborda ANTES de ensancharse
+            if ($n === '=' && $esWide($types[$v] ?? null) && ($T[$i + 3][1] ?? '') === '*' && ($T[$i + 5][1] ?? '') === ';'
+                && $T[$i + 2][0] === 'w' && $T[$i + 4][0] === 'w' && $esInt($types[$T[$i + 2][1]] ?? null) && $esInt($types[$T[$i + 4][1]] ?? null)) {
+                $hecho[$v] = true;
+                $this->add('overflow.int', 'warning', $i + 2, $i + 4, sprintf('%s * %s se calcula en int y desborda antes de guardarse en %s', $T[$i + 2][1], $T[$i + 4][1], $v),
+                    'Aunque `' . $v . '` sea `long long`, `' . $T[$i + 2][1] . ' * ' . $T[$i + 4][1] . '` multiplica dos `int`: el resultado es `int` y se desborda (comportamiento indefinido) **antes** de convertirse a `long long`. Convierte un operando antes de multiplicar: `1LL * a * b` o `(long long)a * b`.',
+                    [$this->fix('Multiplicar en long long: 1LL * ' . $T[$i + 2][1] . ' * ' . $T[$i + 4][1], $i + 2, $i + 4, '1LL * ' . $T[$i + 2][1] . ' * ' . $T[$i + 4][1])]);
+                continue;
+            }
             if (!$esInt($types[$v] ?? null)) {
                 continue;
             }
@@ -501,8 +514,17 @@ final class CppHints
                 continue;
             }
             $hecho[$v] = true;
+            $fixes = [];
+            if ($mult && $T[$i - 1][1] === 'int' && isset(self::INICIO[$T[$i - 2][1] ?? ''])) {
+                $a = $T[$i + 2][1];
+                $b = $T[$i + 4][1];
+                $fixes[] = ['title' => 'Usar long long: long long ' . $v . ' = 1LL * ' . $a . ' * ' . $b, 'edits' => [
+                    ['range' => $this->c->range($i - 1, $i - 1), 'text' => 'long long'],
+                    ['range' => $this->c->range($i + 2, $i + 4), 'text' => '1LL * ' . $a . ' * ' . $b],
+                ]];
+            }
             $this->add('overflow.int', 'hint', $i, $i, $prod ? sprintf('%s es int y acumula un producto: puede desbordarse', $v) : sprintf('%s = %s * %s en int: puede desbordarse', $v, $T[$i + 2][1], $T[$i + 4][1]),
-                'Un `int` solo llega a 2.147.483.647 (≈ 2·10⁹). Un producto que crece en un bucle (factoriales, potencias) o `n * n` con n = 10⁵ lo superan enseguida, y en C++ el desbordamiento de un entero con signo es **comportamiento indefinido**: no da error, da números absurdos. Usa `long long` (hasta ≈ 9,2·10¹⁸) para la variable y, si los operandos son `int`, convierte uno antes de multiplicar: `1LL * a * b`. Si el enunciado pide el resultado módulo 10⁹+7, aplica `% MOD` en cada paso.');
+                'Un `int` solo llega a 2.147.483.647 (≈ 2·10⁹). Un producto que crece en un bucle (factoriales, potencias) o `n * n` con n = 10⁵ lo superan enseguida, y en C++ el desbordamiento de un entero con signo es **comportamiento indefinido**: no da error, da números absurdos. Usa `long long` (hasta ≈ 9,2·10¹⁸) para la variable y, si los operandos son `int`, convierte uno antes de multiplicar: `1LL * a * b`. Si el enunciado pide el resultado módulo 10⁹+7, aplica `% MOD` en cada paso.', $fixes);
         }
     }
 

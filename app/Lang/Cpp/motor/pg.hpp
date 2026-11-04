@@ -1111,6 +1111,8 @@ using pg::compruebaSinOrden;
 using pg::grupo;
 using pg::lista;
 using pg::medirCon;
+using pg::mostrar;
+using pg::noOptimizar;
 using pg::numeros;
 using pg::pendiente;
 using pg::rango;
