@@ -148,7 +148,7 @@ foreach (Languages::IDS as $langId) {
                     $report(!empty($doc['complejidad']) && !empty($doc['explicacion']), "{$langId}: soluciones/{$file}: {$name} sin @complejidad o @explicacion");
                 }
                 if (!empty($ex['medir']) && !$excused($langId, $l['id'], $name, 'medir')) {
-                    $report((bool) preg_match('/["\']' . preg_quote($name, '/') . '(?:["\']|::|\.)/', $medir), "{$langId}: {$file} no mide {$name} con medir()");
+                    $report((bool) preg_match('/["\']' . preg_quote($name, '/') . '(?:["\']|::|\.)|\bmedir\s*\(\s*' . preg_quote($name, '/') . '\s*,/', $medir), "{$langId}: {$file} no mide {$name} con medir()");
                 }
             }
         }

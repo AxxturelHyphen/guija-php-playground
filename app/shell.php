@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 defined('PG_ROOT') or exit;
 
-/** @var \Playground\Core\Language $pgLang  lo fija index.php según la URL (/php, /python, /java) */
+/** @var \Playground\Core\Language $pgLang  lo fija index.php según la URL (/php, /python, /java, /cpp) */
 $langId = $pgLang->id();
 $langName = $pgLang->name();
 // Marca de cada lenguaje: texto del logo, degradado y color del icono de archivo
@@ -11,6 +11,7 @@ $langName = $pgLang->name();
     'php' => ['PHP', '#8892BF', '#4F5B93', '#7A86B8'],
     'python' => ['PY', '#4B8BBE', '#306998', '#4B8BBE'],
     'java' => ['JAVA', '#E76F00', '#5382A1', '#C77B3A'],
+    'cpp' => ['C++', '#00599C', '#004482', '#3A7CC0'],
 ][$langId];
 $h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 
@@ -44,7 +45,7 @@ addEventListener('unhandledrejection', e => { if (e.reason && (e.reason.name ===
   <button id="btn-sidebar" class="btn btn-icon" title="Proyecto (Alt+1)" aria-label="Mostrar u ocultar el panel Proyecto">
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 3.5h13M1.5 8h13M1.5 12.5h13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
   </button>
-  <a class="brand" href="/" title="Cambiar de lenguaje (PHP, Python, Java)"><span class="logo"><?= $h($logo) ?></span><span class="brand-name">Guija <?= $h($langName) ?> Playground</span></a>
+  <a class="brand" href="/" title="Cambiar de lenguaje (PHP, Python, Java, C++)"><span class="logo"><?= $h($logo) ?></span><span class="brand-name">Guija <?= $h($langName) ?> Playground</span></a>
   <span class="pill" id="php-version"><?= $h($langName) ?></span>
   <div class="spacer"></div>
 

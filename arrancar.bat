@@ -66,10 +66,20 @@ start "" /B ".venv\Scripts\python.exe" -c "import matplotlib; matplotlib.use('Ag
 rem -- Java (opcional) ------------------------------------------------
 :java
 where javac >nul 2>nul
-if not errorlevel 1 goto serve
-if defined JAVA_HOME if exist "%JAVA_HOME%\bin\javac.exe" goto serve
+if not errorlevel 1 goto cpp
+if defined JAVA_HOME if exist "%JAVA_HOME%\bin\javac.exe" goto cpp
 echo  ^(JDK no encontrado: la version Java del playground no estara disponible.
 echo   Instala un JDK 21 o superior, por ejemplo Eclipse Temurin 21 LTS, y vuelve a abrir este archivo.^)
+
+rem -- C++ (opcional) -------------------------------------------------
+:cpp
+where g++ >nul 2>nul
+if not errorlevel 1 goto serve
+where clang++ >nul 2>nul
+if not errorlevel 1 goto serve
+if defined PG_CXX goto serve
+echo  ^(g++ no encontrado: la version C++ del playground no estara disponible.
+echo   Instala MinGW-w64 ^(WinLibs, https://winlibs.com, o MSYS2^), anade su carpeta bin al PATH y vuelve a abrir este archivo.^)
 
 :serve
 echo.

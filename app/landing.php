@@ -12,6 +12,7 @@ $cards = [
     ['php', 'PHP', 'PHP', '#8892BF', '#4F5B93', 'El lenguaje, POO a fondo y algoritmos, explicado para quien viene de Java.'],
     ['python', 'Python', 'PY', '#4B8BBE', '#306998', 'Estructuras de datos y algoritmos, y la base para IA/ML: numpy, matplotlib y audio con librosa.'],
     ['java', 'Java', 'JAVA', '#E76F00', '#5382A1', 'Java moderno (17–21), POO y los mismos algoritmos, con el mismo enfoque que la versión PHP.'],
+    ['cpp', 'C++', 'C++', '#00599C', '#004482', 'DSA a fondo en C++20: STL, grafos, DP, árboles de rangos… con AddressSanitizer vigilando tu memoria.'],
 ];
 ?>
 <!doctype html>
@@ -46,7 +47,7 @@ $cards = [
     </a>
 <?php endforeach; ?>
   </div>
-  <p class="muted landing-foot">Pulsa <kbd>1</kbd>, <kbd>2</kbd> o <kbd>3</kbd> para elegir. Desde el editor vuelves aquí haciendo clic en el logo.
+  <p class="muted landing-foot">Pulsa <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd> o <kbd>4</kbd> para elegir. Desde el editor vuelves aquí haciendo clic en el logo.
     Todo se ejecuta en tu PC: el servidor solo escucha en 127.0.0.1.</p>
 </main>
 <script type="module" src="<?= $v('js/landing.js') ?>"></script>

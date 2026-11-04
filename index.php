@@ -4,8 +4,8 @@ declare(strict_types=1);
 /**
  * Router del servidor integrado:  php -S 127.0.0.1:8000 index.php
  *
- *   /                          pantalla de inicio: eliges PHP, Python o Java (app/landing.php)
- *   /php  /python  /java       el IDE de ese lenguaje (app/shell.php)
+ *   /                          pantalla de inicio: eliges PHP, Python, Java o C++ (app/landing.php)
+ *   /php  /python  /java  /cpp el IDE de ese lenguaje (app/shell.php)
  *   /assets/...                CSS y JS (se sirven a mano: nada más de esta carpeta es accesible por URL)
  *   /api?lang=…&action=...     la API (app/Core/Api.php)
  *   cualquier otra             404   (así app/*.php, contenido/, practicas/, var/... nunca se ejecutan ni se leen por URL)
@@ -77,7 +77,7 @@ if (str_starts_with($path, '/assets/') && in_array($method, ['GET', 'HEAD'], tru
 }
 
 // ── Interfaz ────────────────────────────────────────────────────────────
-if (in_array($method, ['GET', 'HEAD'], true) && ($path === '/' || preg_match('#^/(php|python|java)/?$#', $path, $m))) {
+if (in_array($method, ['GET', 'HEAD'], true) && ($path === '/' || preg_match('#^/(php|python|java|cpp)/?$#', $path, $m))) {
     if ($error = Api::authorize($_SERVER)) {
         pg_send(403, 'text/plain; charset=utf-8', $error);
     }

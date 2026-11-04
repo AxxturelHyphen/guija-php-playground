@@ -36,6 +36,57 @@ const slotName = p => (p.match(/\$(\w+)/)?.[1] ?? p.replace(/[=:].*$/, '').trim(
 /** Busca en el catálogo (PHP no distingue mayúsculas en nombres de función). */
 const catFn = (cat, name) => cat?.functions?.[LANG.caseInsensitiveFns ? name.toLowerCase() : name];
 
+// ── Símbolos del usuario (los lenguajes que los envían en analysis.symbols: hoy C++) ──
+const MIEMBRO = new Set(['field', 'method']);
+/** Locales y parámetros solo existen desde su declaración; lo global, en todo su ámbito. */
+const desdeSuLinea = s => s.fn && ['var', 'const', 'lambda', 'alias'].includes(s.kind);
+const visible = (s, line) => s.scope.sl <= line && line <= s.scope.el && (!desdeSuLinea(s) || s.line <= line);
+
+/**
+ * El símbolo que nombra la palabra bajo el cursor: el de ámbito más interno y, a igualdad, el declarado más cerca
+ * antes del cursor. Tras `.` o `->` se prefieren campos y métodos (aunque se usen fuera de su clase).
+ */
+function symbolAt(model, position, w) {
+  const syms = (state.analysis?.symbols ?? []).filter(s => s.name === w.word);
+  if (!syms.length) return null;
+  const line = position.lineNumber;
+  const propia = syms.find(s => s.line === line && s.col === w.startColumn);
+  if (propia) return propia;
+  const miembro = /(\.|->)\s*$/.test(model.getLineContent(line).slice(0, w.startColumn - 1));
+  let cand = syms.filter(s => visible(s, line) && (!miembro || MIEMBRO.has(s.kind)));
+  if (!cand.length && miembro) cand = syms.filter(s => MIEMBRO.has(s.kind));
+  if (!cand.length) return null;
+  const antes = s => (s.line <= line ? line - s.line : 1e6 + s.line);
+  cand.sort((a, b) => (a.scope.el - a.scope.sl) - (b.scope.el - b.scope.sl) || antes(a) - antes(b));
+  return cand[0];
+}
+
+const KIND_ES = {
+  var: ['Variable', 'a'], param: ['Parámetro', 'o'], field: ['Campo', 'o'], function: ['Función', 'a'], method: ['Método', 'o'],
+  type: ['Tipo', 'o'], alias: ['Alias de tipo', 'o'], enumerator: ['Valor de enumeración', 'o'], const: ['Constante', 'a'], lambda: ['Lambda', 'a'],
+};
+
+function symbolHover(s) {
+  const [nombre, g] = KIND_ES[s.kind] ?? ['Símbolo', 'o'];
+  const donde = {
+    param: `Parámetro de \`${s.fn ?? '?'}\` · línea ${s.line}`,
+    field: `Campo de \`${s.cls}\` · declarado en la línea ${s.line}`,
+    method: `Método de \`${s.cls}\` · declarado en la línea ${s.line}`,
+    enumerator: `Valor de \`${s.cls}\` · línea ${s.line}`,
+    type: `Tipo definido en tu código · línea ${s.line}`,
+    function: `Función definida en tu código · línea ${s.line}`,
+  }[s.kind] ?? `${nombre} ${s.fn ? 'local' : 'global'} · declarad${g} en la línea ${s.line}`;
+  const parts = ['```' + LANG.fence + '\n' + (s.decl ?? (s.type ? `${s.type} ${s.name}` : s.name)) + '\n```', donde];
+  if (s.kind === 'function' || s.kind === 'method') {
+    const u = (state.analysis?.units ?? []).find(x => x.name === s.name && (s.kind !== 'method' || x.class === s.cls) && x.startLine <= s.line + 3 && s.line <= x.endLine)
+      ?? (state.analysis?.units ?? []).find(x => x.name === s.name && (s.kind !== 'method' || x.class === s.cls));
+    if (u) parts.push(`Complejidad ciclomática **${u.cc}** (${u.grade}) · cognitiva **${u.cognitive}**${u.bigO ? ` · estimación **${u.bigO}**` : ''}`);
+  }
+  if (s.doc) parts.push(s.doc);
+  if (s.detail) parts.push(s.detail);
+  return mdLines(...parts);
+}
+
 export function registerIde(monaco, { onCommand }) {
   registerTheme(monaco);
   LANG.register?.(monaco);
@@ -63,12 +114,29 @@ export function registerIde(monaco, { onCommand }) {
         seen.add(m[0]);
         out.push({ label: m[0], kind: K.Variable, insertText: m[0], range, sortText: '0' + m[0], detail: 'variable' });
       }
+      // Lo que ha declarado el usuario y se ve aquí (el más interno primero); tras . o -> también campos y métodos
+      const SK = { var: K.Variable, param: K.Variable, field: K.Field, function: K.Function, method: K.Method, type: K.Struct, alias: K.TypeParameter,
+        enumerator: K.EnumMember, const: K.Constant, lambda: K.Function };
+      const miembro = /(\.|->)$/.test(before);
+      const propios = new Set();
+      const syms = (state.analysis?.symbols ?? []).filter(s => visible(s, position.lineNumber) || (miembro && MIEMBRO.has(s.kind)))
+        .sort((a, b) => (a.scope.el - a.scope.sl) - (b.scope.el - b.scope.sl));
+      for (const s of syms) {
+        propios.add(s.name);
+        const clave = (['function', 'method', 'lambda'].includes(s.kind) ? 'fn:' : '') + s.name;
+        if (seen.has(clave) || seen.has(s.name)) continue;
+        seen.add(clave);
+        const kind = s.kind === 'type' && /^(template\s*<.*>\s*)?enum\b/.test(s.decl ?? '') ? K.Enum : (s.kind === 'type' && /\bclass\b/.test(s.decl ?? '') ? K.Class : SK[s.kind] ?? K.Variable);
+        out.push({ label: s.name, kind, insertText: s.name, range, sortText: (miembro && MIEMBRO.has(s.kind) ? '0' : '1') + s.name,
+          detail: s.type ?? s.decl ?? '', documentation: mdLines(s.doc, s.detail) });
+      }
       for (const u of state.analysis?.units ?? []) {
         if (u.kind === 'main' || seen.has('fn:' + u.name)) continue;
         seen.add('fn:' + u.name);
         out.push({ label: u.name, kind: u.kind === 'method' ? K.Method : K.Function, insertText: u.name, range, sortText: '1' + u.name, detail: `${u.qname} · CC ${u.cc}`, documentation: 'Definida en tu código' });
       }
       for (const [name, f] of Object.entries(cat?.functions ?? {})) {
+        if (propios.has(name)) continue;
         const slots = f.p.slice(0, f.r).map((p, i) => `\${${i + 1}:${slotName(p)}}`).join(', ');
         out.push({
           label: { label: name, detail: `(${f.p.map(slotName).join(', ')})` }, kind: K.Function, range, sortText: (f.pg ? '2' : '3') + name,
@@ -77,6 +145,7 @@ export function registerIde(monaco, { onCommand }) {
         });
       }
       for (const [name, c] of Object.entries(cat?.classes ?? {})) {
+        if (propios.has(name)) continue;
         out.push({ label: name, kind: K.Class, insertText: name, range, sortText: '4' + name, documentation: mdLines(c.d, c.j && LANG.showJava ? `Java: \`${c.j}\`` : '') });
       }
       for (const k of KEYWORDS) out.push({ label: k, kind: K.Keyword, insertText: k, range, sortText: '5' + k });
@@ -107,7 +176,10 @@ export function registerIde(monaco, { onCommand }) {
         const lower = w.word.toLowerCase();
         const f = catFn(cat, w.word);
         const user = (state.analysis?.units ?? []).find(u => u.name === w.word && u.kind !== 'main');
-        if (user) {
+        const sym = symbolAt(model, position, w);
+        if (sym) {
+          contents.push(symbolHover(sym));
+        } else if (user) {
           contents.push(mdLines(
             `\`\`\`${LANG.fence}\n${user.kind === 'method' ? user.qname : LANG.fnPrefix + user.name}\n\`\`\``,
             `Definida en tu código · complejidad ciclomática **${user.cc}** (${user.grade}) · cognitiva **${user.cognitive}**${user.bigO ? ` · estimación **${user.bigO}**` : ''}`));

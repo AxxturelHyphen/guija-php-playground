@@ -24,7 +24,7 @@ const IDLE = () => { const b = document.querySelector('#btn-run'); return !b.cla
   const browser = await launch();
   const fallos = [];
   try {
-    for (const lang of ['php', 'python', 'java']) {
+    for (const lang of ['php', 'python', 'java', 'cpp']) {
       const ctx = await browser.newContext({ deviceScaleFactor: 1, viewport: { width: 1280, height: 800 } });
       await cacheExternal(ctx);
       const page = await ctx.newPage();

@@ -57,8 +57,8 @@ function phpBinary(): string
 
 // ═══════════════════════════════════════ 1. sintaxis de todos los PHP ═══════════════════════════════════════
 section('Sintaxis (php -l) de todos los archivos');
-$dirs = ['app', 'app/Core', 'app/Lang/Php', 'app/Lang/Php/Analysis', 'app/Lang/Php/data', 'app/Lang/Python', 'app/Lang/Java', 'app/Lang/Java/Analysis',
-    'contenido/php/ejemplos', 'contenido/php/soluciones', 'tests', 'tests/python', 'tests/java'];
+$dirs = ['app', 'app/Core', 'app/Lang/Php', 'app/Lang/Php/Analysis', 'app/Lang/Php/data', 'app/Lang/Python', 'app/Lang/Java', 'app/Lang/Java/Analysis', 'app/Lang/Cpp', 'app/Lang/Cpp/Analysis',
+    'contenido/php/ejemplos', 'contenido/php/soluciones', 'tests', 'tests/python', 'tests/java', 'tests/cpp'];
 $all = [PG_ROOT . '/index.php', PG_ROOT . '/pg.php'];
 foreach ($dirs as $d) {
     foreach (glob(PG_ROOT . "/{$d}/*.php") ?: [] as $f) {
@@ -280,13 +280,13 @@ if ($up) {
     check('GET /assets/css/app.css → 200 (estático permitido)', $r['status'] === 200 && str_contains($r['headers'], 'text/css'));
     $r = http($port, 'GET', '/');
     check('GET / → selector de lenguaje con Content-Security-Policy', $r['status'] === 200 && str_contains($r['headers'], 'Content-Security-Policy') && str_contains($r['headers'], "frame-ancestors 'none'") && str_contains($r['body'], 'lang-card'));
-    foreach (['php', 'python', 'java'] as $l) {
+    foreach (['php', 'python', 'java', 'cpp'] as $l) {
         $r = http($port, 'GET', "/{$l}");
         check("GET /{$l} → IDE de ese lenguaje con CSP", $r['status'] === 200 && str_contains($r['headers'], "frame-ancestors 'none'") && str_contains($r['body'], "data-lang=\"{$l}\""));
     }
     $r = http($port, 'GET', '/api?action=langs');
     $langs = json_decode($r['body'], true)['langs'] ?? [];
-    check('GET /api?action=langs → los 3 lenguajes con su estado', $r['status'] === 200 && array_column($langs, 'id') === ['php', 'python', 'java']);
+    check('GET /api?action=langs → los 4 lenguajes con su estado', $r['status'] === 200 && array_column($langs, 'id') === ['php', 'python', 'java', 'cpp']);
     foreach (['ruby', '..%2F..%2Fapp', '', 'PHP'] as $badLang) {
         $r = http($port, 'GET', "/api?lang={$badLang}&action=tree");
         check("lang «{$badLang}» desconocido → 404", $badLang === '' ? $r['status'] === 404 || $r['status'] === 200 : $r['status'] === 404, "status {$r['status']}");
@@ -341,7 +341,7 @@ if (is_resource($proc)) {
 
 // ═══════════════════════════════════════ 7. Python, Java y paridad ═══════════════════════════════════════
 // Cada lenguaje tiene su propio autotest con la misma estructura; aquí se lanzan y se cuenta su resultado.
-foreach (['tests/python/run.php' => 'Python', 'tests/java/run.php' => 'Java', 'tests/paridad.php' => 'Paridad del temario (PHP · Python · Java)'] as $script => $label) {
+foreach (['tests/python/run.php' => 'Python', 'tests/java/run.php' => 'Java', 'tests/cpp/run.php' => 'C++', 'tests/paridad.php' => 'Paridad del temario (PHP · Python · Java)'] as $script => $label) {
     if (!is_file(PG_ROOT . '/' . $script)) {
         continue;
     }

@@ -3,16 +3,17 @@ declare(strict_types=1);
 
 namespace Playground\Core;
 
+use Playground\Lang\Cpp\CppLanguage;
 use Playground\Lang\Java\JavaLanguage;
 use Playground\Lang\Php\PhpLanguage;
 use Playground\Lang\Python\PythonLanguage;
 
 defined('PG_ROOT') or exit;
 
-/** Registro de lenguajes. El id va en la URL (/php, /python, /java) y en la API (?lang=…). */
+/** Registro de lenguajes. El id va en la URL (/php, /python, /java, /cpp) y en la API (?lang=…). */
 final class Languages
 {
-    public const IDS = ['php', 'python', 'java'];
+    public const IDS = ['php', 'python', 'java', 'cpp'];
 
     /** @var array<string, Language> */
     private static array $cache = [];
@@ -26,6 +27,7 @@ final class Languages
             'php' => new PhpLanguage(),
             'python' => new PythonLanguage(),
             'java' => new JavaLanguage(),
+            'cpp' => new CppLanguage(),
         };
     }
 
