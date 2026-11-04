@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "descripcion": "Fuente común del temario. Cada lección tiene, por lenguaje, su archivo y título; 'ejercicios' lista los nombres en cada lenguaje (null = no existe en ese lenguaje), el @bigo esperado y si se mide con medir(). 'paridad' recoge las diferencias justificadas entre lenguajes; tests/paridad.php comprueba el resto.",
+  "descripcion": "Fuente común del temario. Cada lección tiene, por lenguaje, su archivo y título; 'ejercicios' lista los nombres en cada lenguaje (null = no existe en ese lenguaje), el @bigo esperado y si se mide con medir(). Las lecciones con solo un lenguaje (numpy, audio en Python; dp, rangos, bits-mates, strings en C++) son propias de ese temario. 'paridad' recoge las diferencias justificadas entre lenguajes; tests/paridad.php comprueba el resto.",
   "lecciones": [
     {
       "id": "fundamentos",
@@ -13,6 +13,10 @@
       "java": {
         "archivo": "01-java-moderno.java",
         "titulo": "01 · Java moderno esencial"
+      },
+      "cpp": {
+        "archivo": "01-de-java-a-cpp.cpp",
+        "titulo": "01 · De Java, PHP y Python a C++"
       },
       "python": {
         "archivo": "01-python-esencial.py",
@@ -35,6 +39,10 @@
         "archivo": "02-poo-a-fondo.java",
         "titulo": "02 · POO a fondo"
       },
+      "cpp": {
+        "archivo": "02-clases-memoria-raii.cpp",
+        "titulo": "02 · Clases, memoria y RAII"
+      },
       "python": {
         "fusionadaEn": "fundamentos"
       },
@@ -42,6 +50,7 @@
         {
           "php": "Dinero",
           "java": "Dinero",
+          "cpp": "Dinero",
           "python": "Dinero",
           "tipo": "type",
           "bigo": null,
@@ -50,6 +59,7 @@
         {
           "php": "DescuentoPorcentaje",
           "java": "DescuentoPorcentaje",
+          "cpp": "DescuentoPorcentaje",
           "python": "DescuentoPorcentaje",
           "tipo": "type",
           "bigo": null,
@@ -58,6 +68,7 @@
         {
           "php": "DescuentoFijo",
           "java": "DescuentoFijo",
+          "cpp": "DescuentoFijo",
           "python": "DescuentoFijo",
           "tipo": "type",
           "bigo": null,
@@ -66,6 +77,7 @@
         {
           "php": "TresPorDos",
           "java": "TresPorDos",
+          "cpp": "TresPorDos",
           "python": "TresPorDos",
           "tipo": "type",
           "bigo": null,
@@ -74,6 +86,7 @@
         {
           "php": "Carrito",
           "java": "Carrito",
+          "cpp": "Carrito",
           "python": "Carrito",
           "tipo": "type",
           "bigo": null,
@@ -82,6 +95,7 @@
         {
           "php": "RepositorioUsuariosEnMemoria",
           "java": "RepositorioUsuariosEnMemoria",
+          "cpp": "RepositorioUsuariosEnMemoria",
           "python": "RepositorioUsuariosEnMemoria",
           "tipo": "type",
           "bigo": "1",
@@ -90,6 +104,7 @@
         {
           "php": "Contenedor",
           "java": "Contenedor",
+          "cpp": "Contenedor",
           "python": null,
           "tipo": "type",
           "bigo": null,
@@ -98,6 +113,7 @@
         {
           "php": "Despachador",
           "java": "Despachador",
+          "cpp": "Despachador",
           "python": "Despachador",
           "tipo": "type",
           "bigo": null,
@@ -116,6 +132,10 @@
         "archivo": "03-arrays-y-colecciones.java",
         "titulo": "03 · Arrays y colecciones"
       },
+      "cpp": {
+        "archivo": "03-stl.cpp",
+        "titulo": "03 · STL: contenedores, iteradores y algoritmos"
+      },
       "python": {
         "archivo": "02-listas-y-colecciones.py",
         "titulo": "02 · Listas, dicts y colecciones"
@@ -124,6 +144,7 @@
         {
           "php": "agruparPor",
           "java": "agruparPor",
+          "cpp": "agruparPor",
           "python": "agrupar_por",
           "tipo": "function",
           "bigo": "n",
@@ -132,6 +153,7 @@
         {
           "php": "topPalabras",
           "java": "topPalabras",
+          "cpp": "topPalabras",
           "python": "top_palabras",
           "tipo": "function",
           "bigo": null,
@@ -140,6 +162,7 @@
         {
           "php": "aplanar",
           "java": "aplanar",
+          "cpp": "aplanar",
           "python": "aplanar",
           "tipo": "function",
           "bigo": null,
@@ -148,6 +171,7 @@
         {
           "php": "Coleccion",
           "java": "Coleccion",
+          "cpp": "Coleccion",
           "python": "Coleccion",
           "tipo": "type",
           "bigo": null,
@@ -156,6 +180,7 @@
         {
           "php": "unicos",
           "java": "unicos",
+          "cpp": "unicos",
           "python": "unicos",
           "tipo": "function",
           "bigo": "n",
@@ -164,6 +189,7 @@
         {
           "php": "interseccion",
           "java": "interseccion",
+          "cpp": "interseccion",
           "python": "interseccion",
           "tipo": "function",
           "bigo": "n",
@@ -172,6 +198,7 @@
         {
           "php": "transponer",
           "java": "transponer",
+          "cpp": "transponer",
           "python": "transponer",
           "tipo": "function",
           "bigo": null,
@@ -190,6 +217,10 @@
         "archivo": "04-recursion.java",
         "titulo": "04 · Recursión"
       },
+      "cpp": {
+        "archivo": "04-recursion.cpp",
+        "titulo": "04 · Recursión"
+      },
       "python": {
         "archivo": "03-recursion.py",
         "titulo": "03 · Recursión"
@@ -198,6 +229,7 @@
         {
           "php": "factorial",
           "java": "factorial",
+          "cpp": "factorial",
           "python": "factorial",
           "tipo": "function",
           "bigo": null,
@@ -206,6 +238,7 @@
         {
           "php": "mcd",
           "java": "mcd",
+          "cpp": "mcd",
           "python": "mcd",
           "tipo": "function",
           "bigo": null,
@@ -214,6 +247,7 @@
         {
           "php": "fibonacci",
           "java": "fibonacci",
+          "cpp": "fibonacci",
           "python": "fibonacci",
           "tipo": "function",
           "bigo": "n",
@@ -222,6 +256,7 @@
         {
           "php": "potencia",
           "java": "potencia",
+          "cpp": "potencia",
           "python": "potencia",
           "tipo": "function",
           "bigo": "log",
@@ -230,6 +265,7 @@
         {
           "php": "esPalindromo",
           "java": "esPalindromo",
+          "cpp": "esPalindromo",
           "python": "es_palindromo",
           "tipo": "function",
           "bigo": null,
@@ -238,6 +274,7 @@
         {
           "php": "permutaciones",
           "java": "permutaciones",
+          "cpp": "permutaciones",
           "python": "permutaciones",
           "tipo": "function",
           "bigo": null,
@@ -246,6 +283,7 @@
         {
           "php": "subconjuntos",
           "java": "subconjuntos",
+          "cpp": "subconjuntos",
           "python": "subconjuntos",
           "tipo": "function",
           "bigo": null,
@@ -254,6 +292,7 @@
         {
           "php": "hanoi",
           "java": "hanoi",
+          "cpp": "hanoi",
           "python": "hanoi",
           "tipo": "function",
           "bigo": null,
@@ -272,6 +311,10 @@
         "archivo": "05-ordenacion.java",
         "titulo": "05 · Ordenación"
       },
+      "cpp": {
+        "archivo": "05-ordenacion.cpp",
+        "titulo": "05 · Ordenación"
+      },
       "python": {
         "archivo": "04-ordenacion.py",
         "titulo": "04 · Ordenación"
@@ -280,6 +323,7 @@
         {
           "php": "burbuja",
           "java": "burbuja",
+          "cpp": "burbuja",
           "python": "burbuja",
           "tipo": "function",
           "bigo": "n2",
@@ -288,6 +332,7 @@
         {
           "php": "insercion",
           "java": "insercion",
+          "cpp": "insercion",
           "python": "insercion",
           "tipo": "function",
           "bigo": "n2",
@@ -296,6 +341,7 @@
         {
           "php": "mergeSort",
           "java": "mergeSort",
+          "cpp": "mergeSort",
           "python": "merge_sort",
           "tipo": "function",
           "bigo": "nlogn",
@@ -304,6 +350,7 @@
         {
           "php": "quickSort",
           "java": "quickSort",
+          "cpp": "quickSort",
           "python": "quick_sort",
           "tipo": "function",
           "bigo": "nlogn",
@@ -312,6 +359,7 @@
         {
           "php": "countingSort",
           "java": "countingSort",
+          "cpp": "countingSort",
           "python": "counting_sort",
           "tipo": "function",
           "bigo": "n",
@@ -320,6 +368,7 @@
         {
           "php": "ordenarPersonas",
           "java": "ordenarPersonas",
+          "cpp": "ordenarPersonas",
           "python": "ordenar_personas",
           "tipo": "function",
           "bigo": null,
@@ -328,6 +377,7 @@
         {
           "php": "ordenarPorFrecuencia",
           "java": "ordenarPorFrecuencia",
+          "cpp": "ordenarPorFrecuencia",
           "python": "ordenar_por_frecuencia",
           "tipo": "function",
           "bigo": null,
@@ -346,6 +396,10 @@
         "archivo": "06-busqueda-y-tecnicas.java",
         "titulo": "06 · Búsqueda y técnicas"
       },
+      "cpp": {
+        "archivo": "06-busqueda-y-tecnicas.cpp",
+        "titulo": "06 · Búsqueda y técnicas"
+      },
       "python": {
         "archivo": "05-busqueda-y-tecnicas.py",
         "titulo": "05 · Búsqueda y técnicas"
@@ -354,6 +408,7 @@
         {
           "php": "busquedaBinaria",
           "java": "busquedaBinaria",
+          "cpp": "busquedaBinaria",
           "python": "busqueda_binaria",
           "tipo": "function",
           "bigo": "log",
@@ -362,6 +417,7 @@
         {
           "php": "limiteInferior",
           "java": "limiteInferior",
+          "cpp": "limiteInferior",
           "python": "limite_inferior",
           "tipo": "function",
           "bigo": "log",
@@ -370,6 +426,7 @@
         {
           "php": "parSuma",
           "java": "parSuma",
+          "cpp": "parSuma",
           "python": "par_suma",
           "tipo": "function",
           "bigo": "n",
@@ -378,6 +435,7 @@
         {
           "php": "dosSumas",
           "java": "dosSumas",
+          "cpp": "dosSumas",
           "python": "dos_sumas",
           "tipo": "function",
           "bigo": "n",
@@ -386,6 +444,7 @@
         {
           "php": "sumaMaximaVentana",
           "java": "sumaMaximaVentana",
+          "cpp": "sumaMaximaVentana",
           "python": "suma_maxima_ventana",
           "tipo": "function",
           "bigo": "n",
@@ -394,6 +453,7 @@
         {
           "php": "subcadenaSinRepetir",
           "java": "subcadenaSinRepetir",
+          "cpp": "subcadenaSinRepetir",
           "python": "subcadena_sin_repetir",
           "tipo": "function",
           "bigo": "n",
@@ -402,6 +462,7 @@
         {
           "php": "agruparAnagramas",
           "java": "agruparAnagramas",
+          "cpp": "agruparAnagramas",
           "python": "agrupar_anagramas",
           "tipo": "function",
           "bigo": null,
@@ -410,6 +471,7 @@
         {
           "php": "SumasPrefijas",
           "java": "SumasPrefijas",
+          "cpp": "SumasPrefijas",
           "python": "SumasPrefijas",
           "tipo": "type",
           "bigo": "1",
@@ -428,6 +490,10 @@
         "archivo": "07-estructuras-de-datos.java",
         "titulo": "07 · Estructuras de datos"
       },
+      "cpp": {
+        "archivo": "07-estructuras-de-datos.cpp",
+        "titulo": "07 · Estructuras de datos"
+      },
       "python": {
         "archivo": "06-estructuras-de-datos.py",
         "titulo": "06 · Estructuras de datos"
@@ -436,6 +502,7 @@
         {
           "php": "parentesisBalanceados",
           "java": "parentesisBalanceados",
+          "cpp": "parentesisBalanceados",
           "python": "parentesis_balanceados",
           "tipo": "function",
           "bigo": "n",
@@ -444,6 +511,7 @@
         {
           "php": "ColaConDosPilas",
           "java": "ColaConDosPilas",
+          "cpp": "ColaConDosPilas",
           "python": "ColaConDosPilas",
           "tipo": "type",
           "bigo": null,
@@ -452,6 +520,7 @@
         {
           "php": "invertirLista",
           "java": "invertirLista",
+          "cpp": "invertirLista",
           "python": "invertir_lista",
           "tipo": "function",
           "bigo": "n",
@@ -460,6 +529,7 @@
         {
           "php": "tieneCiclo",
           "java": "tieneCiclo",
+          "cpp": "tieneCiclo",
           "python": "tiene_ciclo",
           "tipo": "function",
           "bigo": "n",
@@ -468,6 +538,7 @@
         {
           "php": "ArbolBinarioBusqueda",
           "java": "ArbolBinarioBusqueda",
+          "cpp": "ArbolBinarioBusqueda",
           "python": "ArbolBinarioBusqueda",
           "tipo": "type",
           "bigo": null,
@@ -476,6 +547,7 @@
         {
           "php": "MinHeap",
           "java": "MinHeap",
+          "cpp": "MinHeap",
           "python": "MinHeap",
           "tipo": "type",
           "bigo": null,
@@ -484,6 +556,7 @@
         {
           "php": "ordenarConMonticulo",
           "java": "ordenarConMonticulo",
+          "cpp": "ordenarConMonticulo",
           "python": "ordenar_con_monticulo",
           "tipo": "function",
           "bigo": "nlogn",
@@ -492,6 +565,7 @@
         {
           "php": "CacheLRU",
           "java": "CacheLRU",
+          "cpp": "CacheLRU",
           "python": "CacheLRU",
           "tipo": "type",
           "bigo": "1",
@@ -500,6 +574,7 @@
         {
           "php": "topK",
           "java": "topK",
+          "cpp": "topK",
           "python": "top_k",
           "tipo": "function",
           "bigo": "n",
@@ -518,6 +593,10 @@
         "archivo": "08-grafos-y-dp.java",
         "titulo": "08 · Grafos y programación dinámica"
       },
+      "cpp": {
+        "archivo": "08-grafos.cpp",
+        "titulo": "08 · Grafos"
+      },
       "python": {
         "archivo": "07-grafos-y-dp.py",
         "titulo": "07 · Grafos y programación dinámica"
@@ -526,6 +605,7 @@
         {
           "php": "construirGrafo",
           "java": "construirGrafo",
+          "cpp": "construirGrafo",
           "python": "construir_grafo",
           "tipo": "function",
           "bigo": null,
@@ -534,6 +614,7 @@
         {
           "php": "bfsCaminoMasCorto",
           "java": "bfsCaminoMasCorto",
+          "cpp": "bfsCaminoMasCorto",
           "python": "bfs_camino_mas_corto",
           "tipo": "function",
           "bigo": null,
@@ -542,6 +623,7 @@
         {
           "php": "contarIslas",
           "java": "contarIslas",
+          "cpp": "contarIslas",
           "python": "contar_islas",
           "tipo": "function",
           "bigo": "n",
@@ -550,6 +632,7 @@
         {
           "php": "ordenTopologico",
           "java": "ordenTopologico",
+          "cpp": "ordenTopologico",
           "python": "orden_topologico",
           "tipo": "function",
           "bigo": null,
@@ -558,6 +641,7 @@
         {
           "php": "dijkstra",
           "java": "dijkstra",
+          "cpp": "dijkstra",
           "python": "dijkstra",
           "tipo": "function",
           "bigo": "nlogn",
@@ -566,6 +650,7 @@
         {
           "php": "escaleras",
           "java": "escaleras",
+          "cpp": null,
           "python": "escaleras",
           "tipo": "function",
           "bigo": "n",
@@ -574,6 +659,7 @@
         {
           "php": "cambioMonedas",
           "java": "cambioMonedas",
+          "cpp": null,
           "python": "cambio_monedas",
           "tipo": "function",
           "bigo": "n",
@@ -582,6 +668,7 @@
         {
           "php": "mochila",
           "java": "mochila",
+          "cpp": null,
           "python": "mochila",
           "tipo": "function",
           "bigo": "n",
@@ -590,6 +677,7 @@
         {
           "php": "lcs",
           "java": "lcs",
+          "cpp": null,
           "python": "lcs",
           "tipo": "function",
           "bigo": "n2",
@@ -598,12 +686,80 @@
         {
           "php": "distanciaEdicion",
           "java": "distanciaEdicion",
+          "cpp": null,
           "python": "distancia_edicion",
           "tipo": "function",
           "bigo": "n2",
           "medir": true
         }
       ]
+    },
+    {
+      "id": "dp",
+      "tema": "Programación dinámica",
+      "cpp": {
+        "archivo": "09-programacion-dinamica.cpp",
+        "titulo": "09 · Programación dinámica"
+      },
+      "ejercicios": [
+        {
+          "cpp": "escaleras",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "cambioMonedas",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "mochila",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "lcs",
+          "tipo": "function",
+          "bigo": "n2",
+          "medir": true
+        },
+        {
+          "cpp": "distanciaEdicion",
+          "tipo": "function",
+          "bigo": "n2",
+          "medir": true
+        }
+      ]
+    },
+    {
+      "id": "rangos",
+      "tema": "Árboles de rangos",
+      "cpp": {
+        "archivo": "10-arboles-de-rangos.cpp",
+        "titulo": "10 · Árboles de rangos"
+      },
+      "ejercicios": []
+    },
+    {
+      "id": "bits-mates",
+      "tema": "Bits y matemáticas",
+      "cpp": {
+        "archivo": "11-bits-y-matematicas.cpp",
+        "titulo": "11 · Bits y matemáticas"
+      },
+      "ejercicios": []
+    },
+    {
+      "id": "strings",
+      "tema": "Algoritmos de strings",
+      "cpp": {
+        "archivo": "12-strings.cpp",
+        "titulo": "12 · Algoritmos de strings"
+      },
+      "ejercicios": []
     },
     {
       "id": "numpy",
@@ -682,6 +838,36 @@
       "leccion": "recursion",
       "ejercicio": "factorial",
       "motivo": "Los int de Python no desbordan: no hay OverflowError a partir de 21; se prueba el valor exacto de factorial(30)."
+    },
+    {
+      "lenguaje": "cpp",
+      "leccion": "grafos-dp",
+      "ejercicio": "cambioMonedas",
+      "motivo": "En C++ la programación dinámica tiene lección propia (09 · Programación dinámica): este ejercicio está allí."
+    },
+    {
+      "lenguaje": "cpp",
+      "leccion": "grafos-dp",
+      "ejercicio": "distanciaEdicion",
+      "motivo": "En C++ la programación dinámica tiene lección propia (09 · Programación dinámica): este ejercicio está allí."
+    },
+    {
+      "lenguaje": "cpp",
+      "leccion": "grafos-dp",
+      "ejercicio": "escaleras",
+      "motivo": "En C++ la programación dinámica tiene lección propia (09 · Programación dinámica): este ejercicio está allí."
+    },
+    {
+      "lenguaje": "cpp",
+      "leccion": "grafos-dp",
+      "ejercicio": "lcs",
+      "motivo": "En C++ la programación dinámica tiene lección propia (09 · Programación dinámica): este ejercicio está allí."
+    },
+    {
+      "lenguaje": "cpp",
+      "leccion": "grafos-dp",
+      "ejercicio": "mochila",
+      "motivo": "En C++ la programación dinámica tiene lección propia (09 · Programación dinámica): este ejercicio está allí."
     }
   ]
 }
