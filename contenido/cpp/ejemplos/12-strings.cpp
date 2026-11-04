@@ -555,7 +555,7 @@ int main()
     }, true);
     comprueba("letras acentuadas (bytes UTF-8 con signo negativo) funcionan", [&] {
         HashPolinomico h("canción canción");
-        return h.subhash(0, 7) == h.subhash(8, 7) && h.subhash(0, 6) != h.subhash(1, 6);
+        return h.subhash(0, 8) == h.subhash(9, 8) && h.subhash(0, 7) != h.subhash(1, 7);   // "canción" son 8 bytes (la ó ocupa 2)
     }, true);
     comprueba("Rabin-Karp: encuentra las mismas posiciones que la búsqueda ingenua", [&] {
         string t = textoAleatorio(2000, 3, 9);
