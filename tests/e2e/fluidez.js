@@ -14,7 +14,7 @@ const { startServer, launch, cacheExternal, p50 } = require('./lib.js');
 
 const ROUNDS = Math.max(1, parseInt((process.argv.find(a => a.startsWith('--veces=')) || '--veces=3').slice(8), 10));
 const REPS = 7; // cargas completas de la página por lenguaje
-const LANGS = ['php', 'python', 'java'];
+const LANGS = ['php', 'python', 'java', 'cpp'];
 // Mismas lecciones en los tres lenguajes (las que existen en todos y no dependen de bibliotecas externas)
 const TEMAS = ['colecciones', 'recursion', 'ordenacion', 'busqueda', 'estructuras', 'grafos-dp'];
 const TEMARIO = require('../../contenido/temario.json').lecciones;
@@ -123,7 +123,7 @@ async function measureInteraction(browser, base, lang) {
   try {
     const data = {};
     // Las cargas se alternan entre lenguajes (PHP, Python, Java, PHP...) para que la deriva de la máquina no favorezca a ninguno
-    const inter = { php: [], python: [], java: [] };
+    const inter = { php: [], python: [], java: [], cpp: [] };
     await loadOnce(browser, server.base, 'php'); // calentamiento: llena la caché del CDN
     for (let i = 0; i < REPS; i++) for (const lang of LANGS) inter[lang].push(await loadOnce(browser, server.base, lang));
     for (const lang of LANGS) {
@@ -138,7 +138,7 @@ async function measureInteraction(browser, base, lang) {
         const ref = data.php[key];
         let line = `${lang.padEnd(7)} ${label.padEnd(22)} ${f(v)}`;
         if (lang !== 'php') {
-          const limit = key === 'ejecutar' && lang === 'java' ? ref + 400 : Math.max(ref * 1.2, ref + 30);
+          const limit = key === 'ejecutar' && lang === 'java' ? ref + 400 : key === 'ejecutar' && lang === 'cpp' ? ref + 2500 : Math.max(ref * 1.2, ref + 30);
           const ok = v <= limit;
           if (!ok) code = 1;
           line += `   PHP ${f(ref)}  límite ${f(limit)}  ${ok ? 'ok' : 'FALLA'}`;

@@ -31,7 +31,7 @@ foreach (array_slice($argv, 1) as $a) {
     }
 }
 
-const LINT_TARGET = ['php' => 300, 'python' => 300, 'java' => 150];
+const LINT_TARGET = ['php' => 300, 'python' => 300, 'java' => 150, 'cpp' => 800];
 
 function p50(array $xs): float
 {
