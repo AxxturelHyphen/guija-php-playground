@@ -691,6 +691,48 @@
           "tipo": "function",
           "bigo": "n2",
           "medir": true
+        },
+        {
+          "cpp": "bellmanFord",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "floydWarshall",
+          "tipo": "function",
+          "bigo": "n3",
+          "medir": true
+        },
+        {
+          "cpp": "kruskal",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "cpp": "prim",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "componentesFuertes",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "esBipartito",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "tieneCiclo",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
         }
       ]
     },
@@ -731,6 +773,36 @@
           "tipo": "function",
           "bigo": "n2",
           "medir": true
+        },
+        {
+          "cpp": "lis",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "cpp": "tspBitmask",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "multiplicacionMatrices",
+          "tipo": "function",
+          "bigo": "n3",
+          "medir": true
+        },
+        {
+          "cpp": "caminosRejilla",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "particionIgual",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
         }
       ]
     },
