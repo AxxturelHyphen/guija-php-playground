@@ -233,8 +233,8 @@ V ordenarPorFrecuencia(const V& xs)
  * @explicacion Un montículo de máximos guardado en el propio vector: los hijos de i son 2i+1 y 2i+2 y cada padre es
  * mayor que sus hijos. Fase 1 (construir): hundir cada nodo con hijos, de n/2-1 a 0, cuesta O(n) en total. Fase 2:
  * intercambiar la raíz (el mayor) con el último del montículo, reducir el montículo en uno y hundir la nueva raíz,
- * O(log n) por vuelta. Hundir = intercambiar con el mayor de los hijos mientras sea mayor que el nodo. Se usa
- * `ptrdiff_t`/`long long` para la posición para evitar restas con size_t.
+ * O(log n) por vuelta. Hundir = intercambiar con el mayor de los hijos mientras sea mayor que el nodo. Los bucles
+ * con size_t se escriben (`i > 0`, `hundir(i - 1, ...)`) para no restar nunca por debajo de cero.
  * @alternativas std::make_heap + std::sort_heap lo dan hecho. Merge sort es estable y más rápido en la práctica (mejor uso
  * de la caché), pero necesita O(n) de memoria.
  */

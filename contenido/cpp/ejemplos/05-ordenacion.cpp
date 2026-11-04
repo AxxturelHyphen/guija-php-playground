@@ -69,6 +69,17 @@ V datos(int n, int max)
     return aleatorios(n, max, 12345);
 }
 
+/** n valores 0, 1 y 2 repartidos con un patrón fijo (para medir banderaHolandesa sin ruido de la predicción de saltos). */
+V tresValores(int n)
+{
+    V r;
+    r.reserve(static_cast<size_t>(n));
+    for (int i = 0; i < n; i++) {
+        r.push_back((i * 7 + i / 3) % 3);
+    }
+    return r;
+}
+
 /** Una persona para ordenar por varios criterios. */
 struct Persona {
     string nombre;
@@ -334,16 +345,16 @@ int main()
     //   ranges::sort(v, comp, proyección)    versión C++20 sobre el contenedor entero, con proyección.
     titulo("1. La familia sort()");
 
-    V numeros = {10, 9, 2, 33, 1};
-    V copia = numeros;                                // una copia: sort modifica el original
+    V original = {10, 9, 2, 33, 1};
+    V copia = original;                                // una copia: sort modifica el original
     sort(copia.begin(), copia.end());
-    cout << "original: " << mostrar(numeros) << " · ordenado: " << mostrar(copia) << "\n";
+    cout << "original: " << mostrar(original) << " · ordenado: " << mostrar(copia) << "\n";
     sort(copia.begin(), copia.end(), greater<int>());   // descendente: greater<> es un comparador ya hecho
     cout << "descendente con greater<int>: " << mostrar(copia) << "\n";
     sort(copia.rbegin(), copia.rend());               // ¡también! ordenar el rango inverso lo deja descendente
     cout << "con rbegin/rend: " << mostrar(copia) << "\n";
-    sort(numeros.begin(), numeros.begin() + 3);       // solo los 3 primeros
-    cout << "solo el tramo [0, 3): " << mostrar(numeros) << "\n";
+    sort(original.begin(), original.begin() + 3);       // solo los 3 primeros
+    cout << "solo el tramo [0, 3): " << mostrar(original) << "\n";
 
     int viejo[] = {5, 2, 9, 1};                       // un array de C: el «fin» es viejo + tamaño
     sort(viejo, viejo + 4);
@@ -631,8 +642,8 @@ int main()
     medir(insercion, datos(n, 1'000'000));
     medir(mergeSort, datos(n, 1'000'000));
     medir(quickSort, datos(n, 1'000'000));
-    medir(countingSort, datos(n, 1000), 1000);
+    medir(countingSort, numeros(n), n);          // max proporcional a n: el coste es O(n + max) = O(n)
     medir(heapSort, datos(n, 1'000'000));
     medir(contarInversiones, datos(n, 1'000'000));
-    medir(banderaHolandesa, datos(n, 2));
+    medir(banderaHolandesa, tresValores(n));
 }

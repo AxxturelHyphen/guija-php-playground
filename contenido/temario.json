@@ -240,6 +240,18 @@
           "tipo": "function",
           "bigo": null,
           "medir": false
+        },
+        {
+          "cpp": "quitarPares",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "rotarIzquierda",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
         }
       ]
     },
@@ -334,6 +346,18 @@
           "tipo": "function",
           "bigo": null,
           "medir": false
+        },
+        {
+          "cpp": "potenciaModular",
+          "tipo": "function",
+          "bigo": "log",
+          "medir": true
+        },
+        {
+          "cpp": "nReinas",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
         }
       ]
     },
@@ -419,6 +443,24 @@
           "tipo": "function",
           "bigo": null,
           "medir": false
+        },
+        {
+          "cpp": "heapSort",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "cpp": "contarInversiones",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "cpp": "banderaHolandesa",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
         }
       ]
     },
@@ -523,7 +565,7 @@
         {
           "cpp": "SumasPrefijas2D",
           "tipo": "type",
-          "bigo": "1",
+          "bigo": null,
           "medir": false
         }
       ]
