@@ -874,7 +874,50 @@
         "archivo": "10-arboles-de-rangos.cpp",
         "titulo": "10 · Árboles de rangos"
       },
-      "ejercicios": []
+      "ejercicios": [
+        {
+          "cpp": "sumasPrefijas",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "Fenwick",
+          "tipo": "type",
+          "bigo": "log",
+          "medir": true
+        },
+        {
+          "cpp": "ArbolMinimos",
+          "tipo": "type",
+          "bigo": "log",
+          "medir": true
+        },
+        {
+          "cpp": "ArbolLazy",
+          "tipo": "type",
+          "bigo": "log",
+          "medir": true
+        },
+        {
+          "cpp": "TablaDispersa",
+          "tipo": "type",
+          "bigo": "1",
+          "medir": true
+        },
+        {
+          "cpp": "AncestroComun",
+          "tipo": "type",
+          "bigo": "log",
+          "medir": true
+        },
+        {
+          "cpp": "contarInversiones",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        }
+      ]
     },
     {
       "id": "bits-mates",
@@ -883,7 +926,56 @@
         "archivo": "11-bits-y-matematicas.cpp",
         "titulo": "11 · Bits y matemáticas"
       },
-      "ejercicios": []
+      "ejercicios": [
+        {
+          "cpp": "contarBits",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "numeroUnico",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "subconjuntosConSuma",
+          "tipo": "function",
+          "bigo": "exp",
+          "medir": true
+        },
+        {
+          "cpp": "potenciaModular",
+          "tipo": "function",
+          "bigo": "log",
+          "medir": true
+        },
+        {
+          "cpp": "inversoModular",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "criba",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "factorizar",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "Combinatoria",
+          "tipo": "type",
+          "bigo": "1",
+          "medir": true
+        }
+      ]
     },
     {
       "id": "strings",
@@ -892,7 +984,56 @@
         "archivo": "12-strings.cpp",
         "titulo": "12 · Algoritmos de strings"
       },
-      "ejercicios": []
+      "ejercicios": [
+        {
+          "cpp": "funcionFallo",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "buscarKMP",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "funcionZ",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "HashPolinomico",
+          "tipo": "type",
+          "bigo": "1",
+          "medir": true
+        },
+        {
+          "cpp": "palindromoMasLargo",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "Trie",
+          "tipo": "type",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "frecuenciaPalabras",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "periodoMinimo",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        }
+      ]
     },
     {
       "id": "numpy",
