@@ -57,8 +57,8 @@ function phpBinary(): string
 
 // ═══════════════════════════════════════ 1. sintaxis de todos los PHP ═══════════════════════════════════════
 section('Sintaxis (php -l) de todos los archivos');
-$dirs = ['app', 'app/Core', 'app/Lang/Php', 'app/Lang/Php/Analysis', 'app/Lang/Php/data', 'app/Lang/Python', 'app/Lang/Java', 'app/Lang/Java/Analysis',
-    'contenido/php/ejemplos', 'contenido/php/soluciones', 'tests', 'tests/python', 'tests/java'];
+$dirs = ['app', 'app/Core', 'app/Lang/Php', 'app/Lang/Php/Analysis', 'app/Lang/Php/data', 'app/Lang/Python', 'app/Lang/Java', 'app/Lang/Java/Analysis', 'app/Lang/Cpp', 'app/Lang/Cpp/Analysis',
+    'contenido/php/ejemplos', 'contenido/php/soluciones', 'tests', 'tests/python', 'tests/java', 'tests/cpp'];
 $all = [PG_ROOT . '/index.php', PG_ROOT . '/pg.php'];
 foreach ($dirs as $d) {
     foreach (glob(PG_ROOT . "/{$d}/*.php") ?: [] as $f) {
@@ -341,7 +341,7 @@ if (is_resource($proc)) {
 
 // ═══════════════════════════════════════ 7. Python, Java y paridad ═══════════════════════════════════════
 // Cada lenguaje tiene su propio autotest con la misma estructura; aquí se lanzan y se cuenta su resultado.
-foreach (['tests/python/run.php' => 'Python', 'tests/java/run.php' => 'Java', 'tests/paridad.php' => 'Paridad del temario (PHP · Python · Java)'] as $script => $label) {
+foreach (['tests/python/run.php' => 'Python', 'tests/java/run.php' => 'Java', 'tests/cpp/run.php' => 'C++', 'tests/paridad.php' => 'Paridad del temario (PHP · Python · Java)'] as $script => $label) {
     if (!is_file(PG_ROOT . '/' . $script)) {
         continue;
     }
