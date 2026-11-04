@@ -26,7 +26,44 @@
           "poo"
         ]
       },
-      "ejercicios": []
+      "ejercicios": [
+        {
+          "cpp": "intercambiar",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "sumaSinDesbordar",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "contarVocales",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "invertirEnSitio",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "maximo",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "penultimo",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        }
+      ]
     },
     {
       "id": "poo",
