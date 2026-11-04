@@ -513,6 +513,18 @@
           "tipo": "type",
           "bigo": "1",
           "medir": true
+        },
+        {
+          "cpp": "raizEntera",
+          "tipo": "function",
+          "bigo": "log",
+          "medir": false
+        },
+        {
+          "cpp": "SumasPrefijas2D",
+          "tipo": "type",
+          "bigo": "1",
+          "medir": false
         }
       ]
     },
@@ -616,6 +628,18 @@
           "tipo": "function",
           "bigo": "n",
           "medir": true
+        },
+        {
+          "cpp": "UnionFind",
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "Trie",
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
         }
       ]
     },
