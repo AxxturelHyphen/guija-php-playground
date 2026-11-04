@@ -85,7 +85,9 @@
             "pg": true
         },
         "pendiente": {
-            "p": [],
+            "p": [
+                "string_view msg = \"Ejercicio pendiente de implementar\""
+            ],
             "r": 0,
             "ret": ": T",
             "d": "Marca un ejercicio **sin hacer**: `return pendiente();` compila en cualquier función, sea cual sea su tipo de retorno. Al ejecutarse lanza `PorHacer`, y las pruebas que llegan a ella aparecen como «pendiente», no como fallo. `PorHacer` **no** hereda de `std::exception`, para que un `catch (const std::exception&)` de tu código no la atrape. Sustitúyelo por tu implementación.\n```cpp\nint busquedaBinaria(const vector<int>& v, int x) {\n  return pendiente();\n}\n```",
@@ -134,9 +136,9 @@
             "p": [
                 "int n",
                 "int max",
-                "int semilla"
+                "long long semilla = 1"
             ],
-            "r": 3,
+            "r": 2,
             "ret": ": vector<int>",
             "d": "`vector<int>` con `n` enteros pseudoaleatorios entre **0 y `max`** (ambos incluidos). Con la misma `semilla` salen siempre los mismos números, y con **el mismo generador que en PHP, Java y Python** (congruencial `x = (x · 1103515245 + 12345) & 0x7fffffff`), así que los datos coinciden en todos los lenguajes. Con `max` pequeño habrá muchos repetidos (`aleatorios(n, 1000, 1)`); con `max = 1000000000`, casi ninguno. No es para simulaciones serias (para eso, `mt19937`).",
             "pg": true
@@ -671,7 +673,7 @@
             ],
             "r": 2,
             "ret": ": bool",
-            "d": "Como `next_permutation` pero hacia atrás: la **anterior** en orden lexicográfico. Para recorrer todas en orden decreciente, ordena antes de mayor a menor (`sort(v.rbegin(), v.rend())`). Devuelve `false` al dar la vuelta.\n\n**En Python:** `itertools.permutations` + `reversed(sorted(…))`.",
+            "d": "Como `next_permutation` pero hacia atrás: la **anterior** en orden lexicográfico. Para recorrer todas en orden decreciente, ordena antes de mayor a menor (`sort(v.rbegin(), v.rend())`). Devuelve `false` al dar la vuelta.\n\n**En Python:** `itertools.permutations` + `reversed(sorted(…))`. **En Java/PHP:** no hay; se escribe a mano.",
             "o": "O(n) por llamada (O(1) amortizado)"
         },
         "is_sorted": {
@@ -790,7 +792,7 @@
             ],
             "r": 2,
             "ret": ": void",
-            "d": "Tras un `v.push_back(x)`, recoloca el último elemento para restaurar el montículo (*sift-up*): `v.push_back(x); push_heap(v.begin(), v.end());`. Usa el mismo comparador que en `make_heap`.\n\n**En Python:** `heapq.heappush(v, x)`.",
+            "d": "Tras un `v.push_back(x)`, recoloca el último elemento para restaurar el montículo (*sift-up*): `v.push_back(x); push_heap(v.begin(), v.end());`. Usa el mismo comparador que en `make_heap`.\n\n**En Python:** `heapq.heappush(v, x)`. **En Java:** `PriorityQueue.add`. **En PHP:** `SplMaxHeap::insert`.",
             "o": "O(log n)"
         },
         "pop_heap": {
@@ -801,7 +803,7 @@
             ],
             "r": 2,
             "ret": ": void",
-            "d": "Mueve la cima del montículo (el mayor) **al final** y restaura el montículo en el resto; después hay que quitarlo: `pop_heap(v.begin(), v.end()); int mx = v.back(); v.pop_back();`.\n\n**En Python:** `heapq.heappop(v)` (devuelve el menor).",
+            "d": "Mueve la cima del montículo (el mayor) **al final** y restaura el montículo en el resto; después hay que quitarlo: `pop_heap(v.begin(), v.end()); int mx = v.back(); v.pop_back();`.\n\n**En Python:** `heapq.heappop(v)` (devuelve el menor). **En Java:** `PriorityQueue.poll` (el menor). **En PHP:** `SplMaxHeap::extract`.",
             "o": "O(log n)"
         },
         "back_inserter": {
@@ -830,7 +832,7 @@
             ],
             "r": 2,
             "ret": ": T",
-            "d": "Función interna de GCC (`<algorithm>`) para el máximo común divisor, anterior a `std::gcd`. Funciona con enteros, pero no es estándar y con negativos puede devolver un resultado negativo. En C++17 usa `gcd(a, b)`.\n\n**En Python:** `math.gcd`.",
+            "d": "Función interna de GCC (`<algorithm>`) para el máximo común divisor, anterior a `std::gcd`. Funciona con enteros, pero no es estándar y con negativos puede devolver un resultado negativo. En C++17 usa `gcd(a, b)`.\n\n**En Python:** `math.gcd`. **En Java:** `BigInteger.gcd` o a mano. **En PHP:** `gmp_gcd`.",
             "o": "O(log min(a, b))"
         },
         "lcm": {
@@ -886,7 +888,7 @@
             ],
             "r": 1,
             "ret": ": long double",
-            "d": "Raíz cuadrada en `long double` (64 bits de mantisa en GCC/x86 frente a 53 de `double`). Punto de partida para la **raíz entera** de un `long long`: `long long r = sqrtl(n);` y después corregir con `while (r * r > n) r--;` y `while ((r + 1) * (r + 1) <= n) r++;`.\n\n**En Python:** `math.isqrt`.",
+            "d": "Raíz cuadrada en `long double` (64 bits de mantisa en GCC/x86 frente a 53 de `double`). Punto de partida para la **raíz entera** de un `long long`: `long long r = sqrtl(n);` y después corregir con `while (r * r > n) r--;` y `while ((r + 1) * (r + 1) <= n) r++;`.\n\n**En Python:** `math.isqrt`. **En Java:** `Math.sqrt` (solo `double`). **En PHP:** `sqrt`.",
             "o": "O(1)"
         },
         "cbrt": {
@@ -1065,7 +1067,7 @@
             "p": [],
             "r": 0,
             "ret": ": reverse_iterator",
-            "d": "Iterador inverso a la posición **anterior al primer** elemento: el final de un recorrido al revés (no se puede desreferenciar). Ver `rbegin`.\n\n**En Python:** fin de `reversed(v)`.",
+            "d": "Iterador inverso a la posición **anterior al primer** elemento: el final de un recorrido al revés (no se puede desreferenciar). Ver `rbegin`.\n\n**En Python:** fin de `reversed(v)`. **En Java:** `ListIterator.hasPrevious()` false. **En PHP:** fin de `array_reverse`.",
             "o": "O(1)"
         },
         "size": {
@@ -1095,7 +1097,7 @@
             "p": [],
             "r": 0,
             "ret": ": T*",
-            "d": "**vector / string / array**: puntero al primer elemento del almacenamiento contiguo (para pasarlo a funciones de C o a `memcpy`). Deja de valer si el contenedor se realoja. `std::data(c)` es la versión libre. Con `using namespace std`, una variable global llamada `data` choca con `std::data` («reference to 'data' is ambiguous»).\n\n**En C:** el propio nombre del array.",
+            "d": "**vector / string / array**: puntero al primer elemento del almacenamiento contiguo (para pasarlo a funciones de C o a `memcpy`). Deja de valer si el contenedor se realoja. `std::data(c)` es la versión libre. Con `using namespace std`, una variable global llamada `data` choca con `std::data` («reference to 'data' is ambiguous»).\n\n**En C:** el propio nombre del array. **En Java/Python/PHP:** no hay punteros; no aplica.",
             "o": "O(1)"
         },
         "make_pair": {
@@ -1477,7 +1479,7 @@
             ],
             "r": 1,
             "ret": ": T",
-            "d": "C++20 (`<bit>`): menor potencia de dos ≥ `x` (sin signo): `bit_ceil(5u) == 8`. Típico para dimensionar un árbol de segmentos iterativo (`int tam = bit_ceil((unsigned)n);`). UB si el resultado no cabe en el tipo.\n\n**En Python:** `1 << (x - 1).bit_length()`.",
+            "d": "C++20 (`<bit>`): menor potencia de dos ≥ `x` (sin signo): `bit_ceil(5u) == 8`. Típico para dimensionar un árbol de segmentos iterativo (`int tam = bit_ceil((unsigned)n);`). UB si el resultado no cabe en el tipo.\n\n**En Python:** `1 << (x - 1).bit_length()`. **En Java:** `Integer.highestOneBit(x - 1) << 1` (x > 1). **En PHP:** a mano con un bucle.",
             "o": "O(1)"
         },
         "bit_floor": {
@@ -1722,7 +1724,7 @@
             "p": [],
             "r": 0,
             "ret": ": const char*",
-            "d": "**string**: puntero a una cadena estilo C terminada en `'\\0'`, para funciones de C: `printf(\"%s\\n\", s.c_str());`, `puts(s.c_str())`. Deja de ser válido si el `string` se modifica o se destruye: no lo guardes. `data()` es equivalente desde C++11.\n\n**En C:** la propia cadena `char*`.",
+            "d": "**string**: puntero a una cadena estilo C terminada en `'\\0'`, para funciones de C: `printf(\"%s\\n\", s.c_str());`, `puts(s.c_str())`. Deja de ser válido si el `string` se modifica o se destruye: no lo guardes. `data()` es equivalente desde C++11.\n\n**En C:** la propia cadena `char*`. **En Java/Python/PHP:** no hace falta, las cadenas no son `char*`.",
             "o": "O(1)"
         },
         "length": {
@@ -1962,7 +1964,7 @@
             "d": "Generador pseudoaleatorio **Mersenne Twister** (`<random>`), rápido y de buena calidad: `mt19937 rng(semilla);` y `rng()` da un entero de 32 bits. Semilla variable: `mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());` o `random_device{}()`. Para un rango: `uniform_int_distribution<int>(a, b)(rng)`; evita `rng() % n` (ligero sesgo) y sobre todo `rand()` (en Windows solo llega a 32767). `mt19937_64` da 64 bits. Barajar: `shuffle(v.begin(), v.end(), rng)`. Misma semilla → misma secuencia.\n\n**En Java:** `java.util.Random` / `SplittableRandom`. **En Python:** `random` (también Mersenne Twister). **En PHP:** `mt_rand` / `Random\\Randomizer`. **En C:** `rand()` / `srand()`."
         },
         "mt19937_64": {
-            "d": "Versión de 64 bits de `mt19937`: `rng()` da valores de 64 bits. Útil para hashes aleatorios (Zobrist, semillas de un hash anti-colisiones) y valores de hasta 1.8·10¹⁹. Ver `mt19937`."
+            "d": "Versión de 64 bits de `mt19937`: `rng()` da valores de 64 bits. Útil para hashes aleatorios (Zobrist, semillas de un hash anti-colisiones) y valores de hasta 1.8·10¹⁹. Ver `mt19937`.\n\n**En Java:** `SplittableRandom.nextLong()`. **En Python:** `random.getrandbits(64)`. **En PHP:** `random_int(PHP_INT_MIN, PHP_INT_MAX)`."
         },
         "uniform_int_distribution": {
             "d": "Distribución **uniforme de enteros en [a, b], ambos incluidos** (`<random>`): `uniform_int_distribution<int> dado(1, 6); int x = dado(rng);`. Sin sesgo, a diferencia de `rng() % n`. Reales en [a, b): `uniform_real_distribution<double>`. El generador (`mt19937`) y la distribución son objetos distintos: crea el generador **una sola vez** (no en cada llamada, o repetirás valores).\n\n**En Java:** `rnd.nextInt(a, b + 1)`. **En Python:** `random.randint(a, b)`. **En PHP:** `random_int($a, $b)`. **En C:** `a + rand() % (b - a + 1)` (sesgado)."
@@ -2040,6 +2042,7 @@
         "inline": "Históricamente, sugerencia de expandir la función en el punto de llamada (con `-O2` el compilador decide solo). Hoy su significado real es «puede definirse en varias unidades de traducción (p. ej. en una cabecera) sin violar la regla de una definición». Las funciones definidas dentro de la clase son `inline` implícitamente; las variables `inline` (C++17) permiten constantes globales en cabeceras.\n\n**En Java/Python/PHP:** no existe; el JIT decide. **En C:** parecido, con reglas algo distintas (C99).",
         "int": "Entero con signo de **32 bits** en todas las plataformas habituales: −2 147 483 648..2 147 483 647 (≈ ±2.1·10⁹, `INT_MAX`).\n\nLa trampa nº 1 de DSA en C++: el **desbordamiento** con signo es **comportamiento indefinido** (ni error ni «vuelta» fiable). `int a = 100000; a * a` ya desborda (10¹⁰). Sumas de muchos elementos, productos, `n * (n + 1) / 2` con n = 10⁵, distancias en grafos… usa `long long`. Y `long long x = a * b;` con `a`, `b` `int` desborda **antes** de convertir: escribe `1LL * a * b`. La división trunca hacia 0: `-7 / 2 == -3` y `-7 % 2 == -1`.\n\n**En Java:** `int` igual, pero al desbordar da la vuelta (definido). **En Python:** enteros ilimitados; `//` redondea hacia −∞. **En PHP:** `int` de 64 bits que pasa a `float` al desbordar. **En C:** igual.",
         "long": "`long` mide **64 bits en Linux** pero **32 en Windows** (MSVC/MinGW): no te fíes. En DSA usa **`long long`** (siempre ≥ 64 bits): ±9.22·10¹⁸ (`LLONG_MAX` = 9 223 372 036 854 775 807). Literales: `1LL`, `10'000'000'000LL`. E/S: `cin >> x` o `scanf(\"%lld\", &x)`.\n\nRegla rápida: si un valor puede superar ~2·10⁹ (sumas de 10⁵ números de hasta 10⁹, productos, caminos con pesos, conteos), `long long`. Multiplicar dos `long long` de hasta ~10¹⁸ (p. ej. `a * b % m` con `m` ≈ 10¹⁸) desborda: usa `__int128`. `unsigned long long` llega a 1.8·10¹⁹. `long double`: flotante extendido.\n\nAlias habitual: `using ll = long long;`.\n\n**En Java:** `long` (siempre 64 bits). **En Python:** `int` ilimitado. **En PHP:** `int` ya es de 64 bits. **En C:** igual.",
+        "long long": "Entero con signo de **al menos 64 bits** (en la práctica, exactamente 64): de `LLONG_MIN` = −9 223 372 036 854 775 808 a `LLONG_MAX` ≈ 9.22·10¹⁸. Es el tipo por defecto en DSA cuando algo puede pasar de ~2·10⁹ (sumas, productos, distancias con pesos). Alias habitual: `using ll = long long;`.\n```cpp\nlong long s = 0;\nfor (int x : v) s += x;      // bien: suma en 64 bits\nlong long p = 1LL * a * b;   // promueve ANTES de multiplicar\n```\nTrampa: `long long p = a * b;` con `a`, `b` `int` multiplica en 32 bits y desborda **antes** de asignar. Literal: `1LL << 40` (con `1 << 40` es UB). E/S: `scanf(\"%lld\")`. `accumulate(v.begin(), v.end(), 0LL)` (con `0` suma en `int`).\n\n**En Java:** `long`. **En Python:** `int` (sin límite). **En PHP:** `int` (64 bits). **En C:** igual, `long long`.",
         "mutable": "1) Permite modificar un miembro aunque el objeto sea `const` (cachés, contadores internos): `mutable int consultas;`.\n2) En lambdas, permite modificar las **copias** capturadas por valor: `[cnt]() mutable { return ++cnt; }` (sin `mutable`, las capturas por valor son de solo lectura).\n\n**En Java/Python/PHP/C:** sin equivalente.",
         "namespace": "Espacio de nombres para evitar choques: `namespace geo { struct Punto { … }; }` → `geo::Punto`. Toda la biblioteca estándar vive en `std`.\n\n`using namespace std;` mete todos sus nombres en el ámbito: cómodo en ejercicios de un fichero, pero en código grande provoca choques (tus `count`, `distance`, `next`, `data` o `max` globales chocan con los de `std` → errores «ambiguous»). Nunca en una cabecera. Alternativa selectiva: `using std::vector;`. Un `namespace { … }` anónimo hace sus nombres privados del fichero.\n\n**En Java:** `package` + `import`. **En Python:** cada módulo es un espacio de nombres. **En PHP:** `namespace App;` + `use`. **En C:** no existen (prefijos manuales).",
         "new": "Crea un objeto en el **montón** (heap) y devuelve un **puntero**: `Nodo* n = new Nodo(5);`, `int* a = new int[n];`. Hay que liberarlo con `delete` / `delete[]` exactamente una vez; si no, fuga de memoria. Si no hay memoria lanza `std::bad_alloc` (no devuelve `NULL`).\n\nEn C++ moderno no se usa `new` a mano: `vector<int> a(n);` en vez de `new int[n]`, `make_unique<Nodo>(5)` en vez de `new Nodo(5)`, o un objeto local `Nodo n(5);` (vive en la pila y se destruye solo). Excepción habitual en DSA: árboles y listas enlazadas con punteros crudos.\n\n**En Java/PHP:** `new` es la forma de crear objetos y el GC libera. **En Python:** se llama a la clase, `Nodo(5)`. **En C:** `malloc(sizeof(Nodo))`, que no llama al constructor; no lo mezcles con `delete`.",
@@ -2049,7 +2052,7 @@
         "private": "Miembros accesibles solo desde la propia clase (y sus `friend`). Es el acceso por defecto en `class`. Se escribe como sección: `private:` y todo lo que sigue es privado hasta otra etiqueta. Herencia `: private Base` oculta la interfaz pública de la base.\n\n**En Java/PHP:** `private` por miembro. **En Python:** convención `_x` / `__x`. **En C:** no hay control de acceso.",
         "protected": "Miembros accesibles desde la clase y sus **derivadas**, pero no desde fuera. Sección `protected:`.\n\n**En Java:** `protected` además da acceso a todo el paquete. **En Python:** convención `_x`. **En PHP:** `protected`. **En C:** no existe.",
         "public": "Miembros accesibles desde cualquier sitio. Es el acceso por defecto en `struct`. Sección `public:`. En herencia, `class B : public A` mantiene públicos los miembros públicos de `A` (casi siempre es lo que quieres; con `class`, la herencia por defecto es `private`).\n\n**En Java/PHP:** `public` por miembro. **En Python:** todo es público. **En C:** todo es público.",
-        "register": "Obsoleta: desde C++17 no tiene significado (palabra reservada sin uso). Antes sugería guardar la variable en un registro de la CPU; los compiladores ya lo deciden mejor solos.\n\n**En C:** sigue existiendo (y prohíbe tomar la dirección `&` de la variable).",
+        "register": "Obsoleta: desde C++17 no tiene significado (palabra reservada sin uso). Antes sugería guardar la variable en un registro de la CPU; los compiladores ya lo deciden mejor solos.\n\n**En C:** sigue existiendo (y prohíbe tomar la dirección `&` de la variable). **En Java/Python/PHP:** no existe.",
         "reinterpret_cast": "Reinterpreta los bits de un puntero o entero como otro tipo: `reinterpret_cast<char*>(&x)`. Acceder al objeto con el tipo equivocado es casi siempre **comportamiento indefinido** (*strict aliasing*). Para reinterpretar bits de forma segura: `std::bit_cast` (C++20) o `memcpy`. No lo necesitas en DSA.\n\n**En C:** el cast `(T*)p`. **En Java/Python/PHP:** no aplica.",
         "requires": "C++20. Restringe una plantilla con una condición sobre los tipos, o define una expresión de requisitos:\n```cpp\ntemplate <class T> requires std::integral<T>\nT mcd(T a, T b) { return b ? mcd(b, a % b) : a; }\n\ntemplate <class C>\nconcept Contenedor = requires(C c) { c.begin(); c.size(); };\n```\nSi el tipo no cumple, el error dice qué requisito falla en vez de cientos de líneas de plantilla.\n\n**En Java:** límites `<T extends X>`. **En Python/PHP:** no hay. **En C:** no existe.",
         "return": "Devuelve un valor y sale de la función. En una función no `void`, **llegar al final sin `return` es comportamiento indefinido** (puede devolver basura o colgarse; `-Wall` avisa: «control reaches end of non-void function»). `main` es la excepción: sin `return` devuelve 0.\n\nDevolver un `vector` local por valor es barato (movimiento / RVO), pero devolver una **referencia o puntero a una variable local** la deja colgando (UB). Varios valores: `return {a, b};` con `pair`/`tuple` o un `struct`.\n\n**En Java:** el compilador exige `return` en todas las rutas. **En Python:** sin `return` devuelve `None`. **En PHP:** `null`. **En C:** igual que C++.",
@@ -2099,8 +2102,8 @@
         "define": "`#define NOMBRE valor` crea una **macro**: el preprocesador sustituye texto antes de compilar, sin tipos ni ámbitos. Trampas: `#define CUAD(x) x*x` → `CUAD(a+1)` es `a+1*a+1`; con paréntesis `((x)*(x))` sigue evaluando `x` dos veces (`CUAD(i++)` es UB). Para constantes usa `const`/`constexpr`; para funciones, `inline`, plantillas o lambdas. Idioms como `#define int long long` o `#define all(v) v.begin(), v.end()` funcionan, pero úsalos sabiendo que son sustituciones de texto.\n\n**En Java/Python:** no hay preprocesador. **En PHP:** `define('X', 1)` es una constante real. **En C:** igual.",
         "pragma": "Directiva específica del compilador. Comunes: `#pragma once` (la cabecera se incluye una sola vez; alternativa a `#ifndef`/`#define`/`#endif`) y, en competición, `#pragma GCC optimize(\"O3\")` o `#pragma GCC target(\"avx2,popcnt\")` para pedir optimizaciones (pueden fallar en máquinas sin esas instrucciones). Un `#pragma` desconocido se ignora.\n\n**En Java/Python/PHP:** no aplica. **En C:** igual.",
         "ifdef": "Compilación condicional: `#ifdef LOCAL … #endif` solo compila el bloque si la macro está definida (p. ej. compilando con `-DLOCAL` para mensajes de depuración que no salen en el juez). `#ifndef X` / `#define X` / … / `#endif` es el *include guard* clásico de las cabeceras. También existen `#if`, `#elif`, `#else`.\n\n**En Java/Python/PHP:** no hay preprocesador (se usa un `if` en ejecución). **En C:** igual.",
-        "ifndef": "`#ifndef X`: compila el bloque hasta `#endif` solo si la macro `X` **no** está definida. Uso clásico, el *include guard*: `#ifndef GRAFO_H` / `#define GRAFO_H` / … / `#endif` (o `#pragma once`). Ver `ifdef`.",
-        "endif": "Cierra un bloque de compilación condicional abierto con `#if`, `#ifdef` o `#ifndef`. Ver `ifdef`.",
+        "ifndef": "`#ifndef X`: compila el bloque hasta `#endif` solo si la macro `X` **no** está definida. Uso clásico, el *include guard*: `#ifndef GRAFO_H` / `#define GRAFO_H` / … / `#endif` (o `#pragma once`). Ver `ifdef`.\n\n**En Java/Python/PHP:** no hay preprocesador ni hace falta (módulos/imports).",
+        "endif": "Cierra un bloque de compilación condicional abierto con `#if`, `#ifdef` o `#ifndef`. Ver `ifdef`. **En Java/Python/PHP:** no hay preprocesador.",
         "endl": "Manipulador que escribe `'\\n'` **y vacía el búfer** (`flush`). Vaciar en cada línea es lento: imprimir 10⁶ líneas con `endl` puede tardar segundos (TLE). Usa `'\\n'` y deja que el búfer se vacíe solo; reserva `endl`/`flush` para cuando necesites ver la salida al instante (programas interactivos).\n\n**En Java:** `println` (con `PrintWriter`/`BufferedWriter` para ir rápido). **En Python:** `print` añade `\\n`. **En PHP:** `PHP_EOL`. **En C:** `\\n` + `fflush(stdout)`.",
         "flush": "Manipulador/método que **vacía el búfer** de salida: `cout << flush;` o `cout.flush()`. Necesario en problemas **interactivos** (el juez espera tu respuesta antes de enviarte más datos). En el resto, no lo uses en bucles: es lento.\n\n**En Java:** `System.out.flush()`. **En Python:** `print(…, flush=True)`. **En PHP:** `flush()`. **En C:** `fflush(stdout)`.",
         "cin": "Flujo de **entrada estándar** (`<iostream>`). `cin >> x >> y;` lee separando por espacios y saltos y convierte al tipo de la variable. Si falla (fin de entrada, o texto donde se espera un número), `cin` queda en estado de error y las siguientes lecturas no hacen nada: `while (cin >> x)` lo aprovecha para leer hasta EOF. `>>` no lee espacios: para líneas completas `getline(cin, s)` (tras `cin >> n` queda un `'\\n'` pendiente: `cin.ignore()`).\n\nVelocidad: con `ios::sync_with_stdio(false); cin.tie(nullptr);` es tan rápido como `scanf`; tras eso no mezcles `cin` con `scanf`.\n\n**En Java:** `Scanner` / `BufferedReader`. **En Python:** `input()` / `sys.stdin`. **En PHP:** `fgets(STDIN)`, `fscanf`. **En C:** `scanf(\"%d\", &x)` (con `&`; aquí no).",
