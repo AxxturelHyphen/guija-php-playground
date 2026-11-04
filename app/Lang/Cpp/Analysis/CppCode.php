@@ -257,7 +257,7 @@ final class CppCode
         while ($i < $lim) {
             $x = $T[$i][1];
             if ($x === 'template' && ($T[$i + 1][1] ?? '') === '<') {
-                $e = $this->angles($i + 1, $lim);
+                $e = $this->templateAngles($i + 1, $lim);
                 if ($e < 0) {
                     return $i + 1;
                 }
@@ -797,6 +797,31 @@ final class CppCode
             } elseif ($y === '(' && isset($this->m[$j])) {
                 $j = $this->m[$j];
             } elseif (!($x[0] === 'w' || $x[0] === 'n' || in_array($y, [',', '::', '*', '&', '[', ']', '+', '-', '...', '.'], true))) {
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Fin (la ficha tras el `>`) de la cabecera `template<…>` que abre la ficha $i. Más permisivo que angles(): admite
+     * valores por defecto (`int N = 10`, `class Cmp = less<T>`, `typename = enable_if_t<…>`). -1 si no cierra.
+     */
+    public function templateAngles(int $i, int $lim): int
+    {
+        $T = $this->t;
+        $prof = 0;
+        for ($j = $i; $j < $lim && $j < $i + 200; $j++) {
+            $y = $T[$j][1];
+            if ($y === '<') {
+                $prof++;
+            } elseif ($y === '>') {
+                if (--$prof === 0) {
+                    return $j + 1;
+                }
+            } elseif (($y === '(' || $y === '{' || $y === '[') && isset($this->m[$j])) {
+                $j = $this->m[$j];
+            } elseif ($y === ';' || $y === '}' || $y === ')') {
                 return -1;
             }
         }
@@ -1675,6 +1700,10 @@ final class CppCode
             if (in_array($x[1], ['make_unique', 'make_shared'], true)) {
                 return [null, ''];
             }
+            // función libre del usuario con tipo de retorno escrito (no auto, ni plantilla que dependa de T)
+            if (!isset($types[$x[1]]) && ($ret = $this->freeReturn($x[1])) !== null) {
+                return [$ret, 'porque tu función `' . $x[1] . '()` devuelve `' . $ret . '`'];
+            }
         }
         if (in_array($x[1], ['make_unique', 'make_shared'], true) && ($T[$a + 1][1] ?? '') === '<' && ($e = $this->angles($a + 1, $b + 1)) > 0) {
             return [($x[1] === 'make_unique' ? 'unique_ptr<' : 'shared_ptr<') . $this->text($a + 2, $e - 2) . '>', 'por `' . $x[1] . '<…>(…)`'];
@@ -1765,6 +1794,23 @@ final class CppCode
     }
 
     /** Método de un tipo de usuario: su tipo de retorno. */
+    /** Tipo de retorno de una función libre del usuario, si es único entre sobrecargas y no depende de la plantilla. */
+    private function freeReturn(string $name): ?string
+    {
+        $ret = null;
+        foreach ([...$this->units, ...$this->protos] as $u) {
+            if (($u['cls'] ?? '') !== '' || ($u['name'] ?? '') !== $name) {
+                continue;
+            }
+            $r = trim((string) preg_replace('/^((static|inline|constexpr|const)\s+)+/', '', (string) ($u['ret'] ?? '')));
+            if ($r === '' || $r === 'void' || str_contains($r, 'auto') || ($u['tpl'] ?? null) !== null || ($ret !== null && $ret !== $r)) {
+                return null;
+            }
+            $ret = $r;
+        }
+        return $ret;
+    }
+
     private function methodReturn(string $cls, string $m): ?string
     {
         foreach ($this->units as $u) {

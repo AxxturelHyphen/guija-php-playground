@@ -154,7 +154,7 @@ final class CppSymbols
                 continue;
             }
             $kind = $cl['kind'];
-            $decl = ($cl['tpl'] !== null ? $c->text($cl['tpl'], $c->angles($cl['tpl'] + 1, $cl['open']) - 1) . ' ' : '') . ($cl['scoped'] ? 'enum class' : $kind) . ' ' . $cl['name'];
+            $decl = ($cl['tpl'] !== null ? $c->text($cl['tpl'], $c->templateAngles($cl['tpl'] + 1, $cl['open']) - 1) . ' ' : '') . ($cl['scoped'] ? 'enum class' : $kind) . ' ' . $cl['name'];
             $det = match ($kind) {
                 'struct' => '`struct` definido en tu código: agrupa varios campos en un solo tipo (son públicos por defecto).',
                 'class' => '`class` definida en tu código: agrupa datos y métodos (son privados por defecto: lo que uses desde fuera va tras `public:`).',
@@ -227,7 +227,7 @@ final class CppSymbols
         $ps = implode(', ', array_column($f['params'], 'text'));
         $quals = isset($f['quals']['const']) ? ' const' : '';
         $ret = $f['ret'] ?? '';
-        $tpl = $f['tpl'] !== null ? $c->text($f['tpl'], max($f['tpl'], $c->angles($f['tpl'] + 1, count($c->t)) - 1)) . ' ' : '';
+        $tpl = $f['tpl'] !== null ? $c->text($f['tpl'], max($f['tpl'], $c->templateAngles($f['tpl'] + 1, count($c->t)) - 1)) . ' ' : '';
         if (($f['auto'] ?? false) && $ret !== '') {
             return $tpl . 'auto ' . $name . '(' . $ps . ')' . $quals . ' -> ' . $ret;
         }
