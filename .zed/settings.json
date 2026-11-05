@@ -1,0 +1,9 @@
+{
+  "lsp": {
+    "clangd": {
+      "binary": {
+        "arguments": ["--query-driver=C:/Users/dguijarro/scoop/apps/msys2/**/g++.exe"]
+      }
+    }
+  }
+}

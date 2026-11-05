@@ -1,0 +1,40 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - button "Mostrar u ocultar el panel Proyecto" [ref=e3] [cursor=pointer]
+    - link "C++" [ref=e6] [cursor=pointer]:
+      - /url: /
+    - generic [ref=e8]: C++ 16.2.0 (g++)
+    - button "Guardar en practicas/cpp/ (Ctrl+S)" [ref=e9] [cursor=pointer]
+    - button "Ejecutar y medir con medir() (Ctrl+Alt+Enter)" [ref=e12] [cursor=pointer]
+    - button "Comparar tu rendimiento con la solución de referencia (Ctrl+Shift+Enter)" [disabled] [ref=e15]
+    - button "Ejecutar" [ref=e18] [cursor=pointer]
+    - button "Ajustes" [ref=e22] [cursor=pointer]
+    - button "Ayuda" [ref=e26] [cursor=pointer]
+  - generic [ref=e30]:
+    - complementary "Proyecto" [ref=e31]:
+      - generic [ref=e32]:
+        - generic [ref=e33]: Proyecto
+        - button "+ Nuevo" [ref=e34] [cursor=pointer]
+      - navigation "Archivos" [ref=e35]
+    - separator "Arrastra para redimensionar" [ref=e36]
+    - generic [ref=e37]:
+      - region "Editor" [ref=e38]:
+        - generic [ref=e39]:
+          - tablist "Archivos abiertos"
+        - generic [ref=e40]: Cargando editor…
+      - separator "Arrastra para redimensionar" [ref=e42]
+      - region "Resultados" [ref=e43]:
+        - generic [ref=e44]:
+          - tablist "Ventanas de herramientas" [ref=e45]:
+            - tab "Salida" [selected] [ref=e46] [cursor=pointer]
+            - tab "Problemas" [ref=e47] [cursor=pointer]
+            - tab "Pruebas" [ref=e48] [cursor=pointer]
+            - tab "Análisis" [ref=e49] [cursor=pointer]
+          - button "Limpiar" [ref=e50] [cursor=pointer]
+        - tabpanel [ref=e52]:
+          - group [ref=e53]:
+            - generic "Entrada (STDIN)" [ref=e54] [cursor=pointer]
+          - generic [ref=e55]: Pulsa Ctrl+Enter para ejecutar. Aquí verás la salida y los errores explicados en español.
+  - status [ref=e56]:
+    - generic "Estado del análisis" [ref=e57]: Listo
+    - generic [ref=e60]: Ln 1, Col 1

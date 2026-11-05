@@ -21,6 +21,7 @@ export function registerTheme(monaco) {
       { token: 'constant', foreground: 'C77DBB', fontStyle: 'italic' },
       { token: 'variable', foreground: 'BCBEC4' },
       { token: 'type', foreground: 'BCBEC4' },
+      { token: 'type.cpp', foreground: '86985D' },          // tipos de C++ (verde pistacho, como en Zed)
       { token: 'identifier', foreground: 'BCBEC4' },
       { token: 'annotation', foreground: 'B3AE60' },
       { token: 'tag', foreground: 'B3AE60' },              // decoradores de Python
@@ -44,7 +45,7 @@ export function registerTheme(monaco) {
       'editorIndentGuide.background1': '#2E3034',
       'editorIndentGuide.activeBackground1': '#4B5059',
       'editorBracketMatch.background': '#43454A',
-      'editorBracketMatch.border': '#00000000',
+      'editorBracketMatch.border': '#8A8D93',
       'editorError.foreground': '#F75464',
       'editorWarning.foreground': '#E0BB65',
       'editorInfo.foreground': '#868A91',

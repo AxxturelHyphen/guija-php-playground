@@ -1,0 +1,52 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - button "Mostrar u ocultar el panel Proyecto" [ref=e3] [cursor=pointer]
+    - link "C++ Guija C++ Playground" [ref=e6] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e7]: C++
+      - generic [ref=e8]: Guija C++ Playground
+    - generic [ref=e9]: C++ 16.2.0 (g++)
+    - generic "Tiempo máximo de ejecución" [ref=e10]:
+      - generic [ref=e11]: Límite
+      - combobox "Tiempo máximo de ejecución" [ref=e12] [cursor=pointer]:
+        - option "5 s" [selected]
+        - option "10 s"
+        - option "30 s"
+    - button "Guardar" [ref=e13] [cursor=pointer]
+    - button "Medir" [ref=e17] [cursor=pointer]
+    - button "Comparar" [disabled] [ref=e21]
+    - button "Ejecutar Ctrl ↵" [ref=e25] [cursor=pointer]:
+      - generic [ref=e28]: Ejecutar
+      - generic [ref=e29]: Ctrl ↵
+    - button "Ajustes" [ref=e30] [cursor=pointer]
+    - button "Ayuda" [ref=e34] [cursor=pointer]
+  - generic [ref=e38]:
+    - complementary "Proyecto" [ref=e39]:
+      - generic [ref=e40]:
+        - generic [ref=e41]: Proyecto
+        - button "+ Nuevo" [ref=e42] [cursor=pointer]
+      - navigation "Archivos" [ref=e43]
+    - separator "Arrastra para redimensionar" [ref=e44]
+    - generic [ref=e45]:
+      - region "Editor" [ref=e46]:
+        - generic [ref=e47]:
+          - tablist "Archivos abiertos"
+        - generic [ref=e48]: Cargando editor…
+      - separator "Arrastra para redimensionar" [ref=e50]
+      - region "Resultados" [ref=e51]:
+        - generic [ref=e52]:
+          - tablist "Ventanas de herramientas" [ref=e53]:
+            - tab "Salida" [selected] [ref=e54] [cursor=pointer]
+            - tab "Problemas" [ref=e55] [cursor=pointer]
+            - tab "Pruebas" [ref=e56] [cursor=pointer]
+            - tab "Análisis" [ref=e57] [cursor=pointer]
+          - button "Limpiar" [ref=e58] [cursor=pointer]
+        - tabpanel [ref=e60]:
+          - group [ref=e61]:
+            - generic "Entrada (STDIN)" [ref=e62] [cursor=pointer]
+          - generic [ref=e63]: Pulsa Ctrl+Enter para ejecutar. Aquí verás la salida y los errores explicados en español.
+  - status [ref=e64]:
+    - generic "Estado del análisis" [ref=e65]: Listo
+    - generic [ref=e68]: Ln 1, Col 1
+    - generic [ref=e69]: UTF-8
+    - generic [ref=e70]: C++

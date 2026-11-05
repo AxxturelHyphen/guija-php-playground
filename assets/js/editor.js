@@ -48,7 +48,7 @@ function monacoEditor(monaco, actions) {
     tabSize: 4, insertSpaces: true, automaticLayout: true, wordWrap: s.wordWrap ? 'on' : 'off',
     minimap: { enabled: s.minimap }, scrollBeyondLastLine: false, padding: { top: 12, bottom: 12 },
     smoothScrolling: true, cursorBlinking: 'smooth', cursorSmoothCaretAnimation: 'on',
-    bracketPairColorization: { enabled: false }, guides: { indentation: true },
+    bracketPairColorization: { enabled: false }, guides: { indentation: true, bracketPairs: false, highlightActiveBracketPair: false },
     renderLineHighlight: 'line', lineNumbersMinChars: 3, glyphMargin: true,
     showFoldingControls: 'mouseover', stickyScroll: { enabled: false },
     overviewRulerLanes: 2, hideCursorInOverviewRuler: true, fixedOverflowWidgets: true,

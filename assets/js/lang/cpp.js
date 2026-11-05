@@ -1,4 +1,5 @@
 // Configuración de la interfaz para C++ (misma forma que lang/php.js).
+import { registerCpp } from '../monaco-cpp.js';
 
 export default {
   id: 'cpp',
@@ -6,8 +7,8 @@ export default {
   logo: 'C++',
   color: ['#00599C', '#004482'],
   icon: '#3A7CC0',
-  monaco: 'cpp',                     // resaltado de serie de Monaco
-  register: null,
+  monaco: 'cppx',                    // id propio en Monaco: el de serie no distingue llamadas ni miembros
+  register: registerCpp,
   ext: 'cpp',
   nameRe: /^[A-Za-z0-9_-]{1,80}\.cpp$/,
   newName: 'mi-ejercicio.cpp',
