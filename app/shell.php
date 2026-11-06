@@ -72,6 +72,12 @@ addEventListener('unhandledrejection', e => { if (e.reason && (e.reason.name ===
     <span id="run-label">Ejecutar</span>
     <span class="hide-sm"><kbd>Ctrl</kbd> <kbd>↵</kbd></span>
   </button>
+<?php if ($langId === 'cpp'): ?>
+  <a id="btn-guias" class="btn" href="/guias" target="_blank" rel="noopener" title="Guías visuales: punteros, memoria, STL… (se abren en otra pestaña)">
+    <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3c2-.8 4-.8 5.5.7 1.500-1.500 3.500-1.500 5.500-.7v9.500c-2-.8-4-.8-5.500.7-1.500-1.500-3.500-1.500-5.500-.7zM8 3.700v9.500" fill="none" stroke="currentColor" stroke-width="1.300" stroke-linejoin="round"/></svg>
+    <span class="hide-sm">Guías</span>
+  </a>
+<?php endif; ?>
   <button id="btn-settings" class="btn btn-icon" title="Ajustes" aria-label="Ajustes">
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M12.6 3.4l-1.4 1.4M4.8 11.2l-1.4 1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
   </button>

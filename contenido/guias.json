@@ -1,0 +1,365 @@
+{
+  "descripcion": "Índice de guías visuales (/guias), agrupadas por área. Una guía aparece solo si existe assets/guias/data/<id>.js. 'leccion' es la lección del temario de C++ (área dsa) o el número dentro del curso (área calculo).",
+  "guias": [
+    {
+      "id": "punteros",
+      "leccion": "02",
+      "titulo": {
+        "es": "Punteros",
+        "en": "Pointers"
+      },
+      "desc": {
+        "es": "Direcciones, & y *, aritmética sobre arrays, nullptr, punteros colgantes y paso por valor frente a por puntero.",
+        "en": "Addresses, & and *, array arithmetic, nullptr, dangling pointers and pass-by-value versus pass-by-pointer."
+      },
+      "area": "dsa"
+    },
+    {
+      "id": "memoria",
+      "leccion": "02",
+      "titulo": {
+        "es": "Gestión de memoria",
+        "en": "Memory management"
+      },
+      "desc": {
+        "es": "Pila y heap, new/delete, fugas, RAII, smart pointers y cómo lo resuelven Java y Python (recolector de basura).",
+        "en": "Stack and heap, new/delete, leaks, RAII, smart pointers and how Java and Python solve it (garbage collection)."
+      },
+      "area": "dsa"
+    },
+    {
+      "id": "stl",
+      "leccion": "03",
+      "titulo": {
+        "es": "STL: contenedores",
+        "en": "STL: containers"
+      },
+      "desc": {
+        "es": "vector, list, map, unordered_map y priority_queue por dentro, con su complejidad y cuándo elegir cada uno.",
+        "en": "vector, list, map, unordered_map and priority_queue inside out, with their complexity and when to pick each."
+      },
+      "area": "dsa"
+    },
+    {
+      "id": "recursion",
+      "leccion": "04",
+      "titulo": {
+        "es": "Recursión y complejidad",
+        "en": "Recursion and complexity"
+      },
+      "desc": {
+        "es": "La pila de llamadas, árboles de recursión, memoización, Hanoi y cómo crece el coste: O(1) hasta O(2ⁿ).",
+        "en": "The call stack, recursion trees, memoization, Hanoi and how cost grows: O(1) up to O(2ⁿ)."
+      },
+      "area": "dsa"
+    },
+    {
+      "id": "ordenacion",
+      "leccion": "05",
+      "titulo": {
+        "es": "Ordenación y búsqueda",
+        "en": "Sorting and searching"
+      },
+      "desc": {
+        "es": "Burbuja, inserción, merge y quicksort animados, búsqueda binaria, dos punteros y ventana deslizante.",
+        "en": "Bubble, insertion, merge and quicksort animated, binary search, two pointers and sliding window."
+      },
+      "area": "dsa"
+    },
+    {
+      "id": "estructuras",
+      "leccion": "07",
+      "titulo": {
+        "es": "Estructuras de datos",
+        "en": "Data structures"
+      },
+      "desc": {
+        "es": "Listas enlazadas, pilas, colas y árboles binarios de búsqueda: cómo se guardan y cuánto cuestan.",
+        "en": "Linked lists, stacks, queues and binary search trees: how they are stored and what they cost."
+      },
+      "area": "dsa"
+    },
+    {
+      "id": "grafos",
+      "leccion": "08",
+      "titulo": {
+        "es": "Grafos",
+        "en": "Graphs"
+      },
+      "desc": {
+        "es": "Listas y matrices de adyacencia, BFS, DFS, orden topológico, Dijkstra y árbol de expansión mínima, paso a paso.",
+        "en": "Adjacency lists and matrices, BFS, DFS, topological order, Dijkstra and minimum spanning trees, step by step."
+      },
+      "area": "dsa"
+    },
+    {
+      "id": "dp",
+      "leccion": "09",
+      "titulo": {
+        "es": "Programación dinámica",
+        "en": "Dynamic programming"
+      },
+      "desc": {
+        "es": "De la memoización a la tabla: mochila, LCS, distancia de edición, monedas y LIS, con las dependencias dibujadas.",
+        "en": "From memoization to the table: knapsack, LCS, edit distance, coins and LIS, with dependencies drawn."
+      },
+      "area": "dsa"
+    },
+    {
+      "id": "hashing",
+      "leccion": "06",
+      "titulo": {
+        "es": "Hashing y técnicas",
+        "en": "Hashing and techniques"
+      },
+      "desc": {
+        "es": "Tablas hash y colisiones, sumas prefijas y Union-Find con compresión de caminos.",
+        "en": "Hash tables and collisions, prefix sums and Union-Find with path compression."
+      },
+      "area": "dsa"
+    },
+    {
+      "id": "calc1-limites",
+      "area": "calculo",
+      "grupo": "calc1",
+      "leccion": "1",
+      "titulo": {
+        "es": "Límites y continuidad",
+        "en": "Limits and continuity"
+      },
+      "desc": {
+        "es": "Límites laterales, continuidad, la definición ε-δ y las asíntotas, con una banda ε-δ que puedes mover.",
+        "en": "One-sided limits, continuity, the ε-δ definition and asymptotes, with an ε-δ band you can move."
+      }
+    },
+    {
+      "id": "calc1-derivada",
+      "area": "calculo",
+      "grupo": "calc1",
+      "leccion": "2",
+      "titulo": {
+        "es": "La derivada",
+        "en": "The derivative"
+      },
+      "desc": {
+        "es": "De la secante a la tangente, la definición, las reglas de derivación, la regla de la cadena y la derivación implícita.",
+        "en": "From secant to tangent, the definition, differentiation rules, the chain rule and implicit differentiation."
+      }
+    },
+    {
+      "id": "calc1-aplicaciones",
+      "area": "calculo",
+      "grupo": "calc1",
+      "leccion": "3",
+      "titulo": {
+        "es": "Aplicaciones de la derivada",
+        "en": "Applications of the derivative"
+      },
+      "desc": {
+        "es": "Monotonía y concavidad, optimización, Newton-Raphson, L’Hôpital y el teorema del valor medio.",
+        "en": "Monotonicity and concavity, optimization, Newton-Raphson, L’Hôpital and the mean value theorem."
+      }
+    },
+    {
+      "id": "calc1-integral",
+      "area": "calculo",
+      "grupo": "calc1",
+      "leccion": "4",
+      "titulo": {
+        "es": "La integral",
+        "en": "The integral"
+      },
+      "desc": {
+        "es": "Sumas de Riemann, integral definida, teorema fundamental del cálculo y sustitución.",
+        "en": "Riemann sums, the definite integral, the fundamental theorem of calculus and substitution."
+      }
+    },
+    {
+      "id": "calc2-tecnicas",
+      "area": "calculo",
+      "grupo": "calc2",
+      "leccion": "1",
+      "titulo": {
+        "es": "Técnicas de integración",
+        "en": "Integration techniques"
+      },
+      "desc": {
+        "es": "Por partes, fracciones parciales, sustituciones trigonométricas e integrales impropias.",
+        "en": "Integration by parts, partial fractions, trigonometric substitution and improper integrals."
+      }
+    },
+    {
+      "id": "calc2-aplicaciones",
+      "area": "calculo",
+      "grupo": "calc2",
+      "leccion": "2",
+      "titulo": {
+        "es": "Aplicaciones de la integral",
+        "en": "Applications of the integral"
+      },
+      "desc": {
+        "es": "Área entre curvas, volúmenes por discos y capas, y longitud de arco.",
+        "en": "Area between curves, volumes by discs and shells, and arc length."
+      }
+    },
+    {
+      "id": "calc2-series",
+      "area": "calculo",
+      "grupo": "calc2",
+      "leccion": "3",
+      "titulo": {
+        "es": "Sucesiones y series",
+        "en": "Sequences and series"
+      },
+      "desc": {
+        "es": "Convergencia de sucesiones y series, serie geométrica y armónica, y los criterios de convergencia.",
+        "en": "Convergence of sequences and series, geometric and harmonic series, and convergence tests."
+      }
+    },
+    {
+      "id": "calc2-taylor",
+      "area": "calculo",
+      "grupo": "calc2",
+      "leccion": "4",
+      "titulo": {
+        "es": "Series de potencias y Taylor",
+        "en": "Power series and Taylor"
+      },
+      "desc": {
+        "es": "Radio de convergencia, polinomios de Taylor y Maclaurin y el error de aproximación.",
+        "en": "Radius of convergence, Taylor and Maclaurin polynomials and the approximation error."
+      }
+    },
+    {
+      "id": "calc2-parametricas",
+      "area": "calculo",
+      "grupo": "calc2",
+      "leccion": "5",
+      "titulo": {
+        "es": "Paramétricas y polares",
+        "en": "Parametric and polar"
+      },
+      "desc": {
+        "es": "Curvas paramétricas, coordenadas polares, pendientes y áreas en polares.",
+        "en": "Parametric curves, polar coordinates, slopes and areas in polar form."
+      }
+    },
+    {
+      "id": "multi-funciones",
+      "area": "calculo",
+      "grupo": "multi",
+      "leccion": "1",
+      "titulo": {
+        "es": "Funciones de varias variables",
+        "en": "Functions of several variables"
+      },
+      "desc": {
+        "es": "Superficies, curvas de nivel y por qué los límites en dos variables son más delicados.",
+        "en": "Surfaces, level curves and why limits in two variables are subtler."
+      }
+    },
+    {
+      "id": "multi-derivadas",
+      "area": "calculo",
+      "grupo": "multi",
+      "leccion": "2",
+      "titulo": {
+        "es": "Derivadas parciales y gradiente",
+        "en": "Partial derivatives and gradient"
+      },
+      "desc": {
+        "es": "Derivadas parciales, plano tangente, gradiente y derivada direccional.",
+        "en": "Partial derivatives, the tangent plane, the gradient and the directional derivative."
+      }
+    },
+    {
+      "id": "multi-optimizacion",
+      "area": "calculo",
+      "grupo": "multi",
+      "leccion": "3",
+      "titulo": {
+        "es": "Optimización",
+        "en": "Optimization"
+      },
+      "desc": {
+        "es": "Puntos críticos, Hessiana, puntos silla y multiplicadores de Lagrange.",
+        "en": "Critical points, the Hessian, saddle points and Lagrange multipliers."
+      }
+    },
+    {
+      "id": "multi-integrales",
+      "area": "calculo",
+      "grupo": "multi",
+      "leccion": "4",
+      "titulo": {
+        "es": "Integrales múltiples",
+        "en": "Multiple integrals"
+      },
+      "desc": {
+        "es": "Integrales dobles y triples, Fubini y cambio a polares, cilíndricas y esféricas.",
+        "en": "Double and triple integrals, Fubini and change to polar, cylindrical and spherical coordinates."
+      }
+    },
+    {
+      "id": "multi-vectorial",
+      "area": "calculo",
+      "grupo": "multi",
+      "leccion": "5",
+      "titulo": {
+        "es": "Cálculo vectorial",
+        "en": "Vector calculus"
+      },
+      "desc": {
+        "es": "Campos, integrales de línea, teorema de Green, divergencia, rotacional y Stokes.",
+        "en": "Fields, line integrals, Green’s theorem, divergence, curl and Stokes."
+      }
+    }
+  ],
+  "areas": [
+    {
+      "id": "dsa",
+      "titulo": {
+        "es": "Programación y estructuras de datos",
+        "en": "Programming and data structures"
+      },
+      "desc": {
+        "es": "Memoria, STL, recursión, ordenación, grafos y programación dinámica en C++, paso a paso.",
+        "en": "Memory, STL, recursion, sorting, graphs and dynamic programming in C++, step by step."
+      }
+    },
+    {
+      "id": "calculo",
+      "titulo": {
+        "es": "Cálculo",
+        "en": "Calculus"
+      },
+      "desc": {
+        "es": "Límites, derivadas, integrales, series y cálculo en varias variables con gráficas que se mueven.",
+        "en": "Limits, derivatives, integrals, series and multivariable calculus with graphs you can move."
+      },
+      "grupos": [
+        {
+          "id": "calc1",
+          "titulo": {
+            "es": "Cálculo I",
+            "en": "Calculus I"
+          }
+        },
+        {
+          "id": "calc2",
+          "titulo": {
+            "es": "Cálculo II",
+            "en": "Calculus II"
+          }
+        },
+        {
+          "id": "multi",
+          "titulo": {
+            "es": "Cálculo multivariable",
+            "en": "Multivariable calculus"
+          }
+        }
+      ]
+    }
+  ]
+}

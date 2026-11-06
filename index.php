@@ -8,6 +8,7 @@ declare(strict_types=1);
  *   /php  /python  /java  /cpp el IDE de ese lenguaje (app/shell.php)
  *   /assets/...                CSS y JS (se sirven a mano: nada más de esta carpeta es accesible por URL)
  *   /api?lang=…&action=...     la API (app/Core/Api.php)
+ *   /guias  /guias/<id>        guías visuales interactivas (app/guias.php, contenido/guias.json, assets/guias/)
  *   cualquier otra             404   (así app/*.php, contenido/, practicas/, var/... nunca se ejecutan ni se leen por URL)
  */
 
@@ -66,7 +67,7 @@ if (str_starts_with($path, '/assets/') && in_array($method, ['GET', 'HEAD'], tru
     if ($file !== false && str_starts_with($file, $root . DIRECTORY_SEPARATOR) && is_file($file)) {
         $types = [
             'css' => 'text/css; charset=utf-8', 'js' => 'text/javascript; charset=utf-8', 'json' => 'application/json; charset=utf-8',
-            'svg' => 'image/svg+xml', 'png' => 'image/png', 'ico' => 'image/x-icon', 'woff2' => 'font/woff2',
+            'webp' => 'image/webp', 'svg' => 'image/svg+xml', 'png' => 'image/png', 'ico' => 'image/x-icon', 'woff2' => 'font/woff2',
         ];
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
         if (isset($types[$ext])) {
@@ -74,6 +75,18 @@ if (str_starts_with($path, '/assets/') && in_array($method, ['GET', 'HEAD'], tru
         }
     }
     pg_send(404, 'text/plain; charset=utf-8', 'No encontrado');
+}
+
+// ── Guías visuales ──────────────────────────────────────────────────────
+// /guias (índice) y /guias/<id>. app/guias.php solo sirve los ids de contenido/guias.json que tienen su assets/guias/data/<id>.js.
+if (in_array($method, ['GET', 'HEAD'], true) && preg_match('#^/guias(?:/([a-z0-9-]+))?/?$#', $path, $m)) {
+    if ($error = Api::authorize($_SERVER)) {
+        pg_send(403, 'text/plain; charset=utf-8', $error);
+    }
+    $pgGuia = $m[1] ?? null;
+    ob_start();
+    require __DIR__ . '/app/guias.php';
+    pg_send(200, 'text/html; charset=utf-8', (string) ob_get_clean(), ['Cache-Control' => 'no-store', 'Content-Security-Policy' => PG_CSP]);
 }
 
 // ── Interfaz ────────────────────────────────────────────────────────────
