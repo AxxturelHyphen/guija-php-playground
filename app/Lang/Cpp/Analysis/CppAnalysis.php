@@ -141,7 +141,9 @@ final class CppAnalysis
                     }
                 }
             }
-            if ($first === null && $it['kind'] === 'main') {
+            // Nadie la usa todavía (el ejercicio que la usará está en «pendiente»): antes de la primera función, para que
+            // quede declarada antes de cualquier función que la solución vaya a empalmar (los tipos suelen ir arriba).
+            if ($first === null && in_array($it['kind'], ['function', 'method', 'main'], true)) {
                 $first = $it;
             }
         }
