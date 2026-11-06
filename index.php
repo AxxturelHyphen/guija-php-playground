@@ -71,7 +71,9 @@ if (str_starts_with($path, '/assets/') && in_array($method, ['GET', 'HEAD'], tru
         ];
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
         if (isset($types[$ext])) {
-            pg_send(200, $types[$ext], (string) file_get_contents($file), ['Cache-Control' => 'no-cache']);
+            // Librerías de terceros (KaTeX…) no cambian entre ejecuciones: caché de un día para no volver a bajar fuentes en cada guía
+            $cache = str_starts_with($file, $root . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR) ? 'public, max-age=86400' : 'no-cache';
+            pg_send(200, $types[$ext], (string) file_get_contents($file), ['Cache-Control' => $cache]);
         }
     }
     pg_send(404, 'text/plain; charset=utf-8', 'No encontrado');

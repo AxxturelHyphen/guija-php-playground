@@ -174,8 +174,8 @@ const jugarMatriz = {
   lecturas: v => {
     const n = v.val.length, suma = v.val.flat().reduce((s, x) => s + (x ? 1 : 0), 0), E = suma / 2, max = n * (n - 1) / 2;
     return [
-      { expr: '|V|, |E|', valor: `${n}, ${E}` },
-      { expr: 'Σ deg = 2|E|', valor: `${suma} = ${2 * E}` },
+      { expr: '$|V|, |E|$', valor: `${n}, ${E}` },
+      { expr: '$\\sum \\deg = 2|E|$', valor: `${suma} = ${2 * E}` },
       { expr: tr('densidad', 'density'), valor: `${Math.round(100 * E / max)} %  (|E| / ${max})` },
       { expr: tr('listas g', 'lists g'), valor: Array.from({ length: n }, (_, u) => `${u}:{${lista(v, u)}}`).join('  ') },
     ];
@@ -190,7 +190,7 @@ const jugarBFS = {
   soltar: (v, id, x, y, cx) => {
     const G = grafoDe(cx.arbol), s = num(id), r = bfsDe(G, s);
     v.o = s; v.r = r; v.est = {}; v.etiquetas = {}; v.aristaEst = {};
-    r.dist.forEach((d, i) => { if (d >= 0) { v.est[vid(i)] = i === s ? 'activo' : 'ok'; v.etiquetas[vid(i)] = 'd=' + d; } });
+    r.dist.forEach((d, i) => { if (d >= 0) { v.est[vid(i)] = i === s ? 'activo' : 'ok'; v.etiquetas[vid(i)] = `$d=${d}$`; } });
     r.padre.forEach((p, i) => { if (p >= 0) v.aristaEst[claveE(G, p, i)] = 'camino'; });
   },
   lecturas: v => v.r ? [

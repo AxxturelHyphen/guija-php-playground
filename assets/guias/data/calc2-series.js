@@ -15,13 +15,13 @@ const SA = k => (k <= 0 ? 0 : AN[Math.min(k, 25)]);
 
 // Escena A: la sucesión a_n = 1/n (solo puntos: una sucesión es discreta)
 const A_PTS = Array.from({ length: 15 }, (_, i) => ({ tipo: 'punto', x: i + 1, y: 1 / (i + 1) }));
-const A_LIM = [{ tipo: 'asintota', y: 0 }, { tipo: 'texto', x: 12.5, y: .12, s: 'L = 0' }];
-const A_EPS = [{ tipo: 'epsdelta', x: 0, L: 0, eps: 'eps', delta: 0 }, { tipo: 'linea', x1: 'N', y1: -.35, x2: 'N', y2: 1.25 }, { tipo: 'texto', x: 'N', y: 1.15, s: 'n = N' }];
+const A_LIM = [{ tipo: 'asintota', y: 0 }, { tipo: 'texto', x: 12.5, y: .12, s: '$L=0$' }];
+const A_EPS = [{ tipo: 'epsdelta', x: 0, L: 0, eps: 'eps', delta: 0 }, { tipo: 'linea', x1: 'N', y1: -.35, x2: 'N', y2: 1.25 }, { tipo: 'texto', x: 'N', y: 1.15, s: '$n=N$' }];
 const PRESETS = [.5, .25, .1, .07];
 
 // Escena B: sumas parciales de la geométrica (círculos huecos = términos)
 const B_TERM = Array.from({ length: 12 }, (_, i) => ({ tipo: 'punto', x: i + 1, y: .5 ** i, abierto: true }));
-const B_CAPAS = [...B_TERM, { tipo: 'asintota', y: 2 }, { tipo: 'texto', x: 9.5, y: 2.13, s: 'S = 2' }, { tipo: 'marca', c: 'S', u: 'N' }];
+const B_CAPAS = [...B_TERM, { tipo: 'asintota', y: 2 }, { tipo: 'texto', x: 9.5, y: 2.13, s: '$S=2$' }, { tipo: 'marca', c: 'S', u: 'N' }];
 
 // Escena D: criterio de la integral. izq → rectángulos de altura f(n) (sobre la curva); der → altura f(n+1) (bajo ella)
 const RIE = c => [{ tipo: 'riemann', c, a: 1, b: 'b', n: 'n', m: 'izq' }, { tipo: 'riemann', c, a: 1, b: 'b', n: 'n', m: 'der' }];
@@ -37,7 +37,7 @@ export default {
     // ── Sucesiones y límite ──
     { sec: { es: 'Sucesiones y límite', en: 'Sequences and limits' },
       ver: [],
-      funcion: { x: [-.5, 16], y: [-.4, 1.3], curvas: [{ id: 'a', nombre: '1/x', f: x => (x > 0 ? 1 / x : NaN) }], par: { eps: .5, N: 2 }, capas: [...A_PTS, ...A_LIM],
+      funcion: { x: [-.5, 16], y: [-.4, 1.3], curvas: [{ id: 'a', nombre: '$\\dfrac{1}{x}$', f: x => (x > 0 ? 1 / x : NaN) }], par: { eps: .5, N: 2 }, capas: [...A_PTS, ...A_LIM],
         etiqueta: { es: 'Términos de la sucesión 1/n como puntos que se acercan a 0', en: 'Terms of the sequence 1/n as points approaching 0' } },
       es: 'Una **sucesión** es una lista infinita $a_1,a_2,a_3,\\dots$ Aquí $a_n=\\dfrac1n$: $1,\\tfrac12,\\tfrac13,\\dots$ Cada punto es un término. Se acercan a la recta $y=0$ sin tocarla: el **límite** es $0$, $\\displaystyle\\lim_{n\\to\\infty}\\dfrac1n=0$.',
       en: 'A **sequence** is an infinite list $a_1,a_2,a_3,\\dots$ Here $a_n=\\dfrac1n$: $1,\\tfrac12,\\tfrac13,\\dots$ Each dot is a term. They approach the line $y=0$ without touching it: the **limit** is $0$, $\\displaystyle\\lim_{n\\to\\infty}\\dfrac1n=0$.' },
@@ -49,13 +49,13 @@ export default {
         lecturas: (v, cx) => [
           { expr: 'ε', valor: cx.fmt(v.eps) },
           { expr: 'N = ⌊1/ε⌋', valor: cx.fmt(v.N) },
-          { expr: 'a_{N+1} = 1/(N+1)', valor: cx.fmt(1 / (v.N + 1)) },
+          { expr: '$a_{N+1}=\\dfrac1{N+1}$', valor: cx.fmt(1 / (v.N + 1)) },
         ],
       } },
 
     // ── De sucesión a serie ──
     { sec: { es: 'De la sucesión a la serie', en: 'From sequence to series' },
-      funcion: { x: [-.5, 12.5], y: [-.2, 2.35], curvas: [{ id: 'S', nombre: 'S_N', param: { x: t => t, y: poli(SG), t: [0, 12] }, hasta: 'N' }], par: { N: 3 },
+      funcion: { x: [-.5, 12.5], y: [-.2, 2.35], curvas: [{ id: 'S', nombre: '$S_N$', param: { x: t => t, y: poli(SG), t: [0, 12] }, hasta: 'N' }], par: { N: 3 },
         deslizadores: [{ par: 'N', min: 1, max: 12, paso: 1, es: 'Términos sumados N', en: 'Terms added N' }], capas: B_CAPAS,
         etiqueta: { es: 'Sumas parciales de la serie geométrica de razón 1/2', en: 'Partial sums of the geometric series with ratio 1/2' } },
       es: 'Una **serie** es la suma de todos los términos: $\\displaystyle\\sum_{n=1}^{\\infty}a_n$. No se puede sumar infinitas veces, así que se define con **sumas parciales** $S_N=a_1+\\dots+a_N$. Si $S_N$ tiene límite, la serie **converge** y ese límite es su suma. Si no, **diverge**.',
@@ -93,7 +93,7 @@ export default {
 
     // ── La armónica ──
     { sec: { es: 'La serie armónica', en: 'The harmonic series' },
-      funcion: { x: [-1, 52], y: [-.3, 5.4], curvas: [{ id: 'H', nombre: 'H_N', param: { x: t => t, y: poli(SH), t: [0, 50] }, hasta: 'N' }, { id: 'L', nombre: 'ln x + γ', f: x => (x >= .6 ? Math.log(x) + GAMMA : NaN) }], par: { N: 10 },
+      funcion: { x: [-1, 52], y: [-.3, 5.4], curvas: [{ id: 'H', nombre: '$H_N$', param: { x: t => t, y: poli(SH), t: [0, 50] }, hasta: 'N' }, { id: 'L', nombre: '$\\ln x+\\gamma$', f: x => (x >= .6 ? Math.log(x) + GAMMA : NaN) }], par: { N: 10 },
         deslizadores: [{ par: 'N', min: 1, max: 50, paso: 1, es: 'Términos sumados N', en: 'Terms added N' }], capas: [{ tipo: 'marca', c: 'H', u: 'N' }],
         etiqueta: { es: 'Sumas parciales de la serie armónica y la curva ln x + γ', en: 'Partial sums of the harmonic series and the curve ln x + γ' } },
       es: 'Ahora $\\displaystyle\\sum_{n=1}^{\\infty}\\dfrac1n=1+\\tfrac12+\\tfrac13+\\cdots$ (**armónica**). Sus términos también tienden a $0$, como en la geométrica. Mueve $N$: $H_{10}\\approx2{,}93$ y $H_{50}\\approx4{,}50$. ¿Se estabiliza o sigue creciendo?',
@@ -120,7 +120,7 @@ export default {
     { sec: { es: 'Criterio de la integral', en: 'The integral test' },
       ver: ['p1'],
       funcion: { x: [-.5, 18], y: [-.15, 1.3], par: { n: 8, b: 9 },
-        curvas: [{ id: 'p1', nombre: '1/x', f: x => (x > 0 ? 1 / x : NaN) }, { id: 'p2', nombre: '1/x²', f: x => (x > 0 ? 1 / (x * x) : NaN) }, { id: 'ph', nombre: '1/√x', f: x => (x > 0 ? 1 / Math.sqrt(x) : NaN) }],
+        curvas: [{ id: 'p1', nombre: '$\\dfrac{1}{x}$', f: x => (x > 0 ? 1 / x : NaN) }, { id: 'p2', nombre: '$\\dfrac{1}{x^2}$', f: x => (x > 0 ? 1 / (x * x) : NaN) }, { id: 'ph', nombre: '$\\dfrac{1}{\\sqrt{x}}$', f: x => (x > 0 ? 1 / Math.sqrt(x) : NaN) }],
         capas: RIE('p1'), etiqueta: { es: 'Rectángulos sobre y bajo la curva 1/x', en: 'Rectangles above and below the curve 1/x' } },
       es: '**Criterio de la integral.** Si $f$ es positiva, continua y decreciente en $[1,\\infty)$ y $a_n=f(n)$, entonces $\\sum a_n$ y $\\displaystyle\\int_1^{\\infty}f$ convergen o divergen a la vez. Los rectángulos de altura $f(n)$ quedan **sobre** la curva; los de altura $f(n+1)$, **bajo** ella.',
       en: '**Integral test.** If $f$ is positive, continuous and decreasing on $[1,\\infty)$ and $a_n=f(n)$, then $\\sum a_n$ and $\\displaystyle\\int_1^{\\infty}f$ either both converge or both diverge. Rectangles of height $f(n)$ sit **above** the curve; those of height $f(n+1)$ sit **below** it.' },
@@ -177,7 +177,7 @@ export default {
     { sec: { es: 'Criterios de comparación', en: 'Comparison tests' },
       ver: ['g', 'h'],
       funcion: { x: [0, 9], y: [-.06, 1.1],
-        curvas: [{ id: 'g', nombre: '1/x²', f: x => (x > 0 ? 1 / (x * x) : NaN) }, { id: 'h', nombre: '1/(x²+1)', f: x => 1 / (x * x + 1) }, { id: 'u', nombre: 'x/(x²+1)', f: x => x / (x * x + 1) }, { id: 'v', nombre: '1/x', f: x => (x > 0 ? 1 / x : NaN) }, { id: 'w', nombre: 'x/2ˣ', f: x => x / 2 ** x }],
+        curvas: [{ id: 'g', nombre: '$\\dfrac{1}{x^2}$', f: x => (x > 0 ? 1 / (x * x) : NaN) }, { id: 'h', nombre: '$\\dfrac{1}{x^2+1}$', f: x => 1 / (x * x + 1) }, { id: 'u', nombre: '$\\dfrac{x}{x^2+1}$', f: x => x / (x * x + 1) }, { id: 'v', nombre: '$\\dfrac{1}{x}$', f: x => (x > 0 ? 1 / x : NaN) }, { id: 'w', nombre: '$\\dfrac{x}{2^x}$', f: x => x / 2 ** x }],
         capas: [...pts('g', 1, 8), ...pts('h', 1, 8)], etiqueta: { es: 'Términos de 1/n² y 1/(n²+1)', en: 'Terms of 1/n² and 1/(n²+1)' } },
       es: '**Comparación directa.** Si $0\\le a_n\\le b_n$ y $\\sum b_n$ converge, $\\sum a_n$ converge; si $\\sum a_n$ diverge, $\\sum b_n$ también. Como $\\dfrac1{n^2+1}<\\dfrac1{n^2}$ ($0{,}2<0{,}25$ en $n=2$; $0{,}1<0{,}111$ en $n=3$) y $p=2>1$, $\\sum\\dfrac1{n^2+1}$ converge.',
       en: '**Direct comparison.** If $0\\le a_n\\le b_n$ and $\\sum b_n$ converges, $\\sum a_n$ converges; if $\\sum a_n$ diverges, so does $\\sum b_n$. Since $\\dfrac1{n^2+1}<\\dfrac1{n^2}$ ($0.2<0.25$ at $n=2$; $0.1<0.111$ at $n=3$) and $p=2>1$, $\\sum\\dfrac1{n^2+1}$ converges.' },
@@ -196,9 +196,9 @@ export default {
 
     // ── Alternada ──
     { sec: { es: 'Series alternadas', en: 'Alternating series' },
-      funcion: { x: [-1, 21], y: [-.05, 1.12], curvas: [{ id: 'A', nombre: 'S_N', param: { x: t => t, y: poli(SA), t: [0, 20] }, hasta: 'N' }], par: { N: 6 },
+      funcion: { x: [-1, 21], y: [-.05, 1.12], curvas: [{ id: 'A', nombre: '$S_N$', param: { x: t => t, y: poli(SA), t: [0, 20] }, hasta: 'N' }], par: { N: 6 },
         deslizadores: [{ par: 'N', min: 1, max: 20, paso: 1, es: 'Términos sumados N', en: 'Terms added N' }],
-        capas: [{ tipo: 'asintota', y: Math.LN2 }, { tipo: 'texto', x: 14, y: .74, s: { es: 'ln 2 ≈ 0,693', en: 'ln 2 ≈ 0.693' } }, { tipo: 'marca', c: 'A', u: 'N' }],
+        capas: [{ tipo: 'asintota', y: Math.LN2 }, { tipo: 'texto', x: 14, y: .74, s: { es: '$\\ln 2\\approx 0{,}693$', en: '$\\ln 2\\approx 0.693$' } }, { tipo: 'marca', c: 'A', u: 'N' }],
         etiqueta: { es: 'Sumas parciales de la serie armónica alternada', en: 'Partial sums of the alternating harmonic series' } },
       es: '**Leibniz.** Si $b_n>0$ decrece y $b_n\\to0$, entonces $\\displaystyle\\sum(-1)^{n+1}b_n$ converge. Con $b_n=\\dfrac1n$: $1-\\tfrac12+\\tfrac13-\\cdots$ Las sumas parciales saltan a un lado y otro del límite, que es $\\ln2\\approx0{,}693$: $S_5\\approx0{,}783$, $S_6\\approx0{,}617$.',
       en: '**Leibniz.** If $b_n>0$ decreases and $b_n\\to0$, then $\\displaystyle\\sum(-1)^{n+1}b_n$ converges. With $b_n=\\dfrac1n$: $1-\\tfrac12+\\tfrac13-\\cdots$ The partial sums jump to either side of the limit, which is $\\ln2\\approx0.693$: $S_5\\approx0.783$, $S_6\\approx0.617$.' },
@@ -213,8 +213,8 @@ export default {
         ],
         lecturas: (v, cx) => [
           { expr: 'N', valor: cx.fmt(v.N) },
-          { expr: 'S_N', valor: cx.fmt(SA(v.N)) },
-          { expr: '|S − S_N|', valor: cx.fmt(Math.abs(Math.LN2 - SA(v.N))) },
+          { expr: '$S_N$', valor: cx.fmt(SA(v.N)) },
+          { expr: '$|S-S_N|$', valor: cx.fmt(Math.abs(Math.LN2 - SA(v.N))) },
           { expr: { es: 'cota 1/(N+1)', en: 'bound 1/(N+1)' }, valor: cx.fmt(1 / (v.N + 1)) },
         ],
       } },

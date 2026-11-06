@@ -11,7 +11,7 @@ const estA = x => r4({ x0: x, yg: GA(x), yf: FA(x) });
 const AC = x => 2 * x - x * x / 2 - x ** 3 / 3 + 10 / 3; // ∫ de −2 a x de (f − g)
 const ENT = { tipo: 'entre', c: 'f', g: 'g', a: -2, b: 1 };
 const SC = [
-  { id: 's', nombre: 'sen x', f: Math.sin }, { id: 'c', nombre: 'cos x', f: Math.cos },
+  { id: 's', nombre: '$\\operatorname{sen} x$', f: Math.sin }, { id: 'c', nombre: '$\\cos x$', f: Math.cos },
 ];
 const PI = Math.PI;
 const CRUCES = [
@@ -53,7 +53,7 @@ export default {
   pasos: [
     // ── Área entre curvas ──
     { sec: { es: 'Área entre curvas', en: 'Area between curves' },
-      funcion: { x: [-3.5, 3], y: [-2, 5.5], curvas: [{ id: 'f', nombre: '4 − x²', f: FA }, { id: 'g', nombre: 'x + 2', f: GA }],
+      funcion: { x: [-3.5, 3], y: [-2, 5.5], curvas: [{ id: 'f', nombre: '$4-x^2$', f: FA }, { id: 'g', nombre: '$x+2$', f: GA }],
         par: estA(1), arrastrar: 'x0', deslizadores: [{ par: 'x0', min: -2, max: 1, paso: .05, es: 'Borde derecho x', en: 'Right edge x' }],
         capas: [ENT], etiqueta: { es: 'Región entre una parábola y una recta', en: 'Region between a parabola and a line' } },
       es: 'El área entre $f$ y $g$ en $[a,b]$, con $f\\ge g$, es $\\displaystyle\\int_a^b\\bigl(f(x)-g(x)\\bigr)dx$. Para $f=4-x^2$ y $g=x+2$ los cortes salen de $4-x^2=x+2$, es decir $x^2+x-2=0$: $x=-2$ y $x=1$.',
@@ -96,7 +96,7 @@ export default {
 
     // ── Discos ──
     { sec: { es: 'Volumen por discos', en: 'Volume by disks' },
-      funcion: { x: [-.4, 4.8], y: [-2.5, 2.5], igual: true, curvas: [{ id: 'f', nombre: '√x', f: Math.sqrt }],
+      funcion: { x: [-.4, 4.8], y: [-2.5, 2.5], igual: true, curvas: [{ id: 'f', nombre: '$\\sqrt{x}$', f: Math.sqrt }],
         par: { n: 4 }, deslizadores: [{ par: 'n', min: 1, max: NMAX, paso: 1, dec: 0, es: 'Discos n', en: 'Disks n' }],
         capas: [{ tipo: 'riemann', c: 'f', a: 0, b: 4, n: 1, m: 'exacta', espejo: true }], etiqueta: { es: 'Región bajo √x y su reflejo respecto del eje x', en: 'Region under √x and its reflection about the x-axis' } },
       es: 'Al girar la región bajo $y=\\sqrt x$, $0\\le x\\le4$, alrededor del eje $x$ se genera un sólido. Un corte perpendicular al eje es un **disco** de radio $f(x)$ y área $\\pi f(x)^2$. La figura muestra la región y su reflejo: el sólido visto de perfil.',
@@ -127,7 +127,7 @@ export default {
         arrastrables: true, soltar: (v, par, val) => { v[par] = lim(Math.round(val), 1, NMAX); },
       } },
     { funcion: { x: [-.2, 1.3], y: [-1.15, 1.15], igual: true,
-        curvas: [{ id: 'a', nombre: 'x', f: x => x }, { id: 'b', nombre: 'x²', f: x => x * x }, { id: 'na', nombre: '−x', f: x => -x }, { id: 'nb', nombre: '−x²', f: x => -x * x }],
+        curvas: [{ id: 'a', nombre: '$x$', f: x => x }, { id: 'b', nombre: '$x^2$', f: x => x * x }, { id: 'na', nombre: '$-x$', f: x => -x }, { id: 'nb', nombre: '$-x^2$', f: x => -x * x }],
         capas: [{ tipo: 'entre', c: 'a', g: 'b', a: 0, b: 1 }, { tipo: 'entre', c: 'na', g: 'nb', a: 0, b: 1 }], etiqueta: { es: 'Región entre y = x e y = x² y su reflejo', en: 'Region between y = x and y = x² and its reflection' } },
       ver: ['a', 'b'],
       es: 'Si la región está entre dos curvas, cada corte es una **arandela**: radio exterior $R$, interior $r$, área $\\pi(R^2-r^2)$. Entre $y=x$ e $y=x^2$, con $0\\le x\\le1$: $V=\\pi\\int_0^1(x^2-x^4)\\,dx=\\pi\\bigl(\\tfrac13-\\tfrac15\\bigr)=\\tfrac{2\\pi}{15}\\approx0{,}42$.',
@@ -148,7 +148,7 @@ export default {
 
     // ── Capas cilíndricas ──
     { sec: { es: 'Capas cilíndricas', en: 'Cylindrical shells' },
-      funcion: { x: [-5, 5], y: [-.5, 2.6], curvas: [{ id: 'f', nombre: '√|x|', f: x => Math.sqrt(Math.abs(x)) }],
+      funcion: { x: [-5, 5], y: [-.5, 2.6], curvas: [{ id: 'f', nombre: '$\\sqrt{|x|}$', f: x => Math.sqrt(Math.abs(x)) }],
         par: { n: 4 }, deslizadores: [{ par: 'n', min: 1, max: 30, paso: 1, dec: 0, es: 'Capas n', en: 'Shells n' }],
         capas: [{ tipo: 'riemann', c: 'f', a: 0, b: 4, n: 1, m: 'exacta' }, { tipo: 'riemann', c: 'f', a: -4, b: 0, n: 1, m: 'exacta' }],
         etiqueta: { es: 'Región bajo √x y su reflejo respecto del eje y', en: 'Region under √x and its reflection about the y-axis' } },
@@ -189,7 +189,7 @@ export default {
 
     // ── Longitud de arco ──
     { sec: { es: 'Longitud de arco', en: 'Arc length' },
-      funcion: { x: [-.5, 3.6], y: [-.6, 4.2], igual: true, curvas: [{ id: 'f', nombre: 'f(x)', f: FL }], capas: segs(1),
+      funcion: { x: [-.5, 3.6], y: [-.6, 4.2], igual: true, curvas: [{ id: 'f', nombre: '$f(x)$', f: FL }], capas: segs(1),
         etiqueta: { es: 'Curva f(x) = (2/3)x^(3/2) con una poligonal inscrita', en: 'Curve f(x) = (2/3)x^(3/2) with an inscribed polygonal path' } },
       es: 'Para medir una curva la aproximamos por segmentos. Cada tramo entre $x_i$ y $x_{i+1}$ mide $\\sqrt{\\Delta x^2+\\Delta y^2}$ (Pitágoras). Tomamos $f(x)=\\tfrac23x^{3/2}$ en $[0,3]$ y sumamos las longitudes. Con un solo segmento ya hay una cota inferior: $\\sqrt{21}$.',
       en: 'To measure a curve we approximate it by segments. Each stretch between $x_i$ and $x_{i+1}$ has length $\\sqrt{\\Delta x^2+\\Delta y^2}$ (Pythagoras). We take $f(x)=\\tfrac23x^{3/2}$ on $[0,3]$ and add the lengths. A single segment already gives a lower bound: $\\sqrt{21}$.' },

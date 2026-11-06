@@ -214,5 +214,34 @@ const congelar = o => { if (o && typeof o === 'object' && !Object.isFrozen(o)) {
     assert.ok(aperturas >= 4);
   });
 
+  console.log('tooltip y accesibilidad');
+  prueba('describirBarra: valor, estado (hl manda), punteros y rango', () => {
+    const e = abre({ est: { 2: 'cmp' }, marcas: { i: 2, j: 2, lo: 0 }, rango: [1, 3] }, { arr: [5, 2, 8, 1, 7], aux: 2 });
+    const d = B.describirBarra(e, 2);
+    assert.deepEqual([d.pos, d.valor, d.est, d.marcas, d.fuera], [2, 8, 'cmp', ['i', 'j'], false]);
+    assert.equal(B.describirBarra(e, 0).fuera, true); assert.deepEqual(B.describirBarra(e, 0).marcas, ['lo']);
+    assert.equal(B.describirBarra({ ...e, hl: { 2: 'ok' } }, 2).est, 'ok', 'hl se superpone a est');
+    assert.equal(B.describirBarra(e, 9), null); assert.equal(B.describirBarra(e, -1), null); assert.equal(B.describirBarra(e, 1.5), null);
+  });
+  prueba('describirAux: solo huecos ocupados', () => {
+    const e = abre({ aux: { 1: 4 } }, { arr: [5, 2, 8, 1], aux: 4 });
+    assert.deepEqual(B.describirAux(e, 1), { hueco: 1, valor: 4 });
+    assert.equal(B.describirAux(e, 0), null); assert.equal(B.describirAux(e, 7), null);
+  });
+  prueba('NOMBRE_EST cubre todos los estados y es bilingüe', () => {
+    for (const k of B.ESTADOS) assert.ok(B.NOMBRE_EST[k].es && B.NOMBRE_EST[k].en, k);
+  });
+  const { colocarTip, TIP_ANCHO } = await imp('assets/guias/tip.js');
+  prueba('colocarTip: centrado, acotado al panel y con volteo si no cabe arriba', () => {
+    const a = colocarTip({ x: 20, y: 200, y2: 260 }, { s: 1, left: 0, top: 0, vw: 800 });
+    assert.ok(a.x >= TIP_ANCHO / 2 && a.arriba && a.y === 200, 'x acotado por la izquierda');
+    const b = colocarTip({ x: 790, y: 200, y2: 260 }, { s: 1, left: 0, top: 0, vw: 800 });
+    assert.ok(b.x <= 800 - TIP_ANCHO / 2, 'no se sale por la derecha');
+    const c = colocarTip({ x: 300, y: 30, y2: 90 }, { s: 1.5, left: 10, top: 5, vw: 800 });
+    assert.equal(c.arriba, false); assert.equal(c.y, 90, 'sin sitio arriba: bajo y2');
+    assert.equal(colocarTip({ x: 300, y: 30 }, { s: 1, vw: 800 }).arriba, true, 'sin y2 siempre arriba');
+    assert.equal(colocarTip({ x: 100, y: 50, y2: 80 }, { s: 2, left: 40, top: 0, vw: 0 }).x, 100, 'sin ancho de panel no se acota');
+  });
+
   console.log(`\n✓ ${n} pruebas de barras`);
 })().catch(e => { console.error('\n✗ ' + (e.stack || e)); process.exit(1); });

@@ -113,7 +113,7 @@ const rng = semilla => () => { semilla |= 0; semilla = (semilla + 0x6D2B79F5) | 
     const r = comp(T.G_BFS, 0);
     igual(r.dist, [0, 1, 1, 2, 2, 2, 3], 'distancias del grafo de la guía');
     const S = plegarTodo(abreArbol(T.G_BFS), r.frames);
-    igual(Object.fromEntries(Object.entries(S.etiquetas)), Object.fromEntries(r.dist.map((d, i) => [vid(i), 'd=' + d])), 'las etiquetas finales son las distancias ejecutadas');
+    igual(Object.fromEntries(Object.entries(S.etiquetas)), Object.fromEntries(r.dist.map((d, i) => [vid(i), `$d=${d}$`])), 'las etiquetas finales son las distancias ejecutadas');
     const ruta = T.caminoDe(r.padre, 0, 6);
     ok(ruta.length - 1 === r.dist[6] && ruta[0] === 0 && ruta.at(-1) === 6, 'camino reconstruido con la longitud de dist');
     ok(ruta.every((u, i) => !i || T.G_BFS.E.some(([a, b]) => (a === ruta[i - 1] && b === u) || (b === ruta[i - 1] && a === u))), 'el camino usa aristas del grafo');
@@ -322,23 +322,23 @@ const rng = semilla => () => { semilla |= 0; semilla = (semilla + 0x6D2B79F5) | 
     // matriz
     prueba(idxJ[0], (v, cx, S, J) => {
       const val = x => J.lecturas(v, cx).find(r => r.expr === x).valor;
-      igual(val('|V|, |E|'), '5, 5', 'matriz: 5 vértices y 5 aristas al empezar');
-      igual(val('Σ deg = 2|E|'), '10 = 10', 'matriz: suma de grados = 2|E|');
+      igual(val('$|V|, |E|$'), '5, 5', 'matriz: 5 vértices y 5 aristas al empezar');
+      igual(val('$\\sum \\deg = 2|E|$'), '10 = 10', 'matriz: suma de grados = 2|E|');
       igual(val('listas g').includes('3:{1, 2, 4}'), true, 'matriz: lista del 3');
       J.soltar(v, 0, 4, cx);
-      igual(val('|V|, |E|'), '5, 6', 'matriz: clic añade la arista 0–4');
+      igual(val('$|V|, |E|$'), '5, 6', 'matriz: clic añade la arista 0–4');
       igual([TB.leer(v, 0, 4), TB.leer(v, 4, 0)], [1, 1], 'matriz: añade las dos celdas simétricas');
       igual(val('listas g').includes('4:{0, 3}'), true, 'matriz: g[4] refleja la nueva arista');
       J.soltar(v, 4, 0, cx);
-      igual(val('|V|, |E|'), '5, 5', 'matriz: segundo clic la quita');
+      igual(val('$|V|, |E|$'), '5, 5', 'matriz: segundo clic la quita');
       J.soltar(v, 2, 2, cx);
-      igual(val('|V|, |E|'), '5, 5', 'matriz: la diagonal no cambia');
+      igual(val('$|V|, |E|$'), '5, 5', 'matriz: la diagonal no cambia');
       J.botones[1].hacer(v, cx);
-      igual([val('|V|, |E|'), val('Σ deg = 2|E|')], ['5, 10', '20 = 20'], 'matriz: rellenar = grafo completo K5');
+      igual([val('$|V|, |E|$'), val('$\\sum \\deg = 2|E|$')], ['5, 10', '20 = 20'], 'matriz: rellenar = grafo completo K5');
       J.botones[0].hacer(v, cx);
-      igual(val('|V|, |E|'), '5, 0', 'matriz: vaciar');
+      igual(val('$|V|, |E|$'), '5, 0', 'matriz: vaciar');
       J.botones[2].hacer(v, cx);
-      igual(val('|V|, |E|'), '5, 5', 'matriz: volver al ejemplo');
+      igual(val('$|V|, |E|$'), '5, 5', 'matriz: volver al ejemplo');
     });
     // BFS
     prueba(idxJ[1], (v, cx, S, J) => {
@@ -346,7 +346,7 @@ const rng = semilla => () => { semilla |= 0; semilla = (semilla + 0x6D2B79F5) | 
       J.soltar(v, 'v0', 0, 0, cx);
       igual(val('dist'), '[0, 1, 1, 2, 2, 2, 3]', 'BFS jugar: distancias desde 0');
       igual(val('niveles'), 4, 'BFS jugar: 4 niveles desde 0');
-      igual(v.etiquetas.v6, 'd=3', 'BFS jugar: etiqueta de v6');
+      igual(v.etiquetas.v6, '$d=3$', 'BFS jugar: etiqueta de v6');
       ok(Object.values(v.aristaEst).filter(e => e === 'camino').length === 6, 'BFS jugar: el árbol tiene V-1 aristas');
       J.soltar(v, 'v4', 0, 0, cx);
       igual(val('dist'), '[2, 1, 1, 2, 0, 2, 1]', 'BFS jugar: distancias desde 4');

@@ -3,7 +3,17 @@
 // Las celdas ocupan huecos fijos (posición = orden en `celdas` dentro de su columna), así que el layout no salta.
 // Las flechas se calculan con aritmética (sin medir el DOM) y se interpolan en un único requestAnimationFrame.
 // Implementa el contrato de escena descrito en guia.js: clave, plegar, crear (+ vista/conVista/ctx para `jugar`).
+//
+// Interacción (sin cambiar el formato de datos): tooltip al pasar el puntero o enfocar una celda (nombre, tipo, dirección,
+// valor, a quién apunta y quién la apunta) con resaltado de las flechas que la tocan; arrastre de punteros con el extremo
+// de la flecha colgado de un Muelle (peso, imán sobre la celda destino, vuelve al origen si no se suelta sobre una celda);
+// al soltar, la flecha real nace desde donde se dejó. Teclado: Intro/Espacio sobre una celda arrastrable abre la elección
+// de destino, ↑↓←→ recorren las celdas candidatas, Intro confirma y Esc cancela (una región aria-live anuncia el destino).
+// Los textos de zonas, grupos, columnas, nombres y tipos admiten `$…$` (KaTeX vía mates.etiqueta, solo si cambian).
 import { idioma } from './idioma.js';
+import { etiqueta } from './mates.js';
+import { Muelle, tarea } from './movimiento.js';
+import { crearTip } from './tip.js';
 
 export const clave = 'celdas';
 export const COLW = 230, CELLH = 50, ROWH = 58, GUT = 96, GAP = 130, HEAD = 26, PAD = 6, PX = 18, HG = 22, GP = 8, GG = 12;
@@ -12,6 +22,27 @@ const NUM = ['sx', 'sy', 'ex', 'ey', 'o1', 'o2', 'head', 'bar', 'op'];
 const ease = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const REDUCIDO = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const L = x => (x && typeof x === 'object' ? x[idioma()] : x) ?? '';
+const TXT = {
+  es: { tipo: 'Tipo', dir: 'Dirección', val: 'Valor', apunta: 'Apunta a', apuntada: 'Apuntada por', estado: 'Estado', grupo: 'En', nulo: 'nada (nulo)', fan: 'liberada o fuera de ámbito', nada: '—', agarra: 'puntero: Intro para elegir a qué celda apunta', elige: 'Elige destino', sin: 'sin destino', fin: 'apunta ahora a' },
+  en: { tipo: 'Type', dir: 'Address', val: 'Value', apunta: 'Points to', apuntada: 'Pointed by', estado: 'State', grupo: 'In', nulo: 'nothing (null)', fan: 'freed or out of scope', nada: '—', agarra: 'pointer: press Enter to choose which cell it points to', elige: 'Choose target', sin: 'no target', fin: 'now points to' },
+};
+const CSS = `
+.cel{box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 1px 2px rgba(0,0,0,.3)}
+.cel.arrastrable:focus,.cel.arrastrable:focus-visible{outline:none}
+.cel.arrastrable:focus-visible{border-color:var(--g-activo);box-shadow:0 0 0 3px var(--g-halo)}
+.cel.enlace{border-color:var(--g-aux);background:var(--g-aux-bg)}
+.cel.elige{border-color:var(--g-hecho);background:var(--g-hecho-bg)}
+.fl.hov .ln,.fl.hov .br{stroke:var(--g-aux);stroke-width:3} .fl.hov .hd{fill:var(--g-aux)}
+path.vivo.imana{stroke-dasharray:none;stroke-width:2.5}
+circle.vivo-p{fill:var(--g-activo);stroke:var(--island);stroke-width:2;pointer-events:none}
+.pg-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+`;
+const inyectarCss = () => {
+  if (document.getElementById('css-celdas')) return;
+  const e = document.createElement('style'); e.id = 'css-celdas'; e.textContent = CSS; document.head.append(e);
+};
+/** Pone el texto en el elemento solo si cambió (con `$…$` pasa por KaTeX). */
+const poner = (el, t) => { if (el._t !== t) { el._t = t; etiqueta(el, t); } };
 const svg = (tag, cls) => { const e = document.createElementNS(NS, tag); if (cls) e.setAttribute('class', cls); return e; };
 const ICO = {
   pila: '<svg viewBox="0 0 16 16" width="15" height="15"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><rect x="2" y="2" width="12" height="3.2" rx="1"/><rect x="2" y="6.4" width="12" height="3.2" rx="1"/><rect x="2" y="10.8" width="12" height="3.2" rx="1"/></g></svg>',
@@ -42,7 +73,12 @@ export class Escena {
     this.def = null; this.por = new Map(); this.els = new Map(); this.extras = []; this.gr = new Map(); this.vis = new Set();
     this.arr = new Map(); this.cur = new Map(); this.txt = new Map(); this.W = this.H = 0;
     this.svg = svg('svg', 'flechas'); stage.append(this.svg);
-    this.raf = 0; this.tween = null; this.drag = null; this.vivo = null;
+    this.raf = 0; this.tween = null; this.drag = null; this.vivo = null; this.kb = null; this.ptr = new Map(); this.hov = null; this.ult = null;
+    inyectarCss();
+    this.sr = Object.assign(document.createElement('div'), { className: 'pg-sr' }); this.sr.setAttribute('role', 'status'); this.sr.setAttribute('aria-live', 'polite'); stage.append(this.sr);
+    this.tip = crearTip(stage, { objetivo: n => this.tipClave(n), datos: id => this.tipDatos(id), sobre: id => { this.hov = id; this.aplicarHover(); } });
+    stage.addEventListener('keydown', e => this.tecla(e));
+    stage.addEventListener('focusout', () => { if (this.kb) this.kbCancelar(); });
     stage.addEventListener('pointerdown', e => this.arrancar(e));
     stage.addEventListener('pointermove', e => this.mover(e));
     stage.addEventListener('pointerup', e => this.soltar(e));
@@ -53,8 +89,8 @@ export class Escena {
 
   fijar(def) {
     if (def === this.def) return;
-    cancelAnimationFrame(this.raf);
-    for (const el of [...this.els.values(), ...this.extras]) { el.classList.add('sale'); setTimeout(() => el.remove(), 260); }
+    cancelAnimationFrame(this.raf); this.vivoFuera(); this.tip.ocultar(); this.ptr = new Map(); this.ult = null;
+    for (const el of [...this.els.values(), ...this.extras]) { el.classList.remove('arrastrable'); el.removeAttribute('tabindex'); el.classList.add('sale'); setTimeout(() => el.remove(), 260); }
     for (const r of this.arr.values()) r.g.remove();
     this.def = def; this.els = new Map(); this.extras = []; this.gr = new Map(); this.vis = new Set();
     this.arr = new Map(); this.cur = new Map(); this.txt = new Map(); this.pos = new Map(); this.drag = null;
@@ -118,31 +154,35 @@ export class Escena {
   /** S = {st: {id: 'vivo'|'fantasma'}, val: {id: valor}, hl: {id|grupo: 'a'|'b'|'c'}}; animar: false | true | ms */
   pintar({ st, val, hl = {} }, animar = true) {
     const dur = animar === true ? 520 : +animar || 0, anim = dur > 0 && !REDUCIDO, { cols } = this.def;
-    for (const e of this.extras) if (e.dataset.col != null) e.textContent = L(cols[e.dataset.col]);
-    for (const { z, t } of this.zon) t.textContent = L(z.titulo);
+    this.ult = { st, val };
+    for (const e of this.extras) if (e.dataset.col != null) poner(e, String(L(cols[e.dataset.col])));
+    for (const { z, t } of this.zon) poner(t, String(L(z.titulo)));
     for (const { id, r, el, t } of this.grp) {
       const v = r.miembros.filter(m => st[m]), fan = v.length && v.every(m => st[m] === 'fantasma');
       el.className = 'grupo' + (v.length ? '' : ' oculta') + (fan ? ' fantasma' : '') + (hl[id] ? ' hl-' + hl[id] : '');
-      t.textContent = L(this.def.grupos?.find(g => g.id === id)?.titulo ?? id);
+      poner(t, String(L(this.def.grupos?.find(g => g.id === id)?.titulo ?? id)));
     }
     this.vis = new Set();
-    const dianas = new Map();
+    const dianas = new Map(), ptrs = new Map();
     for (const c of this.def.celdas) {
       const el = this.els.get(c.id), s = st[c.id], v = val[c.id], ptr = typeof v === 'string' && v[0] === '→';
       if (s) this.vis.add(c.id);
       el.className = 'cel' + (!s ? ' oculta' : s === 'fantasma' ? ' fantasma' : '') + (hl[c.id] ? ' hl-' + hl[c.id] : '') + (this.drag?.has(c.id) && s ? ' arrastrable' : '');
-      el.children[0].textContent = c.addr;
-      el.children[1].textContent = L(c.type) + (c.size ? ` · ${c.size} B` : '');
-      el.children[2].textContent = L(c.name);
+      const arr = !!(this.drag?.has(c.id) && s), u = TXT[idioma()];
+      if (arr) { el.tabIndex = 0; el.setAttribute('role', 'button'); el.setAttribute('aria-label', `${L(c.name)}, ${u.agarra}`); }
+      else if (el.hasAttribute('tabindex')) { el.removeAttribute('tabindex'); el.removeAttribute('role'); el.removeAttribute('aria-label'); }
+      poner(el.children[0], String(c.addr ?? ''));
+      poner(el.children[1], String(L(c.type)) + (c.size ? ` · ${c.size} B` : ''));
+      poner(el.children[2], String(L(c.name)));
       const valEl = el.children[3], txt = String(this.texto(v, c));
       valEl.className = 'val' + (ptr ? ' ptr' : '');
       if (s && txt !== this.txt.get(c.id) && anim && this.txt.has(c.id)) {
         valEl.animate([{ opacity: 0, transform: 'translateY(5px)' }, { opacity: 1, transform: 'none' }], { duration: Math.min(320, dur), easing: 'ease-out' });
         if (!s || s === 'vivo') el.animate([{ opacity: .55 }, { opacity: 1 }], { duration: Math.min(520, dur * 1.2), easing: 'ease-out' });
       }
-      valEl.textContent = s === 'fantasma' ? '' : txt;
+      poner(valEl, s === 'fantasma' ? '' : txt);
       this.txt.set(c.id, txt);
-      if (ptr && s) { const t = this.diana(c, v, st, hl); if (t) dianas.set(c.id, t); }
+      if (ptr && s) { const t = this.diana(c, v, st, hl); if (t) { dianas.set(c.id, t); if (v !== '→∅') ptrs.set(c.id, v.slice(1)); } }
     }
     // Flechas: las que ya no existen se desvanecen donde estaban; las nuevas «salen» de su origen
     const from = new Map(), to = new Map();
@@ -155,6 +195,47 @@ export class Escena {
     cancelAnimationFrame(this.raf);
     this.tween = { t0: performance.now(), dur: anim ? dur : 0, from, to };
     this.frame(this.tween.t0);
+    this.ptr = ptrs; this.aplicarHover(); this.tip.refrescar();
+  }
+
+  // ── Tooltip y relaciones al pasar el puntero ──
+  tipClave(n) {
+    const c = n.closest?.('.cel');
+    return c && this.stage.contains(c) ? c.dataset.id : null;
+  }
+
+  /** Quién apunta a `id` (ids de celdas). */
+  apuntadaPor(id) { return [...this.ptr].filter(([, t]) => t === id).map(([o]) => o); }
+
+  tipDatos(id) {
+    const c = this.por.get(id), S = this.ult, o = this.pos?.get(id);
+    if (!c || !S || !o || !S.st[id]) return null;
+    const u = TXT[idioma()], v = S.val[id], ptr = typeof v === 'string' && v[0] === '→', nombre = i => String(L(this.por.get(i)?.name ?? i)), filas = [];
+    const txt = String(this.texto(v, c));
+    if (c.type) filas.push([u.tipo, String(L(c.type)) + (c.size ? ` · ${c.size} B` : '')]);
+    if (c.addr) filas.push([u.dir, c.addr]);
+    filas.push([u.val, S.st[id] === 'fantasma' || txt === '' ? u.nada : txt]);
+    if (ptr) {
+      const t = v.slice(1);
+      filas.push([u.apunta, v === '→∅' ? u.nulo : `${nombre(t)}${S.st[t] === 'fantasma' ? ' · ' + u.fan : ''}`]);
+    }
+    const por = this.apuntadaPor(id);
+    if (por.length) filas.push([u.apuntada, por.map(nombre).join(', ')]);
+    if (S.st[id] === 'fantasma') filas.push([u.estado, u.fan]);
+    if (c.grupo) { const g = this.def.grupos?.find(x => x.id === c.grupo); if (g) filas.push([u.grupo, String(L(g.titulo))]); }
+    return { titulo: String(L(c.name)), filas, x: o.x + COLW / 2, y: o.y - 2, y2: o.y + CELLH + 2 };
+  }
+
+  /** Resalta la flecha de la celda con el puntero encima, las que llegan a ella y las celdas del otro extremo. */
+  aplicarHover() {
+    const h = this.hov, rel = new Set(), fl = new Set();
+    if (h) {
+      const a = this.ptr.get(h);
+      if (a) { fl.add(h); rel.add(a); }
+      for (const o of this.apuntadaPor(h)) { fl.add(o); rel.add(o); }
+    }
+    for (const [id, el] of this.els) el.classList.toggle('enlace', rel.has(id));
+    for (const [id, r] of this.arr) r.g.classList.toggle('hov', fl.has(id));
   }
 
   /** Geometría de la flecha de un puntero (null si el destino no está en escena). */
@@ -200,45 +281,166 @@ export class Escena {
   }
 
   // ── Arrastre de punteros: se arrastra desde la celda y se suelta sobre la celda destino ──
+  // El extremo de la flecha «viva» cuelga de dos Muelle: sigue al puntero con algo de peso, se pega (imán) a la celda
+  // candidata y, si no se suelta sobre ninguna, vuelve a su origen. El rectángulo del stage se mide UNA vez al agarrar.
   /** Activa (ids = [..]) o desactiva (null) el arrastre; cb(origen, destino) al soltar sobre una celda visible. */
   arrastre(ids, cb) {
     this.drag = ids && ids.length ? new Set(ids) : null; this.cbSoltar = cb;
-    for (const [id, el] of this.els) el.classList.toggle('arrastrable', !!(this.drag && this.drag.has(id) && this.vis.has(id)));
+    if (this.kb) this.kbCancelar();
+    for (const [id, el] of this.els) {
+      const on = !!(this.drag && this.drag.has(id) && this.vis.has(id));
+      el.classList.toggle('arrastrable', on);
+      if (on) { el.tabIndex = 0; el.setAttribute('role', 'button'); el.setAttribute('aria-label', `${L(this.por.get(id).name)}, ${TXT[idioma()].agarra}`); }
+      else if (el.hasAttribute('tabindex')) { el.removeAttribute('tabindex'); el.removeAttribute('role'); el.removeAttribute('aria-label'); }
+    }
   }
 
-  local(e) {
-    const r = this.stage.getBoundingClientRect(), k = r.width / this.W;
-    return [(e.clientX - r.left) / k, (e.clientY - r.top) / k];
+  /** Crea la flecha viva de `id` con el extremo en (px, py). */
+  iniciarVivo(id, px, py) {
+    const o = this.pos.get(id), sx = o.x + COLW, sy = o.y + CELLH / 2;
+    const v = { id, sx, sy, path: svg('path', 'vivo'), punta: svg('circle', 'vivo-p'), dst: null, izq: false, snap: false, suelto: false, mx: new Muelle(px, 30), my: new Muelle(py, 30), cancela: null, r: null, k: 1, kb: false };
+    v.punta.setAttribute('r', 5); this.svg.append(v.path, v.punta);
+    this.els.get(id)?.classList.add('agarrada');
+    this.vivo = v; this.pintarVivo(v); this.tip.pausa(true);
+    return v;
   }
+
+  pintarVivo(v) {
+    const x = v.mx.x, y = v.my.x;
+    v.path.setAttribute('d', `M${v.sx} ${v.sy}C${v.sx + 60} ${v.sy} ${v.izq ? x + 60 : x - 60} ${y} ${x} ${y}`);
+    v.punta.setAttribute('cx', x); v.punta.setAttribute('cy', y);
+  }
+
+  /** Un único trabajo por fotograma mientras los muelles se mueven; al reposar, si la flecha se soltó, se retira. */
+  tareaVivo(v) {
+    if (REDUCIDO) { v.mx.salto(v.mx.a); v.my.salto(v.my.a); this.pintarVivo(v); if (v.suelto) this.quitarVivo(v); return; }
+    if (v.cancela) return;
+    v.cancela = tarea((_, dt) => {
+      v.mx.paso(dt); v.my.paso(dt); this.pintarVivo(v);
+      if (!(v.mx.quieto && v.my.quieto)) return true;
+      v.cancela = null; if (v.suelto) this.quitarVivo(v);
+      return false;
+    });
+  }
+
+  quitarVivo(v) { v.cancela?.(); v.cancela = null; v.path.remove(); v.punta.remove(); }
+
+  /** Apunta la flecha viva al candidato `dst` (imán a su borde) o, sin candidato, al punto (px, py). */
+  apuntar(v, dst, px, py) {
+    if (dst) {
+      const p = this.pos.get(dst), der = p.x > this.pos.get(v.id).x;
+      v.mx.ir(der ? p.x : p.x + COLW); v.my.ir(p.y + CELLH / 2); v.izq = !der;
+    } else { v.mx.ir(px); v.my.ir(py); v.izq = false; }
+    if (!!dst !== v.snap) { v.snap = !!dst; v.path.classList.toggle('imana', v.snap); }
+    this.tareaVivo(v);
+  }
+
+  /** Cambia el candidato resaltado. */
+  candidato(v, dst) {
+    if (dst === v.dst) return;
+    this.els.get(v.dst)?.classList.remove('diana', 'elige'); this.els.get(dst)?.classList.add(v.kb ? 'elige' : 'diana'); v.dst = dst;
+  }
+
+  /** Deja la flecha viva: aceptada (la real ocupa su lugar) o rechazada (vuelve a su origen y se retira). */
+  cerrarVivo(v, aceptada) {
+    this.els.get(v.dst)?.classList.remove('diana', 'elige'); this.els.get(v.id)?.classList.remove('agarrada');
+    this.tip.pausa(false);
+    if (aceptada || REDUCIDO) { this.quitarVivo(v); return; }
+    v.suelto = true; v.snap = false; v.path.classList.remove('imana'); v.mx.w = v.my.w = 20; v.mx.ir(v.sx); v.my.ir(v.sy); this.tareaVivo(v);
+  }
+
+  /** La flecha real del puntero arranca desde donde el usuario dejó el extremo (la animación de pintar la lleva al destino). */
+  sembrar(v) {
+    const r = this.garr(v.id), c = { sx: v.sx, sy: v.sy, ex: v.mx.x, ey: v.my.x, o1: 60, o2: v.izq ? 60 : -60, h: v.izq ? -1 : 1, head: 1, bar: 0, op: 1 };
+    r.g.setAttribute('class', 'fl hl'); this.cur.set(v.id, c); this.dibujar(v.id, c);
+  }
+
+  /** Quita sin ceremonias cualquier flecha viva (cambio de escena). */
+  vivoFuera() {
+    const v = this.vivo;
+    if (!v) return;
+    this.vivo = null; this.kb = null; this.quitarVivo(v);
+    this.els.get(v.dst)?.classList.remove('diana', 'elige'); this.els.get(v.id)?.classList.remove('agarrada');
+  }
+
+  local(v, e) { return [(e.clientX - v.r.left) / v.k, (e.clientY - v.r.top) / v.k]; }
 
   arrancar(e) {
     const el = e.target.closest('.cel.arrastrable');
-    if (!el) return;
+    if (!el || this.vivo || this.els.get(el.dataset.id) !== el) return; // (las celdas de una escena anterior se están desvaneciendo: no cuentan)
     e.preventDefault(); this.stage.setPointerCapture(e.pointerId);
-    this.vivo = { id: el.dataset.id, path: svg('path', 'vivo'), dst: null };
-    this.svg.append(this.vivo.path); el.classList.add('agarrada');
+    const r = this.stage.getBoundingClientRect(), k = r.width / this.W || 1, px = (e.clientX - r.left) / k, py = (e.clientY - r.top) / k;
+    const v = this.iniciarVivo(el.dataset.id, px, py);
+    v.r = r; v.k = k; v.pid = e.pointerId; el.focus({ preventScroll: true });
     this.mover(e);
   }
 
   mover(e) {
     const v = this.vivo;
-    if (!v) return;
-    const [px, py] = this.local(e), o = this.pos.get(v.id), sx = o.x + COLW, sy = o.y + CELLH / 2;
-    v.path.setAttribute('d', `M${sx} ${sy}C${sx + 60} ${sy} ${px - 60} ${py} ${px} ${py}`);
+    if (!v || v.kb || e.pointerId !== v.pid) return;
+    const [px, py] = this.local(v, e);
     let dst = null;
     for (const id of this.vis) {
       const p = this.pos.get(id);
       if (id !== v.id && px >= p.x - 4 && px <= p.x + COLW + 4 && py >= p.y - 4 && py <= p.y + CELLH + 4) { dst = id; break; }
     }
-    if (dst !== v.dst) { this.els.get(v.dst)?.classList.remove('diana'); this.els.get(dst)?.classList.add('diana'); v.dst = dst; }
+    this.candidato(v, dst); this.apuntar(v, dst, px, py);
   }
 
   soltar(e, cancelado = false) {
     const v = this.vivo;
-    if (!v) return;
-    this.vivo = null; v.path.remove();
-    this.els.get(v.dst)?.classList.remove('diana'); this.els.get(v.id)?.classList.remove('agarrada');
+    if (!v || v.kb) return;
+    this.vivo = null;
     if (this.stage.hasPointerCapture(e.pointerId)) this.stage.releasePointerCapture(e.pointerId);
-    if (!cancelado && v.dst && this.cbSoltar) this.cbSoltar(v.id, v.dst);
+    const ok = !cancelado && v.dst && this.cbSoltar;
+    this.cerrarVivo(v, !!ok);
+    if (ok) { this.sembrar(v); this.cbSoltar(v.id, v.dst); }
+  }
+
+  // ── Teclado: Intro/Espacio abre la elección de destino; ↑↓←→ recorren los candidatos; Intro confirma; Esc cancela ──
+  tecla(e) {
+    const k = e.key;
+    if (!this.kb) {
+      const el = e.target.closest?.('.cel.arrastrable');
+      if (el && (k === 'Enter' || k === ' ')) { e.preventDefault(); e.stopPropagation(); this.kbIniciar(el.dataset.id); }
+      return;
+    }
+    const paso = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[k];
+    if (paso) { e.preventDefault(); e.stopPropagation(); this.kbMover(paso); }
+    else if (k === 'Enter' || k === ' ') { e.preventDefault(); e.stopPropagation(); this.kbConfirmar(); }
+    else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); this.kbCancelar(); }
+  }
+
+  kbIniciar(id) {
+    if (this.vivo || !this.vis.has(id)) return;
+    const lista = this.def.celdas.map(c => c.id).filter(x => this.vis.has(x) && x !== id);
+    if (!lista.length) return;
+    const o = this.pos.get(id), v = this.iniciarVivo(id, o.x + COLW, o.y + CELLH / 2), actual = lista.indexOf(this.ptr.get(id));
+    v.kb = true; this.kb = { id, lista, i: actual >= 0 ? actual : 0 };
+    this.kbMostrar();
+  }
+
+  kbMover(d) { const K = this.kb; K.i = (K.i + d + K.lista.length) % K.lista.length; this.kbMostrar(); }
+
+  kbMostrar() {
+    const K = this.kb, v = this.vivo, dst = K.lista[K.i];
+    this.candidato(v, dst); this.apuntar(v, dst);
+    const c = this.por.get(dst), u = TXT[idioma()];
+    this.sr.textContent = `${u.elige}: ${L(c.name)} ${c.addr ?? ''} (${K.i + 1}/${K.lista.length})`;
+  }
+
+  kbConfirmar() {
+    const K = this.kb, v = this.vivo, dst = K.lista[K.i];
+    this.kb = null; this.vivo = null;
+    this.cerrarVivo(v, true); this.sembrar(v);
+    this.sr.textContent = `${L(this.por.get(K.id).name)} ${TXT[idioma()].fin} ${L(this.por.get(dst).name)}`;
+    if (this.cbSoltar) this.cbSoltar(K.id, dst);
+  }
+
+  kbCancelar() {
+    const v = this.vivo;
+    this.kb = null; this.vivo = null;
+    if (v) this.cerrarVivo(v, false);
+    this.sr.textContent = TXT[idioma()].sin;
   }
 }

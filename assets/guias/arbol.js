@@ -40,8 +40,17 @@
 // Arrastre (jugar.arrastrables): ids === true | [ids]; al soltar el nodo se queda donde se dejó hasta el próximo cambio
 // de estructura (o paso) y se llama cb(id, x, y) en px lógicos. Las aristas lo siguen en vivo.
 // vista(S) = datos planos {est, val, etiquetas, aristaEst}; ctx(S) = funciones puras (altura, camino, hijos, recorrido…).
+//
+// INTERACCIÓN (sin cambiar el formato): tooltip al pasar el puntero o enfocar un nodo (id, clave, nivel, padre e hijos o vecinos
+// con su peso, estado) y resaltado de sus aristas y vecinos; el nodo agarrado sigue al puntero a través de un Muelle (peso) y al
+// soltar se asienta conservando la velocidad; teclado: Tab enfoca nodos arrastrables, las flechas los desplazan (Mayús = paso
+// grande) e Intro/Espacio los «suelta» (llama a cb como al soltar con el ratón). Un pulso de aro avisa de cada cambio de estado.
+// Los textos con `$…$` (valores, etiquetas y notas laterales) se dibujan con KaTeX en un <foreignObject> (mates.etiqueta, solo si cambian).
 
 import { idioma } from './idioma.js';
+import { etiqueta } from './mates.js';
+import { Muelle, tarea } from './movimiento.js';
+import { crearTip } from './tip.js';
 
 export const clave = 'arbol';
 const NS = 'http://www.w3.org/2000/svg';
@@ -288,6 +297,33 @@ export const ctx = s => {
   };
 };
 
+// ── Tooltip (lógica pura) ─────────────────────────────────────────────────────────────────────────────────────────────
+export const NOMBRE_EST = {
+  activo: { es: 'activo', en: 'active' }, visitado: { es: 'visitado', en: 'visited' }, camino: { es: 'en el camino', en: 'on the path' },
+  ok: { es: 'correcto', en: 'done' }, mal: { es: 'error', en: 'error' },
+};
+/** Datos del nodo `id` para el tooltip: {id, val, etiqueta, est, nivel, padre, hijos, vecinos}; null si no existe. PURA. */
+export function describirNodo(S, id, modo = 'arbol', hl = {}) {
+  if (!S.nodos.some(m => m.id === id)) return null;
+  const val = x => txt(S.val[x] ?? S.nodos.find(m => m.id === x)?.val ?? x), peso = e => (e.peso != null ? txt(e.peso) : null);
+  const est = (hl[id] && { a: 'activo', b: 'ok', c: 'mal' }[hl[id]]) || S.est[id] || null;
+  const r = { id, val: val(id), etiqueta: txt(S.etiquetas[id] ?? ''), est, nivel: null, padre: null, hijos: [], vecinos: [] };
+  if (modo === 'libre') {
+    for (const e of S.aristas) {
+      if (e.a === id) r.vecinos.push({ id: e.b, val: val(e.b), peso: peso(e), dir: e.dir ? 'sale' : null });
+      else if (e.b === id) r.vecinos.push({ id: e.a, val: val(e.a), peso: peso(e), dir: e.dir ? 'llega' : null });
+    }
+  } else {
+    const padreDe = new Map(S.aristas.map(e => [e.b, e.a])), p = padreDe.get(id);
+    if (p != null) r.padre = { id: p, val: val(p) };
+    r.hijos = S.aristas.filter(e => e.a === id).map(e => ({ id: e.b, val: val(e.b), lado: e.lado || null }));
+    let nv = 0;
+    for (let c = id; padreDe.has(c) && nv <= S.nodos.length; c = padreDe.get(c)) nv++;
+    r.nivel = nv;
+  }
+  return r;
+}
+
 // ── CSS (se inyecta una vez, al crear la primera escena) ────────────────────────────────────────────────────────────
 const CSS = `
 .ar-svg { position: absolute; left: 0; top: 0; overflow: visible; }
@@ -303,13 +339,26 @@ const CSS = `
 .ar-n .ar-c { fill: var(--cell); stroke: var(--line2); stroke-width: 1.5; transition: fill .3s, stroke .3s, stroke-width .3s; }
 .ar-n .ar-v { font-family: var(--ui); font-weight: 600; fill: var(--text); text-anchor: middle; pointer-events: none; }
 .ar-n .ar-e { font: 600 11px var(--ui); fill: var(--g-aux); text-anchor: middle; paint-order: stroke; stroke: var(--island); stroke-width: 3.5px; stroke-linejoin: round; pointer-events: none; }
-.ar-n .ar-aro { fill: none; stroke: var(--g-activo); stroke-width: 2; opacity: 0; transition: opacity .3s; pointer-events: none; }
+.ar-n .ar-aro { fill: none; stroke: var(--g-activo); stroke-width: 2; opacity: 0; transition: opacity .3s; pointer-events: none; transform-box: fill-box; transform-origin: center; }
+@media (hover: hover) { .ar-n:hover .ar-aro { opacity: .3; } }
+.ar-n.vec .ar-c { stroke: var(--g-aux); stroke-width: 2.5; }
+.ar-a.hov .ar-l { stroke: var(--g-aux); stroke-width: 3; } .ar-a.hov .ar-h { fill: var(--g-aux); }
+.ar-n:focus, .ar-n:focus-visible { outline: none; }
+.ar-n:focus-visible .ar-c { stroke: var(--g-activo); stroke-width: 3.5; } .ar-n:focus-visible .ar-aro { opacity: .75; }
+.ar-fo { overflow: visible; pointer-events: none; }
+.ar-fo > div { width: 100%; height: 100%; white-space: pre; font-family: var(--ui); }
+.ar-fo.v > div { text-align: center; font-weight: 600; color: var(--text); }
+.ar-fo.v.e-visitado > div { color: var(--muted); }
+.ar-fo.e > div { text-align: center; font-weight: 600; font-size: 11px; color: var(--g-aux); text-shadow: 0 0 3px var(--island), 0 0 3px var(--island), 0 0 3px var(--island); }
+.ar-fo.n > div { font-size: 12px; color: var(--muted); }
+.ar-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .ar-n .ar-ins { opacity: 0; transition: opacity .3s; pointer-events: none; }
 .ar-n .ar-ins circle { fill: var(--g-hecho); } .ar-n .ar-ins path { fill: none; stroke: var(--island); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .ar-n .ar-xx { display: none; }
 .ar-n.e-activo .ar-c { stroke: var(--g-activo); stroke-width: 3; fill: var(--g-activo-bg); } .ar-n.e-activo .ar-aro { opacity: .45; }
 .ar-n.e-visitado .ar-c { fill: rgba(134, 138, 145, .22); stroke: var(--muted); } .ar-n.e-visitado .ar-v { fill: var(--muted); }
 .ar-n.e-camino .ar-c { stroke: var(--g-camino); stroke-width: 3.6; fill: var(--g-camino-bg); }
+.ar-n.e-camino .ar-aro { stroke: var(--g-camino); } .ar-n.e-ok .ar-aro { stroke: var(--g-hecho); } .ar-n.e-mal .ar-aro { stroke: var(--g-mal); }
 .ar-n.e-ok .ar-c { stroke: var(--g-hecho); stroke-width: 3; fill: var(--g-hecho-bg); } .ar-n.e-ok .ar-ins { opacity: 1; }
 .ar-n.e-mal .ar-c { stroke: var(--g-mal); stroke-width: 3; fill: var(--g-mal-bg); stroke-dasharray: 4 3; } .ar-n.e-mal .ar-ins { opacity: 1; }
 .ar-n.e-mal .ar-ins circle { fill: var(--g-mal); } .ar-n.e-mal .ar-ck { display: none; } .ar-n.e-mal .ar-xx { display: inline; }
@@ -324,7 +373,7 @@ function inyectarCss() {
 }
 
 // ── Tamaño lógico de la escena abierta (solo depende de `def`) ─────────────────────────────────────────────────────
-const radioDe = def => def.radio ?? clamp(Math.round(3.9 * Math.max(2, def.cabida?.texto ?? 0, ...(def.nodos || []).map(n => txt(n.val).length))), 16, 32);
+const radioDe = def => def.radio ?? clamp(Math.round(3.9 * Math.max(2, def.cabida?.texto ?? 0, ...(def.nodos || []).map(n => txt(n.val).replace(/[$\\{}]/g, '').length))), 16, 32);
 function medidaDef(def, R) {
   const g = geo(R), c = def.cabida, NG = c?.notas ? (c.notas > 1 ? c.notas : 250) : def.notas?.length ? 250 : 0;
   let Wt, H;
@@ -337,6 +386,30 @@ function medidaDef(def, R) {
   return { Wt, NG, W: Wt + NG, H: Math.max(H, 140) };
 }
 
+const TXT = {
+  es: { nodo: 'Nodo', clave: 'Clave', etiqueta: 'Etiqueta', nivel: 'Nivel', padre: 'Padre', hijos: 'Hijos', vecinos: 'Vecinos', sale: 'Sale a', llega: 'Llega de', estado: 'Estado', izq: 'izq.', der: 'der.', peso: 'peso', ninguno: 'ninguno', mover: 'nodo: flechas para moverlo, Intro para soltarlo' },
+  en: { nodo: 'Node', clave: 'Key', etiqueta: 'Label', nivel: 'Level', padre: 'Parent', hijos: 'Children', vecinos: 'Neighbors', sale: 'Goes to', llega: 'Comes from', estado: 'State', izq: 'left', der: 'right', peso: 'weight', ninguno: 'none', mover: 'node: arrow keys to move it, Enter to drop it' },
+};
+/** Texto SVG que admite `$…$`: sin fórmula es el <text> de siempre; con ella, un <foreignObject> hermano (se crea al primer uso con `mk`). */
+function ponerSvg(t, s, mk) {
+  const mate = s.includes('$');
+  if (mate) {
+    if (!t._fo) { t._fo = mk(); t.after(t._fo); }
+    if (t._s !== s || t._m !== true) { etiqueta(t._fo.firstChild, s); t.textContent = ''; }
+    t._fo.style.display = '';
+  } else {
+    if (t._fo && t._m) t._fo.style.display = 'none';
+    if (t._s !== s || t._m) t.textContent = s;
+  }
+  t._s = s; t._m = mate;
+}
+/** <foreignObject> centrado en (x, y) con `w`×`h` px lógicos para una etiqueta con fórmula. */
+function creaFo(clase, x, y, w, h) {
+  const fo = svg('foreignObject', 'ar-fo ' + clase);
+  fo.setAttribute('x', x); fo.setAttribute('y', y); fo.setAttribute('width', w); fo.setAttribute('height', h);
+  const d = document.createElement('div'); d.style.lineHeight = h + 'px'; fo.append(d); return fo;
+}
+
 export const crear = stage => new EscenaArbol(stage);
 const svg = (tag, cls) => { const e = document.createElementNS(NS, tag); if (cls) e.setAttribute('class', cls); return e; };
 
@@ -347,17 +420,57 @@ export class EscenaArbol {
     this.svg = svg('svg', 'ar-svg'); stage.append(this.svg);
     this.raf = 0; this.T = null; this.drag = null; this.vivo = null; this.cbSoltar = null;
     this.nd = new Map(); this.ed = new Map(); this.nt = new Map(); this.manual = new Map(); this.firma = '';
+    this.asent = null; this.ult = null; this.hov = null; this.hlUlt = {};
+    this.sr = Object.assign(document.createElement('div'), { className: 'ar-sr' }); this.sr.setAttribute('role', 'status'); this.sr.setAttribute('aria-live', 'polite'); stage.append(this.sr);
+    this.tip = crearTip(stage, { objetivo: n => this.tipClave(n), datos: id => this.tipDatos(id), sobre: id => { this.hov = id; this.aplicarHover(); } });
     this.svg.addEventListener('pointerdown', e => this.arrancar(e));
     this.svg.addEventListener('pointermove', e => this.mover(e));
     this.svg.addEventListener('pointerup', e => this.soltar(e));
     this.svg.addEventListener('pointercancel', e => this.soltar(e, true));
+    this.svg.addEventListener('keydown', e => this.tecla(e));
+  }
+
+  // ── Tooltip: clave = id del nodo; se ancla en su posición lógica actual (sin medir el DOM) ──
+  tipClave(n) {
+    const g = n.closest?.('.ar-n');
+    return g && this.svg.contains(g) ? g.dataset.id : null;
+  }
+
+  tipDatos(id) {
+    const S = this.ult, r = this.nd.get(id);
+    if (!S || !r || !r.vivo) return null;
+    const d = describirNodo(S, id, this.modo, this.hlUlt), u = TXT[idioma()], filas = [];
+    if (!d) return null;
+    filas.push([u.clave, d.val]);
+    if (d.etiqueta) filas.push([u.etiqueta, d.etiqueta]);
+    if (d.nivel != null) filas.push([u.nivel, String(d.nivel)]);
+    if (d.padre) filas.push([u.padre, d.padre.val]);
+    if (this.modo === 'arbol') filas.push([u.hijos, d.hijos.length ? d.hijos.map(h => h.val + (h.lado ? ` (${h.lado === 'i' ? u.izq : u.der})` : '')).join(', ') : u.ninguno]);
+    else if (d.vecinos.length) {
+      const dirs = d.vecinos.some(v => v.dir);
+      const f = v => `${v.val}${v.peso != null ? ` (${u.peso} ${v.peso})` : ''}`;
+      if (dirs) {
+        const s = d.vecinos.filter(v => v.dir === 'sale').map(f), l = d.vecinos.filter(v => v.dir === 'llega').map(f), n = d.vecinos.filter(v => !v.dir).map(f);
+        if (s.length) filas.push([u.sale, s.join(', ')]); if (l.length) filas.push([u.llega, l.join(', ')]); if (n.length) filas.push([u.vecinos, n.join(', ')]);
+      } else filas.push([u.vecinos, d.vecinos.map(f).join(', ')]);
+    } else filas.push([u.vecinos, u.ninguno]);
+    if (d.est) filas.push([u.estado, L(NOMBRE_EST[d.est]) || d.est]);
+    return { titulo: `${u.nodo} ${id}`, filas, x: r.x, y: r.y - this.R * r.sc - 6, y2: r.y + this.R * r.sc + (d.etiqueta ? 22 : 8) };
+  }
+
+  /** Resalta las aristas del nodo con el puntero encima y a sus vecinos. */
+  aplicarHover() {
+    const S = this.ult, h = this.hov, vec = new Set(), ar = new Set();
+    if (S && h != null) for (const e of S.aristas) { if (e.a === h) { vec.add(e.b); ar.add(claveArista(e.a, e.b)); } else if (e.b === h) { vec.add(e.a); ar.add(claveArista(e.a, e.b)); } }
+    for (const [id, r] of this.nd) r.g.classList.toggle('vec', vec.has(id));
+    for (const [k, r] of this.ed) r.g.classList.toggle('hov', ar.has(k));
   }
 
   get tam() { return { W: this.W, H: this.H }; }
 
   fijar(def) {
     if (def === this.def) return;
-    cancelAnimationFrame(this.raf); this.T = null; this.vivo = null;
+    cancelAnimationFrame(this.raf); this.T = null; this.finVivo(); this.tip.ocultar(); this.ult = null; this.hov = null;
     this.svg.replaceChildren(this.gQ = svg('g'), this.gE = svg('g'), this.gN = svg('g'));
     this.def = def; this.modo = def.modo === 'libre' ? 'libre' : 'arbol'; this.R = radioDe(def);
     const m = medidaDef(def, this.R);
@@ -374,7 +487,7 @@ export class EscenaArbol {
     const disco = svg('circle'); disco.setAttribute('r', 7);
     ins.append(disco, marca('ar-ck', 'M-3 .2L-.8 2.6L3.2-2.4'), marca('ar-xx', 'M-2.6-2.6L2.6 2.6M2.6-2.6L-2.6 2.6'));
     g.append(aro, c, t, lb, ins); this.gN.append(g);
-    const r = { g, t, lb, x: 0, y: 0, op: 0, sc: .35, vivo: true, txt: undefined };
+    const r = { g, t, lb, aro, x: 0, y: 0, op: 0, sc: .35, vivo: true, txt: undefined, est: undefined, tab: false };
     this.nd.set(id, r); return r;
   }
 
@@ -404,12 +517,21 @@ export class EscenaArbol {
       r.vivo = true; r.a = { x: pos[n.id].x, y: pos[n.id].y, op: 1, sc: 1 };
       const v = txt(S.val[n.id] ?? n.val), est = (hl[n.id] && estDe[hl[n.id]]) || S.est[n.id];
       if (v !== r.txt) {
-        r.t.textContent = v; r.t.setAttribute('font-size', clamp(2.93 * R / Math.max(v.length, 1), 9, 14).toFixed(1));
-        if (anim && r.txt !== undefined) r.t.animate([{ opacity: 0 }, { opacity: 1 }], { duration: Math.min(320, dur), easing: 'ease-out' });
+        const fs = clamp(2.93 * R / Math.max(v.replace(/[$\\{}^_]/g, '').length, 1), 9, 14).toFixed(1);
+        r.t.setAttribute('font-size', fs);
+        ponerSvg(r.t, v, () => creaFo('v', -R, -R, 2 * R, 2 * R));
+        if (r.t._fo) r.t._fo.firstChild.style.fontSize = fs + 'px';
+        const vis = r.t._m ? r.t._fo : r.t;
+        if (anim && r.txt !== undefined) vis.animate([{ opacity: 0 }, { opacity: 1 }], { duration: Math.min(320, dur), easing: 'ease-out' });
         r.txt = v;
       }
-      r.lb.textContent = txt(S.etiquetas[n.id] ?? '');
+      ponerSvg(r.lb, txt(S.etiquetas[n.id] ?? ''), () => creaFo('e', -80, R + 3, 160, 18));
+      if (r.t._fo) r.t._fo.classList.toggle('e-visitado', est === 'visitado');
       r.g.setAttribute('class', 'ar-n' + (est ? ' e-' + est : '') + (this.puede(n.id) ? ' arrastrable' : ''));
+      // pulso del aro al entrar en un estado (solo transform/opacity; el primer pintado no pulsa)
+      const e = est ?? null;
+      if (e !== r.est) { if (e && e !== 'visitado' && anim && r.est !== undefined) r.aro.animate([{ transform: 'scale(.9)', opacity: .9 }, { transform: 'scale(1.6)', opacity: 0 }], { duration: Math.min(560, dur * 1.1), easing: 'ease-out' }); r.est = e; }
+      this.tabNodo(n.id, r);
     }
     for (const [id, r] of this.nd) if (!vivos.has(id)) { r.vivo = false; r.a = { x: r.x, y: r.y, op: 0, sc: .6 }; r.g.classList.remove('arrastrable'); }
 
@@ -428,8 +550,16 @@ export class EscenaArbol {
     cancelAnimationFrame(this.raf);
     for (const r of this.nd.values()) r.de = { x: r.x, y: r.y, op: r.op, sc: r.sc };
     for (const r of this.ed.values()) r.de = r.op;
+    // un nodo que aún se asienta (o se sostiene) sigue con sus muelles, ahora hacia su posición actual del diseño; la transición no lo toca (r.libre)
+    const A = this.asent;
+    if (A) {
+      const p = pos[A.id];
+      if (!p || this.nd.get(A.id) !== A.r || !A.r.vivo) this.finAsiento();
+      else if (this.vivo !== A) { A.tx = p.x; A.ty = p.y; A.mx.ir(p.x); A.my.ir(p.y); A.ms.ir(1); this.tareaNodo(A); }
+    }
     this.T = { t0: performance.now(), dur: anim ? dur : 0 };
     this.frame(this.T.t0);
+    this.ult = S; this.hlUlt = hl; this.aplicarHover(); this.tip.refrescar();
   }
 
   /** Etiquetas laterales por nivel (en el margen derecho reservado): se desvanecen al entrar y salir. */
@@ -443,7 +573,9 @@ export class EscenaArbol {
         if (!reducido()) q.g.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
       }
       const y = tr.y(nv);
-      q.vivo = true; q.t.textContent = txt(n.texto);
+      q.vivo = true;
+      ponerSvg(q.t, txt(n.texto), () => creaFo('n', 0, 0, Math.max(60, this.W - this.Wt - 18), 20));
+      if (q.t._fo) { q.t._fo.setAttribute('x', this.Wt + 14); q.t._fo.setAttribute('y', y - 10); }
       q.ln.setAttribute('x1', 6); q.ln.setAttribute('x2', this.Wt + 4); q.ln.setAttribute('y1', y); q.ln.setAttribute('y2', y);
       q.t.setAttribute('x', this.Wt + 14); q.t.setAttribute('y', y);
     }
@@ -462,7 +594,7 @@ export class EscenaArbol {
   frame = now => {
     const T = this.T, k = T.dur ? Math.min(1, (now - T.t0) / T.dur) : 1, e = ease(k);
     for (const r of this.nd.values()) {
-      for (const c of ['x', 'y', 'op', 'sc']) r[c] = r.de[c] + (r.a[c] - r.de[c]) * e;
+      for (const c of ['x', 'y', 'op', 'sc']) if (!r.libre || c === 'op') r[c] = r.de[c] + (r.a[c] - r.de[c]) * e;
       this.ponerNodo(r);
     }
     for (const r of this.ed.values()) r.op = r.de + (r.a - r.de) * e;
@@ -497,45 +629,114 @@ export class EscenaArbol {
   }
 
   // ── Arrastre de nodos (Pointer Events con captura) ──
+  // El nodo agarrado sigue al puntero a través de Muelle (x, y) y de escala (se «levanta» un 12 %); al soltar los muelles
+  // siguen hasta el reposo conservando la velocidad (asentamiento). Un único trabajo por fotograma (tarea compartida) mueve
+  // el nodo y recalcula sus aristas; mientras dura, la transición de pintar() no toca ese nodo (r.libre). El rectángulo del
+  // stage se mide UNA vez al agarrar.
   puede(id) { return !!(this.drag && (this.drag === true || this.drag.has(id))); }
+
+  /** Foco por teclado y etiqueta accesible solo en los nodos que se pueden mover. */
+  tabNodo(id, r) {
+    const pd = !!(r.vivo && this.puede(id));
+    if (pd !== r.tab) {
+      r.tab = pd;
+      if (pd) { r.g.setAttribute('tabindex', '0'); r.g.setAttribute('role', 'button'); } else { r.g.removeAttribute('tabindex'); r.g.removeAttribute('role'); r.g.removeAttribute('aria-label'); }
+    }
+    if (pd) r.g.setAttribute('aria-label', `${r.txt ?? id}, ${TXT[idioma()].mover}`);
+  }
 
   /** Activa (true | [ids]) o desactiva (null) el arrastre; cb(id, x, y) al soltar (px lógicos). Desactivar devuelve los nodos a su sitio. */
   arrastre(ids, cb) {
     this.drag = ids === true ? true : ids && ids.length ? new Set(ids) : null; this.cbSoltar = cb;
-    if (!this.drag) this.manual.clear();
+    if (!this.drag) { this.manual.clear(); this.finVivo(); }
     this.svg.classList.toggle('arrastra', !!this.drag);
-    for (const [id, r] of this.nd) r.g.classList.toggle('arrastrable', r.vivo && this.puede(id));
+    for (const [id, r] of this.nd) { r.g.classList.toggle('arrastrable', r.vivo && this.puede(id)); this.tabNodo(id, r); }
   }
 
-  local(e) {
-    const b = this.stage.getBoundingClientRect(), k = b.width / this.W || 1;
-    return [(e.clientX - b.left) / k, (e.clientY - b.top) / k];
+  /** Muelles de un nodo (posición y escala) a partir de donde esté ahora. */
+  asiento(id, r) {
+    const v = { id, r, mx: new Muelle(r.x, 30), my: new Muelle(r.y, 30), ms: new Muelle(r.sc, 22), cancela: null, tx: r.x, ty: r.y };
+    r.libre = true; this.asent = v; return v;
+  }
+
+  /** Un único trabajo por fotograma mientras los muelles se mueven; al reposar (y sin puntero encima) termina el asentamiento. */
+  tareaNodo(v) {
+    const r = v.r, poner = () => { r.x = r.a.x = v.mx.x; r.y = r.a.y = v.my.x; r.sc = r.a.sc = v.ms.x; this.ponerNodo(r); this.dibujarAristas(); };
+    if (reducido()) { v.mx.salto(v.mx.a); v.my.salto(v.my.a); v.ms.salto(v.ms.a); poner(); if (this.vivo !== v) this.finAsiento(); return; }
+    if (v.cancela) return;
+    v.cancela = tarea((_, dt) => {
+      v.mx.paso(dt); v.my.paso(dt); v.ms.paso(dt); poner();
+      if (!(v.mx.quieto && v.my.quieto && v.ms.quieto)) return true;
+      v.cancela = null; if (this.vivo !== v) this.finAsiento();
+      return false;
+    });
+  }
+
+  /** Termina el asentamiento: el nodo vuelve a ser cosa de la transición de pintar(). */
+  finAsiento() {
+    const v = this.asent;
+    if (!v) return;
+    this.asent = null; v.cancela?.(); v.cancela = null; v.r.libre = false;
+  }
+
+  /** Suelta cualquier arrastre en curso (cambio de escena o arrastre desactivado). */
+  finVivo() {
+    const v = this.vivo;
+    if (v) { this.vivo = null; v.r.g.classList.remove('agarrado'); this.tip.pausa(false); }
+    this.finAsiento();
   }
 
   arrancar(e) {
     const g = e.target.closest?.('.ar-n.arrastrable'), r = g && this.nd.get(g.dataset.id);
-    if (!r) return;
+    if (!r || this.vivo) return;
     e.preventDefault(); this.svg.setPointerCapture(e.pointerId);
     cancelAnimationFrame(this.raf); if (this.T) this.frame(Infinity); // termina la transición en curso para arrastrar sobre posiciones finales
-    const [px, py] = this.local(e);
-    this.vivo = { id: g.dataset.id, r, ox: r.x - px, oy: r.y - py };
-    g.classList.add('agarrado'); this.gN.append(g);
+    this.finAsiento();
+    const b = this.stage.getBoundingClientRect(), k = b.width / this.W || 1, px = (e.clientX - b.left) / k, py = (e.clientY - b.top) / k;
+    const v = this.asiento(g.dataset.id, r);
+    Object.assign(v, { b, k, ox: r.x - px, oy: r.y - py, pid: e.pointerId });
+    v.ms.ir(1.12); this.vivo = v; this.tip.pausa(true);
+    g.classList.add('agarrado'); this.gN.append(g); g.focus({ preventScroll: true }); // appendChild lo trae al frente (y le quita el foco: se devuelve)
+    this.tareaNodo(v);
   }
 
   mover(e) {
     const v = this.vivo;
-    if (!v) return;
-    const [px, py] = this.local(e), R = this.R;
-    v.r.x = v.r.a.x = clamp(px + v.ox, R, this.W - R); v.r.y = v.r.a.y = clamp(py + v.oy, R, this.H - R);
-    this.ponerNodo(v.r); this.dibujarAristas();
+    if (!v || e.pointerId !== v.pid) return;
+    const R = this.R;
+    v.tx = clamp((e.clientX - v.b.left) / v.k + v.ox, R, this.W - R); v.ty = clamp((e.clientY - v.b.top) / v.k + v.oy, R, this.H - R);
+    v.mx.ir(v.tx); v.my.ir(v.ty); this.tareaNodo(v);
   }
 
   soltar(e, cancelado = false) {
     const v = this.vivo;
     if (!v) return;
-    this.vivo = null; v.r.g.classList.remove('agarrado');
+    this.vivo = null; v.r.g.classList.remove('agarrado'); this.tip.pausa(false);
     if (this.svg.hasPointerCapture(e.pointerId)) this.svg.releasePointerCapture(e.pointerId);
-    this.manual.set(v.id, { x: v.r.x, y: v.r.y });
-    if (!cancelado && this.cbSoltar) this.cbSoltar(v.id, Math.round(v.r.x), Math.round(v.r.y));
+    this.manual.set(v.id, { x: v.tx, y: v.ty });
+    v.ms.ir(1); this.tareaNodo(v);
+    if (!cancelado && this.cbSoltar) this.cbSoltar(v.id, Math.round(v.tx), Math.round(v.ty));
+  }
+
+  // ── Teclado: flechas desplazan el nodo enfocado (Mayús = paso grande); Intro/Espacio lo «suelta» (llama a cb) ──
+  tecla(e) {
+    const g = e.target.closest?.('.ar-n.arrastrable'), r = g && this.nd.get(g.dataset.id);
+    if (!r || this.vivo) return;
+    const id = g.dataset.id, k = e.key, R = this.R;
+    const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[k];
+    if (!d && k !== 'Enter' && k !== ' ') return;
+    e.preventDefault(); e.stopPropagation();
+    if (d) {
+      let v = this.asent?.id === id ? this.asent : null;
+      if (!v) { this.finAsiento(); v = this.asiento(id, r); }
+      const paso = e.shiftKey ? 40 : 10;
+      v.tx = clamp(v.tx + d[0] * paso, R, this.W - R); v.ty = clamp(v.ty + d[1] * paso, R, this.H - R);
+      v.mx.ir(v.tx); v.my.ir(v.ty); this.manual.set(id, { x: v.tx, y: v.ty }); this.tareaNodo(v);
+      this.sr.textContent = `${Math.round(v.tx)}, ${Math.round(v.ty)}`;
+    } else if (this.cbSoltar) {
+      const v = this.asent?.id === id ? this.asent : null;
+      this.manual.set(id, { x: v?.tx ?? r.x, y: v?.ty ?? r.y });
+      this.cbSoltar(id, Math.round(v?.tx ?? r.x), Math.round(v?.ty ?? r.y));
+    }
   }
 }

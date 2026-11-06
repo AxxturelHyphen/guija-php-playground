@@ -74,11 +74,11 @@ export default {
     // ── Integral de línea ──
     { sec: { es: 'Integral de línea', en: 'Line integral' },
       campo: { f: (x, y) => Math.hypot(x, y), ...V2, modo: 'nivel', par: { s: PI2 },
-        deslizadores: [{ par: 's', min: 0, max: 6.3, paso: .05, dec: 2, es: 's (hasta dónde se recorre)', en: 's (how far it is travelled)' }],
+        deslizadores: [{ par: 's', min: 0, max: 6.3, paso: .05, dec: 2, es: '$s$ (hasta dónde se recorre)', en: '$s$ (how far it is travelled)' }],
         capas: [{ tipo: 'campo', F: ROT, n: 9 }, { tipo: 'camino', x: Math.cos, y: Math.sin, t: [0, TAU], hasta: 's' }],
         etiqueta: { es: 'Campo F = (−y, x) y circunferencia unidad recorrida hasta t = s', en: 'Field F = (−y, x) and unit circle travelled up to t = s' } },
-      es: 'Una partícula recorre una curva $C$, $\\vec r(t)$ con $a\\le t\\le b$. El **trabajo** del campo es $\\displaystyle\\int_C\\vec F\\cdot d\\vec r=\\int_a^b\\vec F(\\vec r(t))\\cdot\\vec r\\,\'(t)\\,dt$. Aquí $C$ es la circunferencia unidad, $\\vec r(t)=(\\cos t,\\sin t)$, y el deslizador fija hasta dónde se recorre.',
-      en: 'A particle travels along a curve $C$, $\\vec r(t)$ with $a\\le t\\le b$. The field\'s **work** is $\\displaystyle\\int_C\\vec F\\cdot d\\vec r=\\int_a^b\\vec F(\\vec r(t))\\cdot\\vec r\\,\'(t)\\,dt$. Here $C$ is the unit circle, $\\vec r(t)=(\\cos t,\\sin t)$, and the slider sets how far it is travelled.' },
+      es: 'Una partícula recorre una curva $C$, $\\vec r(t)$ con $a\\le t\\le b$. El **trabajo** del campo es $\\displaystyle\\int_C\\vec F\\cdot d\\vec r=\\int_a^b\\vec F(\\vec r(t))\\cdot\\vec{r}\'(t)\\,dt$. Aquí $C$ es la circunferencia unidad, $\\vec r(t)=(\\cos t,\\sin t)$, y el deslizador fija hasta dónde se recorre.',
+      en: 'A particle travels along a curve $C$, $\\vec r(t)$ with $a\\le t\\le b$. The field\'s **work** is $\\displaystyle\\int_C\\vec F\\cdot d\\vec r=\\int_a^b\\vec F(\\vec r(t))\\cdot\\vec{r}\'(t)\\,dt$. Here $C$ is the unit circle, $\\vec r(t)=(\\cos t,\\sin t)$, and the slider sets how far it is travelled.' },
     { sec: { es: 'Pruébalo tú', en: 'Try it yourself' },
       jugar: {
         botones: [[PI2, 'π/2'], [Math.PI, 'π'], [3 * Math.PI / 2, '3π/2'], [TAU, '2π']].map(([s, e]) => ({ label: { es: `s = ${e}`, en: `s = ${e}` }, hacer: v => { v.s = s; } })),
@@ -91,8 +91,8 @@ export default {
           ];
         },
       },
-      es: 'Sobre la circunferencia, $\\vec F(\\vec r(t))=(-\\sin t,\\cos t)$ y $\\vec r\\,\'(t)=(-\\sin t,\\cos t)$: **iguales**, el campo empuja siempre a favor del movimiento. El producto es $\\sin^2t+\\cos^2t=1$ y $\\int_0^s1\\,dt=s$. Comprueba la lectura numérica.',
-      en: 'On the circle, $\\vec F(\\vec r(t))=(-\\sin t,\\cos t)$ and $\\vec r\\,\'(t)=(-\\sin t,\\cos t)$: **equal**, the field always pushes along the motion. The product is $\\sin^2t+\\cos^2t=1$ and $\\int_0^s1\\,dt=s$. Check the numerical reading.' },
+      es: 'Sobre la circunferencia, $\\vec F(\\vec r(t))=(-\\sin t,\\cos t)$ y $\\vec{r}\'(t)=(-\\sin t,\\cos t)$: **iguales**, el campo empuja siempre a favor del movimiento. El producto es $\\sin^2t+\\cos^2t=1$ y $\\int_0^s1\\,dt=s$. Comprueba la lectura numérica.',
+      en: 'On the circle, $\\vec F(\\vec r(t))=(-\\sin t,\\cos t)$ and $\\vec{r}\'(t)=(-\\sin t,\\cos t)$: **equal**, the field always pushes along the motion. The product is $\\sin^2t+\\cos^2t=1$ and $\\int_0^s1\\,dt=s$. Check the numerical reading.' },
     { par: { s: TAU },
       es: 'Tras una vuelta completa ($s=2\\pi$), ¿cuánto vale $\\oint_C\\vec F\\cdot d\\vec r$?',
       en: 'After one full turn ($s=2\\pi$), what is $\\oint_C\\vec F\\cdot d\\vec r$?',
@@ -103,15 +103,15 @@ export default {
           { es: '$\\pi$', en: '$\\pi$' },
         ],
         why: {
-          es: 'Como $\\vec F\\cdot\\vec r\\,\'=1$ en todo punto, la integral es la longitud de la curva: $2\\pi$. Que no sea $0$ al cerrar el circuito significa que el campo hace trabajo neto: **no es conservativo**.',
-          en: 'Since $\\vec F\\cdot\\vec r\\,\'=1$ at every point, the integral is the length of the curve: $2\\pi$. That it is not $0$ after closing the loop means the field does net work: it is **not conservative**.',
+          es: 'Como $\\vec F\\cdot\\vec{r}\'=1$ en todo punto, la integral es la longitud de la curva: $2\\pi$. Que no sea $0$ al cerrar el circuito significa que el campo hace trabajo neto: **no es conservativo**.',
+          en: 'Since $\\vec F\\cdot\\vec{r}\'=1$ at every point, the integral is the length of the curve: $2\\pi$. That it is not $0$ after closing the loop means the field does net work: it is **not conservative**.',
         },
       } },
 
     // ── Conservativo ──
     { sec: { es: 'Campos conservativos', en: 'Conservative fields' },
       campo: { f: (x, y) => x * y, ...V2, modo: 'nivel', par: { u: .5 },
-        deslizadores: [{ par: 'u', min: 0, max: 1, paso: .025, dec: 3, es: 'u (fracción recorrida)', en: 'u (fraction travelled)' }],
+        deslizadores: [{ par: 'u', min: 0, max: 1, paso: .025, dec: 3, es: '$u$ (fracción recorrida)', en: '$u$ (fraction travelled)' }],
         capas: [{ tipo: 'campo', grad: true, n: 9 }, { tipo: 'camino', x: RECTA.x, y: RECTA.y, t: [0, 1], hasta: 'u' }, { tipo: 'camino', x: PARAB.x, y: PARAB.y, t: [0, 1], hasta: 'u' }],
         etiqueta: { es: 'Potencial φ = xy (color), campo F = ∇φ y dos caminos de (0,0) a (1,1)', en: 'Potential φ = xy (colour), field F = ∇φ and two paths from (0,0) to (1,1)' } },
       es: 'Un campo es **conservativo** si es un gradiente: $\\vec F=\\nabla\\varphi$. Aquí $\\varphi=xy$ (el color) y $\\vec F=(y,\\,x)$ es perpendicular a sus curvas de nivel. Hay dos caminos de $(0,0)$ a $(1,1)$: la recta $y=x$ y la parábola $y=x^2$.',
@@ -126,8 +126,8 @@ export default {
           { expr: 'φ(fin parábola)', valor: cx.fmt(v.u * v.u * v.u) },
         ],
       },
-      es: '**Teorema fundamental**: $\\int_C\\nabla\\varphi\\cdot d\\vec r=\\varphi(B)-\\varphi(A)$, sea cual sea el camino. Recta: $\\vec F\\cdot\\vec r\\,\'=2t$, integral $1$. Parábola: $(t^2,t)\\cdot(1,2t)=3t^2$, integral $1$. Ambas valen $\\varphi(1,1)-\\varphi(0,0)=1$. Con $u<1$ cada una vale $\\varphi$ en su punto final.',
-      en: '**Fundamental theorem**: $\\int_C\\nabla\\varphi\\cdot d\\vec r=\\varphi(B)-\\varphi(A)$, whatever the path. Line: $\\vec F\\cdot\\vec r\\,\'=2t$, integral $1$. Parabola: $(t^2,t)\\cdot(1,2t)=3t^2$, integral $1$. Both equal $\\varphi(1,1)-\\varphi(0,0)=1$. With $u<1$ each equals $\\varphi$ at its own end point.' },
+      es: '**Teorema fundamental**: $\\int_C\\nabla\\varphi\\cdot d\\vec r=\\varphi(B)-\\varphi(A)$, sea cual sea el camino. Recta: $\\vec F\\cdot\\vec{r}\'=2t$, integral $1$. Parábola: $(t^2,t)\\cdot(1,2t)=3t^2$, integral $1$. Ambas valen $\\varphi(1,1)-\\varphi(0,0)=1$. Con $u<1$ cada una vale $\\varphi$ en su punto final.',
+      en: '**Fundamental theorem**: $\\int_C\\nabla\\varphi\\cdot d\\vec r=\\varphi(B)-\\varphi(A)$, whatever the path. Line: $\\vec F\\cdot\\vec{r}\'=2t$, integral $1$. Parabola: $(t^2,t)\\cdot(1,2t)=3t^2$, integral $1$. Both equal $\\varphi(1,1)-\\varphi(0,0)=1$. With $u<1$ each equals $\\varphi$ at its own end point.' },
     { es: '¿Cuál de estos campos es conservativo?',
       en: 'Which of these fields is conservative?',
       pregunta: {
@@ -150,13 +150,13 @@ export default {
           { expr: '½ sen 4πu', valor: cx.fmt(c0(Math.sin(2 * TAU * v.u) / 2)) },
         ],
       },
-      es: 'En un campo conservativo la circulación por **toda curva cerrada** es $0$: $\\varphi(A)-\\varphi(A)=0$. Con $(y,x)$ en la circunferencia unidad, $\\vec F\\cdot\\vec r\\,\'=\\cos2t$ y la integral hasta $t$ es $\\tfrac12\\sin2t$: sube a $\\tfrac12$, baja a $-\\tfrac12$ y vuelve a $0$. Con $(-y,x)$ daba $2\\pi$.',
-      en: 'In a conservative field the circulation around **every closed curve** is $0$: $\\varphi(A)-\\varphi(A)=0$. With $(y,x)$ on the unit circle, $\\vec F\\cdot\\vec r\\,\'=\\cos2t$ and the integral up to $t$ is $\\tfrac12\\sin2t$: it rises to $\\tfrac12$, falls to $-\\tfrac12$ and returns to $0$. With $(-y,x)$ it gave $2\\pi$.' },
+      es: 'En un campo conservativo la circulación por **toda curva cerrada** es $0$: $\\varphi(A)-\\varphi(A)=0$. Con $(y,x)$ en la circunferencia unidad, $\\vec F\\cdot\\vec{r}\'=\\cos2t$ y la integral hasta $t$ es $\\tfrac12\\sin2t$: sube a $\\tfrac12$, baja a $-\\tfrac12$ y vuelve a $0$. Con $(-y,x)$ daba $2\\pi$.',
+      en: 'In a conservative field the circulation around **every closed curve** is $0$: $\\varphi(A)-\\varphi(A)=0$. With $(y,x)$ on the unit circle, $\\vec F\\cdot\\vec{r}\'=\\cos2t$ and the integral up to $t$ is $\\tfrac12\\sin2t$: it rises to $\\tfrac12$, falls to $-\\tfrac12$ and returns to $0$. With $(-y,x)$ it gave $2\\pi$.' },
 
     // ── Green ──
     { sec: { es: 'Teorema de Green', en: 'Green\'s theorem' },
       campo: { f: (x, y) => x * x, x: [-.5, 1.5], y: [-.5, 1.5], modo: 'nivel', par: { s: 2 },
-        deslizadores: [{ par: 's', min: 0, max: 4, paso: .05, dec: 2, es: 's (recorrido del borde)', en: 's (distance along the boundary)' }],
+        deslizadores: [{ par: 's', min: 0, max: 4, paso: .05, dec: 2, es: '$s$ (recorrido del borde)', en: '$s$ (distance along the boundary)' }],
         capas: [{ tipo: 'region', x: [0, 1], y: [0, 1] }, { tipo: 'campo', F: FUL, n: 9 }, { tipo: 'camino', x: CUAD.x, y: CUAD.y, t: [0, 4], hasta: 's' }],
         etiqueta: { es: 'Campo F = (0, x²) y borde del cuadrado unidad en sentido antihorario', en: 'Field F = (0, x²) and the unit-square boundary, counterclockwise' } },
       es: '**Teorema de Green**: si $C$ cierra una región $D$ (antihorario), $\\displaystyle\\oint_CP\\,dx+Q\\,dy=\\iint_D\\Bigl(\\dfrac{\\partial Q}{\\partial x}-\\dfrac{\\partial P}{\\partial y}\\Bigr)dA$. La circulación por el borde es el giro local acumulado dentro. Probémoslo con $\\vec F=(0,\\,x^2)$ y el cuadrado unidad.',
@@ -166,7 +166,7 @@ export default {
         lecturas: (v, cx) => [
           { expr: 's', valor: cx.fmt(v.s) },
           { expr: '∮ hasta s', valor: cx.fmt(c0(linea(FUL, CUAD, 0, Math.min(v.s, 4), [1, 2, 3]))) },
-          { expr: '∬ (Q_x − P_y) dA', valor: cx.fmt(doble((x, y) => 2 * x, 0, 1, 0, 1)) },
+          { expr: '$\\iint (Q_x-P_y)\\,dA$', valor: cx.fmt(doble((x, y) => 2 * x, 0, 1, 0, 1)) },
         ],
       },
       es: 'Aquí $\\partial Q/\\partial x-\\partial P/\\partial y=2x$ y $\\iint_D2x\\,dA=\\int_0^1\\!\\int_0^12x\\,dy\\,dx=1$. Por el borde solo aporta el lado derecho (subiendo en $x=1$): $\\int_0^11\\,dy=1$. En los otros $P=0$ con $dy=0$, o bien $Q=0$ en $x=0$. Recorre el perímetro con $s$.',

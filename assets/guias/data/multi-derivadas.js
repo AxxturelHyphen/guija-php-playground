@@ -22,7 +22,7 @@ const superficie = capas => ({ f, ...V, modo: 'superficie', par: { x0: 1, y0: 1 
   etiqueta: { es: 'Superficie z = x² + xy + 2y²', en: 'Surface z = x² + xy + 2y²' } });
 
 // Derivada direccional: la dirección se maneja con el deslizador de θ
-const DIR_CAPAS = [GRAD, P, { tipo: 'punto', x: 'px', y: 'py' }, { tipo: 'texto', x: 'px', y: 'py', s: 'u' }];
+const DIR_CAPAS = [GRAD, P, { tipo: 'punto', x: 'px', y: 'py' }, { tipo: 'texto', x: 'px', y: 'py', s: '$u$' }];
 const DIR_J = {
   botones: [
     { label: { es: 'θ = 0° (eje x)', en: 'θ = 0° (x axis)' }, hacer: v => { v.th = 0; poner(v); } },
@@ -36,7 +36,7 @@ const DIR_J = {
       { expr: '(x₀, y₀)', valor: `(${cx.fmt(v.x0)}, ${cx.fmt(v.y0)})` },
       { expr: '∇f', valor: `(${cx.fmt(a)}, ${cx.fmt(b)})` },
       { expr: 'u = (cos θ, sen θ)', valor: `(${cx.fmt(c)}, ${cx.fmt(s)})` },
-      { expr: 'D_u f = ∇f · u', valor: cx.fmt(D), malo: D < 0 },
+      { expr: '$D_u f=\\nabla f\\cdot u$', valor: cx.fmt(D), malo: D < 0 },
       { expr: '|∇f|', valor: cx.fmt(Math.hypot(a, b)) },
     ];
   },
@@ -60,7 +60,7 @@ export default {
       es: 'Fijar $y=y_0=1$ equivale a cortar la superficie con el plano vertical $y=1$. La **curva de corte** (en ámbar) es una función de una sola variable: $g(x)=f(x,1)=x^2+x+2$. Su pendiente en $x=1$ es la **derivada parcial** respecto de $x$: $f_x(1,1)=g\'(1)=2\\cdot1+1=3$.',
       en: 'Fixing $y=y_0=1$ means cutting the surface with the vertical plane $y=1$. The **cut curve** (amber) is a function of one variable: $g(x)=f(x,1)=x^2+x+2$. Its slope at $x=1$ is the **partial derivative** with respect to $x$: $f_x(1,1)=g\'(1)=2\\cdot1+1=3$.' },
     { sec: { es: 'El corte visto de lado', en: 'The cut seen from the side' },
-      funcion: { x: [-2, 2], y: [0, 9], curvas: [{ id: 'g', nombre: { es: 'f(x, 1)', en: 'f(x, 1)' }, f: g1 }], par: { x0: 1 }, arrastrar: 'x0',
+      funcion: { x: [-2, 2], y: [0, 9], curvas: [{ id: 'g', nombre: { es: '$f(x,1)$', en: '$f(x,1)$' }, f: g1 }], par: { x0: 1 }, arrastrar: 'x0',
         capas: [{ tipo: 'tangente', c: 'g', x: 'x0' }, { tipo: 'punto', c: 'g', x: 'x0' }],
         etiqueta: { es: 'Corte y = 1 de la superficie, como curva plana', en: 'Cut y = 1 of the surface, as a plane curve' } },
       es: 'El mismo corte, como curva plana $z=g(x)$. La tangente en $x_0=1$ tiene pendiente $3$. Arrastra el punto: la pendiente del corte es $f_x(x_0,\\,1)=2x_0+1$, y se anula en el fondo de la parábola, $x_0=-\\tfrac12$.',
@@ -142,7 +142,7 @@ export default {
     // ── Derivada direccional ──
     { sec: { es: 'Derivada direccional', en: 'Directional derivative' },
       campo: { f, ...V, modo: 'nivel', par: { x0: 1, y0: 1, ...dir(45) }, arrastrar: ['x0', 'y0'], capas: DIR_CAPAS,
-        deslizadores: [{ par: 'th', min: 0, max: 360, paso: 1, es: 'Dirección θ (grados)', en: 'Direction θ (degrees)' }],
+        deslizadores: [{ par: 'th', min: 0, max: 360, paso: 1, es: 'Dirección $\\theta$ (grados)', en: 'Direction $\\theta$ (degrees)' }],
         etiqueta: { es: 'Mapa de nivel con el gradiente y una dirección u', en: 'Contour map with the gradient and a direction u' } },
       es: 'Para avanzar en una dirección cualquiera, dada por un vector **unitario** $\\mathbf u=(\\cos\\theta,\\,\\operatorname{sen}\\theta)$: $D_{\\mathbf u}f=\\nabla f\\cdot\\mathbf u=f_x\\cos\\theta+f_y\\operatorname{sen}\\theta$. Con $\\theta=0^\\circ$ sale $f_x$ y con $\\theta=90^\\circ$ sale $f_y$. Mueve el **deslizador** de $\\theta$ y observa la lectura; el punto marcado $u$ indica la dirección.',
       en: 'To move in any direction, given by a **unit** vector $\\mathbf u=(\\cos\\theta,\\,\\sin\\theta)$: $D_{\\mathbf u}f=\\nabla f\\cdot\\mathbf u=f_x\\cos\\theta+f_y\\sin\\theta$. With $\\theta=0^\\circ$ you get $f_x$ and with $\\theta=90^\\circ$ you get $f_y$. Move the $\\theta$ **slider** and watch the reading; the marked point $u$ shows the direction.',

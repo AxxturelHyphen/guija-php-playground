@@ -135,6 +135,23 @@ export function flecha(g, [r1, c1, r2, c2]) {
   };
 }
 
+/**
+ * Dependencias de la celda (r,c) según `deps` ([r,c leída, r2,c2 calculada]): {de: celdas que lee, a: celdas que se calculan con ella}.
+ * Sin repetidos, en el orden de `deps`. Pura.
+ */
+export function relaciones(deps, r, c) {
+  const de = [], a = [], visto = new Set();
+  for (const d of deps || []) {
+    const [r1, c1, r2, c2] = d;
+    const k = r2 === r && c2 === c ? ['de', r1, c1] : r1 === r && c1 === c ? ['a', r2, c2] : null;
+    if (!k) continue;
+    const id = k.join(',');
+    if (visto.has(id)) continue;
+    visto.add(id); (k[0] === 'de' ? de : a).push([k[1], k[2]]);
+  }
+  return { de, a };
+}
+
 /** Marcas con nombre agrupadas por cabecera: [{nombre, tipo:'fila'|'col', i, nivel, de}] (`de` = cuántas comparten cabecera, máx. 3). */
 export function colocarMarcas(marcas, def) {
   const por = new Map(), res = [];
@@ -235,11 +252,30 @@ const CSS = `
 .tb-fo{display:flex;align-items:center;justify-content:center;padding:0 10px;text-align:center;font:14px/1.45 var(--ui);color:var(--code);opacity:0;transition:opacity var(--tb-ms) var(--tb-e)}
 .tb-fo.on{opacity:1}
 .tb-fo code{font:600 .95em var(--mono);color:var(--text);background:var(--line);padding:2px 7px;border-radius:4px}
+.tb-c[data-d=lee]{outline:2px dashed var(--tb-compara);outline-offset:1px}
+.tb-c[data-d=sale]{outline:2px dashed var(--tb-aux);outline-offset:1px}
+.tb-c[data-h]{outline:2px solid var(--tb-activo);outline-offset:1px}
+.tb-d{transition:opacity .12s}
+.tb-sv.foco .tb-d{opacity:.14}
+.tb-sv.foco .tb-d.hi{opacity:1}
+.tb-d.hi path{stroke-width:3}
+.tb-tip{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;opacity:0;transition:opacity .12s;z-index:3}
+.tb-tip.on{opacity:1}
+.tb-tip>div{position:absolute;left:0;top:0;width:max-content;max-width:260px;padding:6px 9px;border-radius:7px;background:color-mix(in srgb,var(--island) 94%,transparent);border:1px solid var(--line2);color:var(--text);font:12px/16px var(--ui);font-variant-numeric:tabular-nums}
+.tb-tip.a>div{transform:translateY(calc(-100% - 6px))}
+.tb-tip.b>div{transform:translateY(6px)}
+.tb-tip.d.a>div{transform:translate(-100%,calc(-100% - 6px))}
+.tb-tip.d.b>div{transform:translate(-100%,6px)}
+.tb-tip b{font-weight:600}
+.tb-tip .lee{color:var(--tb-compara)}
+.tb-tip .sale{color:var(--tb-aux)}
+@media (prefers-reduced-motion:reduce){.tb-d,.tb-tip{transition:none}}
 `;
 const inyectarCSS = () => {
   if (document.getElementById('css-tabla')) return;
   const s = document.createElement('style'); s.id = 'css-tabla'; s.textContent = CSS; document.head.append(s);
 };
+const TT = { es: { lee: 'Lee de', sale: 'Alimenta a', vacia: 'sin calcular' }, en: { lee: 'Reads from', sale: 'Feeds', vacia: 'not computed yet' } };
 const reducido = () => !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
 /** Texto de la fórmula → HTML seguro; `código` entre acentos graves. */
@@ -263,6 +299,11 @@ export class Escena {
     r.addEventListener('pointercancel', () => { this.dn = null; });
     r.addEventListener('keydown', e => this.tecla(e));
     r.addEventListener('focusin', e => this.enfocado(e));
+    // Lectura de dependencias al pasar el ratón / enfocar: solo cambian atributos, clases y opacidad (sin medir)
+    r.addEventListener('pointerover', e => { if (e.pointerType === 'mouse') this.sobre(this.celdaAny(e.target)); });
+    r.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') this.sobre(null); });
+    r.addEventListener('focusout', () => this.sobre(null));
+    this.hov = null; this.marc = []; this.hiD = [];
   }
 
   get tam() { return this.g ? { W: this.g.W, H: this.g.H } : { W: MINW, H: 240 }; }
@@ -293,6 +334,8 @@ export class Escena {
     }
     this.sv = svg('svg', 'tb-sv'); this.sv.setAttribute('width', g.W); this.sv.setAttribute('height', g.H); this.root.append(this.sv);
     this.fo = def.formula ? pon(el('div', 'tb-fo'), PAD, g.fy, g.W - 2 * PAD, FH) : null;
+    this.tip = el('div', 'tb-tip'); this.tip.append(el('div')); this.tip.setAttribute('aria-hidden', 'true'); this.root.append(this.tip);
+    this.hov = null; this.marc = []; this.hiD = [];
     this.ult = null; this.ids = null; this.cb = null; this.foco = null; // la interacción de la escena anterior no se hereda
   }
 
@@ -307,6 +350,7 @@ export class Escena {
     for (const e of this.nuevos) e.classList.remove('nuevo');
     this.nuevos.length = 0;
     const set = (o, k, v, fn) => { if (o.x[k] !== v) { o.x[k] = v; fn(v); } };
+    let pops = 0; // celdas que «brotan» en este pintado: entran escalonadas (en orden de lectura, tope 200 ms)
     // Cabeceras (el texto se reescribe solo si cambia el idioma: pueden ser {es,en})
     if (lang !== this.lang) {
       this.lang = lang;
@@ -329,7 +373,7 @@ export class Escena {
       if (k.x.t !== t) {
         const antes = k.x.t; k.x.t = t; k.v.textContent = t;
         if (t) k.v.style.fontSize = tamFuente(g.cs, t.length) + 'px';
-        if (ms > 0 && t && antes !== undefined && antes !== null && k.v.animate) k.v.animate([{ opacity: 0, transform: 'scale(.35)' }, { opacity: 1, transform: 'scale(1.12)', offset: .7 }, { opacity: 1, transform: 'none' }], { duration: Math.min(420, ms), easing: 'ease-out' });
+        if (ms > 0 && t && antes !== undefined && antes !== null && k.v.animate) k.v.animate([{ opacity: 0, transform: 'scale(.35)' }, { opacity: 1, transform: 'scale(1.12)', offset: .7 }, { opacity: 1, transform: 'none' }], { duration: Math.min(420, ms), easing: 'ease-out', delay: Math.min(pops++ * 18, 200), fill: 'backwards' });
         k.el.setAttribute('aria-label', `${txt(def.cabF[k.r])}, ${txt(def.cabC[k.c])}: ${t || '—'}`);
       }
     }
@@ -340,6 +384,52 @@ export class Escena {
       if (clv !== this.fclave) { this.fclave = clv; this.fo.innerHTML = htmlFormula(f); this.fo.classList.toggle('on', !!f); }
     }
     this.root.setAttribute('aria-label', `${def.filas}×${def.cols}`);
+    if (this.hov) this.aplicarHov(); // las flechas/valores pueden haber cambiado bajo el puntero
+  }
+
+  celdaAny(t) { const e = t?.closest?.('.tb-c'); return e ? this.celdas[+e.dataset.r * this.def.cols + +e.dataset.c] : null; }
+
+  /** Celda bajo el puntero/foco (o null). Solo reacciona si cambia. */
+  sobre(k) {
+    if ((k || null) === this.hov) return;
+    this.hov = k || null; this.aplicarHov();
+  }
+
+  /** Limpia y aplica el resalte de dependencias de `this.hov` con las flechas que ya están pintadas. */
+  aplicarHov() {
+    for (const c of this.marc) { c.el.removeAttribute('data-d'); c.el.removeAttribute('data-h'); }
+    for (const n of this.hiD) n.classList.remove('hi');
+    this.marc.length = 0; this.hiD.length = 0;
+    const k = this.hov, S = this.ult;
+    const rel = k && S ? relaciones(S.deps, k.r, k.c) : null;
+    if (!rel || !(rel.de.length || rel.a.length)) { this.sv.classList.remove('foco'); this.tip.classList.remove('on'); return; }
+    const def = this.def, cols = def.cols, g = this.g;
+    const marca = (lista, tipo) => lista.forEach(([r, c]) => { const x = this.celdas[r * cols + c]; x.el.setAttribute('data-d', tipo); this.marc.push(x); });
+    marca(rel.de, 'lee'); marca(rel.a, 'sale');
+    k.el.setAttribute('data-h', ''); this.marc.push(k);
+    for (const d of S.deps) {
+      const hit = (d[2] === k.r && d[3] === k.c) || (d[0] === k.r && d[1] === k.c), n = hit && this.deps.get(d.join(','));
+      if (n) { n.el.classList.add('hi'); this.hiD.push(n.el); }
+    }
+    this.sv.classList.add('foco');
+    // Tooltip: «cabecera fila, cabecera col = valor», qué lee y a quién alimenta
+    const tt = TT[idioma()], nom = (r, c) => { const v = S.val[r][c]; return `${txt(def.cabF[r])}, ${txt(def.cabC[c])}`.concat(v == null || v === '' ? '' : ` (${v})`); };
+    const caja = this.tip.firstChild, v0 = S.val[k.r][k.c];
+    caja.replaceChildren();
+    const t1 = el('div'), b = el('b'); b.textContent = `${txt(def.cabF[k.r])}, ${txt(def.cabC[k.c])} = `;
+    t1.append(b, document.createTextNode(v0 == null || v0 === '' ? tt.vacia : String(v0))); caja.append(t1);
+    const lin = (lista, cls, rot) => {
+      if (!lista.length) return;
+      const l = el('div'), s = el('span'); s.className = cls; s.textContent = rot + ': ';
+      const mas = lista.length > 4;
+      l.append(s, document.createTextNode(lista.slice(0, 4).map(([r, c]) => nom(r, c)).join(' · ') + (mas ? ' …' : ''))); caja.append(l);
+    };
+    lin(rel.de, 'lee', tt.lee); lin(rel.a, 'sale', tt.sale);
+    // el tooltip va al lado contrario de donde están las celdas citadas, para no taparlas
+    const rs = [...rel.de, ...rel.a].map(q => q[0]), media = rs.reduce((a, b) => a + b, 0) / rs.length;
+    const der = k.c >= cols / 2, arriba = def.filas === 1 || media >= k.r, x = g.x0 + (k.c + (der ? 1 : 0)) * g.cs, y = g.y0 + (k.r + (arriba ? 0 : 1)) * g.cs;
+    this.tip.className = 'tb-tip on ' + (der ? 'd ' : 'i ') + (arriba ? 'a' : 'b');
+    this.tip.style.transform = `translate(${x}px,${y}px)`;
   }
 
   /** Marcas con nombre: cada nombre tiene su nodo (se desliza de una cabecera a otra); los que no están se atenúan. */
@@ -419,6 +509,7 @@ export class Escena {
 
   enfocado(e) {
     const k = this.celdaDe(e.target);
+    if (k) this.sobre(k);
     if (!k || this.foco === k.k) return;
     const antes = this.celdas.find(x => x.k === this.foco);
     if (antes && antes.el.hasAttribute('tabindex')) { antes.el.tabIndex = -1; antes.x.tab = -1; }

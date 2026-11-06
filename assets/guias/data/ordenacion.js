@@ -54,10 +54,10 @@ const T_MERGE = (() => {
   return { nodos, aristas, raiz: 'm' };
 })();
 const NOTA = [
-  { nivel: 0, texto: { es: 'mezcla 8', en: 'merge 8' } },
-  { nivel: 1, texto: { es: '2 × 4 = 8', en: '2 × 4 = 8' } },
-  { nivel: 2, texto: { es: '4 × 2 = 8', en: '4 × 2 = 8' } },
-  { nivel: 3, texto: { es: '8 × 1: sin mezcla', en: '8 × 1: no merge' } },
+  { nivel: 0, texto: { es: 'mezcla $8$', en: 'merge $8$' } },
+  { nivel: 1, texto: { es: '$2 \\times 4 = 8$', en: '$2 \\times 4 = 8$' } },
+  { nivel: 2, texto: { es: '$4 \\times 2 = 8$', en: '$4 \\times 2 = 8$' } },
+  { nivel: 3, texto: { es: '$8 \\times 1$: sin mezcla', en: '$8 \\times 1$: no merge' } },
 ];
 
 // Árbol de decisión de ordenar (a, b, c) por comparaciones: izquierda = «sí», derecha = «no»
@@ -294,9 +294,9 @@ export default {
     {
       grafica: {
         curvas: [
-          { id: 'n', nombre: 'n', f: n => n },
-          { id: 'lgfact', nombre: 'log₂(n!)', f: lgFact },
-          { id: 'nlogn', nombre: 'n log₂ n', f: n => n * lg(n) },
+          { id: 'n', nombre: '$n$', f: n => n },
+          { id: 'lgfact', nombre: '$\\log_2(n!)$', f: lgFact },
+          { id: 'nlogn', nombre: '$n \\log_2 n$', f: n => n * lg(n) },
         ],
         nmax: 64, n: 64, escala: 'lin',
       },

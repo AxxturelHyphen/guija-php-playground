@@ -27,6 +27,9 @@
 // cambiar(v, i, j) / reponer(v, arr) (mantienen la identidad); si solo mutas v.arr (p.ej. sort) conVista reconstruye la identidad por valores.
 // La lógica pura (geometría, plegar, helpers) no toca el DOM al importar, así se prueba en Node.
 import { idioma } from './idioma.js';
+import { etiqueta } from './mates.js';
+import { Muelle, tarea } from './movimiento.js';
+import { crearTip } from './tip.js';
 
 export const clave = 'barras';
 export const W = 620, PADX = 20, MAXSW = 72, HB = 120, HBOX = 46, IXH = 16, MKH = 17, MKROWS = 3, CAPH = 18, MAXN = 32;
@@ -137,6 +140,27 @@ export function reconciliar(ord, arr0, arr1) {
 
 export const ordenado = arr => arr.every((x, i) => i === 0 || arr[i - 1] <= x);
 
+// ── Tooltip y accesibilidad (lógica pura + textos) ───────────────────────────────────────────────────
+export const NOMBRE_EST = {
+  cmp: { es: 'comparando', en: 'comparing' }, ok: { es: 'en su sitio', en: 'in place' },
+  piv: { es: 'pivote', en: 'pivot' }, sel: { es: 'señalada', en: 'flagged' },
+};
+const TXT = {
+  es: { pos: 'Posición', idx: 'Índice', val: 'Valor', est: 'Estado', mk: 'Punteros', aux: 'Auxiliar', hueco: 'hueco', fuera: 'Fuera del rango activo', rango: 'Rango' },
+  en: { pos: 'Position', idx: 'Index', val: 'Value', est: 'State', mk: 'Pointers', aux: 'Auxiliary', hueco: 'slot', fuera: 'Outside the active range', rango: 'Range' },
+};
+/** Datos de la columna en la posición p (S = estado + hl opcional): {pos, valor, est, marcas, fuera}; null si no existe. Pura. */
+export function describirBarra(S, p) {
+  if (!Number.isInteger(p) || p < 0 || p >= S.arr.length) return null;
+  const est = (S.hl && S.hl[p]) || S.est[p] || null;
+  return {
+    pos: p, valor: S.arr[p], est, marcas: Object.entries(S.marcas).filter(([, i]) => i === p).map(([k]) => k),
+    fuera: !!(S.rango && (p < S.rango[0] || p > S.rango[1])),
+  };
+}
+/** Datos del hueco k de la fila auxiliar: {hueco, valor}; null si está vacío o no existe. Pura. */
+export const describirAux = (S, k) => (Number.isInteger(k) && k >= 0 && k < S.aux.length && S.aux[k] != null ? { hueco: k, valor: S.aux[k] } : null);
+
 // ── Para los bloques `jugar`: los botones mutan una copia `v` ───────────────────────────────────────
 const sync = v => { Object.defineProperty(v, '_arr', { value: [...v.arr], writable: true, configurable: true }); return v; };
 export const vista = S => sync({ arr: [...S.arr], ord: [...S.ord], aux: [...S.aux], marcas: { ...S.marcas }, rango: S.rango && [...S.rango], est: { ...S.est }, cont: { ...S.cont } });
@@ -169,6 +193,14 @@ const CSS = `
 .br-col.fuera{opacity:.28}
 .br-aux.oculto{opacity:0}
 .br-bar{position:absolute;bottom:0;left:calc((var(--sw) - var(--bw))/2);width:var(--bw);height:var(--hr);border-radius:3px 3px 0 0;background:var(--neu);transform-origin:50% 100%;transition:transform var(--br-ms) var(--br-e)}
+.br-bar::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(90deg,rgba(255,255,255,.13),rgba(255,255,255,0) 46%,rgba(0,0,0,.16));pointer-events:none}
+.cajas .br-bar::after{display:none}
+.br-base{position:absolute;height:1px;background:var(--line2);pointer-events:none}
+.br-slot{position:absolute;left:0;top:0;width:var(--bw);height:var(--hr);margin-left:calc((var(--sw) - var(--bw))/2);border:1.5px dashed var(--g-activo);border-radius:4px;background:color-mix(in srgb,var(--g-activo) 8%,transparent);opacity:0;pointer-events:none;transition:opacity .15s,transform .12s ease-out}
+.br-slot.on{opacity:1} .br-slot.sa{transition:opacity .15s}
+.br-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.br-hueco,.br-cap{transition:opacity .35s}
+.aux-vacio .br-hueco{opacity:.6} .aux-vacio .br-cap{opacity:.65}
 .br-lb{position:absolute;left:0;bottom:0;width:100%;text-align:center;font:600 12px/16px var(--ui);color:var(--muted);transition:transform var(--br-ms) var(--br-e)}
 .br-lb i{font-style:normal;display:inline-block;min-width:20px;padding:0 4px;border:1.5px solid transparent;border-radius:3px}
 .dens .br-lb{font-size:10px}
@@ -206,9 +238,14 @@ const CSS = `
 /* Arrastre */
 .br-col.arr{cursor:grab;touch-action:none}
 .br-col.arr::after{content:'';position:absolute;left:calc((var(--sw) - var(--bw))/2);width:var(--bw);bottom:-4px;height:3px;border-radius:2px;background:var(--g-activo)}
-.br-col.agarrada{cursor:grabbing;z-index:3;transition:opacity var(--br-ms) var(--br-e)}
+.br-col.agarrada,.br-col.asienta{z-index:3;transition:opacity var(--br-ms) var(--br-e)}
+.br-col.agarrada{cursor:grabbing}
 .br-col.agarrada .br-bar{outline:2px solid var(--g-activo)}
-.br-col.arr:focus-visible{outline-offset:2px}
+.br-col.arr:focus,.br-col.arr:focus-visible{outline:none}
+.br-col.arr:focus-visible::after{height:4px;box-shadow:0 0 0 3px var(--g-halo)}
+.br-col.arr:focus-visible .br-bar{outline:2px solid var(--g-activo);outline-offset:2px}
+@media (hover:hover){.br-col:hover .br-bar{filter:brightness(1.22)} .cajas .br-col:hover .br-bar{filter:none;border-color:var(--muted)}}
+@media (prefers-reduced-motion:reduce){.br-slot{transition:none}}
 `;
 const inyectarCSS = () => {
   if (document.getElementById('css-barras')) return;
@@ -231,6 +268,34 @@ export class Escena {
     r.addEventListener('pointerup', e => this.suelta(e));
     r.addEventListener('pointercancel', e => this.suelta(e, true));
     r.addEventListener('keydown', e => this.tecla(e));
+    this.as = null; this.slot = this.sr = null; this.auxVacio = null;
+    this.tip = crearTip(stage, { objetivo: n => this.tipClave(n), datos: k => this.tipDatos(k) });
+  }
+
+  // ── Tooltip: clave 'c<id>' (columna) o 'a<k>' (hueco auxiliar); la posición sale de la geometría lógica, no del DOM ──
+  tipClave(n) {
+    const c = n.closest?.('.br-col, .br-aux');
+    if (!c || !this.root.contains(c)) return null;
+    return c.classList.contains('br-aux') ? 'a' + c.dataset.k : 'c' + c.dataset.id;
+  }
+
+  tipDatos(clave) {
+    const S = this.ult, g = this.g;
+    if (!S || !g) return null;
+    const u = TXT[idioma()], aux = clave[0] === 'a', i = +clave.slice(1), filas = [];
+    if (aux) {
+      const d = describirAux(S, i);
+      if (!d) return null;
+      filas.push([u.val, d.valor]);
+      return { titulo: `${u.aux} · ${u.hueco} ${i}`, filas, x: g.x0 + i * g.sw + g.sw / 2, y: g.auxY + g.hr * (1 - (g.cajas ? 1 : escalaBarra(d.valor, this.def.max))) - (g.cajas ? 2 : 21), y2: g.auxY + g.hr + 2 };
+    }
+    const p = this.posDe[i], d = describirBarra(S, p);
+    if (!d) return null;
+    filas.push([u.val, d.valor]);
+    if (d.est) filas.push([u.est, L(NOMBRE_EST[d.est]) || d.est]);
+    if (d.marcas.length) filas.push([u.mk, d.marcas.join(', ')]);
+    if (d.fuera) filas.push(['', u.fuera]);
+    return { titulo: `${u.idx} ${p}`, filas, x: g.x0 + p * g.sw + g.sw / 2, y: g.topY + (g.cajas ? -2 : g.hr * (1 - escalaBarra(d.valor, this.def.max)) - 21), y2: g.base + 2 };
   }
 
   get tam() { return this.g ? { W: this.g.W, H: this.g.H } : { W, H: 240 }; }
@@ -238,7 +303,7 @@ export class Escena {
   /** (Re)construye si el def cambió (mismo def = misma escena: se conservan los nodos y se anima entre pasos). */
   fijar(def) {
     if (def === this.def) return;
-    this.cancelar(); this.root.replaceChildren();
+    this.cancelar(); this.fin(false); this.tip.ocultar(); this.root.replaceChildren(); this.auxVacio = null;
     const g = this.g = geom(def), rs = this.root.style;
     this.def = def; this.mk = new Map(); this.nuevos = []; this.contClave = ''; this.ms = -1; this.nuevo = true;
     rs.width = g.W + 'px'; rs.height = g.H + 'px';
@@ -252,12 +317,17 @@ export class Escena {
       if (!g.cajas) { c.bar.style.transform = 'scaleY(0)'; c.lb.style.transform = 'translateY(-3px)'; c.c.s = 0; } // nacen a altura 0
       return c;
     };
+    const linea = y => { const e = div('br-base'); e.style.width = g.sw * g.cols + 'px'; sitio(e, g.x0, y); };
+    if (!g.cajas) linea(g.base);
     if (def.etiquetas) for (let p = 0; p < g.n; p++) sitio(div('br-ix', p), g.x0 + p * g.sw, g.ixY);
     if (def.aux) {
       sitio(div('br-cap', 'aux'), g.x0, g.capY);
       for (let k = 0; k < def.aux; k++) sitio(div('br-hueco'), g.x0 + k * g.sw, g.auxY);
-      this.auxs = Array.from({ length: def.aux }, (_, k) => { const c = celda('br-aux oculto'); sitio(c.el, g.x0 + k * g.sw, g.auxY); return c; });
+      this.auxs = Array.from({ length: def.aux }, (_, k) => { const c = celda('br-aux oculto'); c.el.dataset.k = k; sitio(c.el, g.x0 + k * g.sw, g.auxY); return c; });
+      if (!g.cajas) linea(g.auxY + g.hr);
     } else this.auxs = [];
+    this.slot = div('br-slot'); // hueco punteado donde caerá la barra agarrada
+    this.sr = div('br-sr'); this.sr.setAttribute('role', 'status'); this.sr.setAttribute('aria-live', 'polite');
     this.cols = Array.from({ length: g.n }, (_, id) => { const c = celda('br-col'); c.el.dataset.id = id; c.id = id; return c; });
     this.cont = div('br-cont');
     this.posDe = Array(g.n).fill(0);
@@ -267,7 +337,7 @@ export class Escena {
   /** S = estado de plegar + `hl`; animar: false | true (520 ms) | milisegundos. Solo transform/opacity (transiciones CSS). */
   pintar(S, animar = true) {
     if (S.def !== this.def) this.fijar(S.def);
-    this.cancelar(); this.ult = S; this.np++;
+    this.cancelar(); this.fin(false); this.ult = S; this.np++;
     const g = this.g, def = this.def, max = def.max, n = g.n;
     const ms = this.nuevo || this.red ? 0 : clamp(animar === true ? 520 : +animar || 0, 0, 3000);
     this.nuevo = false;
@@ -277,26 +347,38 @@ export class Escena {
     const est = S.hl ? { ...S.est, ...S.hl } : S.est, ran = S.rango;
     // pone `v` en la propiedad `k` de la caché de `c` y solo toca el DOM si cambió
     const set = (c, k, v, fn) => { if (c.c[k] !== v) { c.c[k] = v; fn(v); } };
-    const pinta = (c, x, y, v, e, cls) => {
+    const arrOn = c => !!(this.ids && c.id !== undefined && (this.ids === true || this.ids.has(c.id))), tx = TXT[idioma()];
+    const pinta = (c, x, y, v, e, cls, p) => {
       set(c, 't', `translate(${x}px,${y}px)`, t => { c.el.style.transform = t; });
       if (!g.cajas) {
         const s = escalaBarra(v, max);
         set(c, 's', s, s => { c.bar.style.transform = `scaleY(${s})`; c.lb.style.transform = `translateY(${-s * g.hr - 3}px)`; });
       }
       set(c, 'v', v ?? '', t => { c.tx.textContent = t; });
-      set(c, 'cls', cls + (e ? ' e-' + e : '') + (this.ids && c.id !== undefined && (this.ids === true || this.ids.has(c.id)) ? ' arr' : ''), t => { c.el.className = t; });
+      const arr = arrOn(c);
+      set(c, 'cls', cls + (e ? ' e-' + e : '') + (arr ? ' arr' : ''), t => { c.el.className = t; });
+      // etiqueta accesible solo en lo que se puede mover (el resto lo cubre el aria-label del grupo)
+      set(c, 'al', arr ? `${v}, ${tx.pos} ${p + 1} / ${n}` : '', t => {
+        if (t) { c.el.setAttribute('role', 'button'); c.el.setAttribute('aria-label', t); } else { c.el.removeAttribute('role'); c.el.removeAttribute('aria-label'); }
+      });
+      // pulso de aviso (solo transform/opacity: la propiedad individual `scale` se compone con el transform de la barra)
+      const en = e ?? null;
+      if (en !== c.c.e) { if (en && en !== 'ok' && ms > 0 && c.c.e !== undefined) c.bar.animate({ scale: ['1 1', '1.18 1', '1 1'] }, { duration: Math.min(380, ms), easing: 'ease-out' }); c.c.e = en; }
     };
     S.ord.forEach((id, p) => { this.posDe[id] = p; });
     for (const c of this.cols) {
       const p = this.posDe[c.id], fuera = ran && (p < ran[0] || p > ran[1]);
-      pinta(c, g.x0 + p * g.sw, g.topY, S.arr[p], est[p], 'br-col' + (fuera ? ' fuera' : '') + (c.c.p !== undefined && c.c.p !== p ? ' mov' : ''));
+      pinta(c, g.x0 + p * g.sw, g.topY, S.arr[p], est[p], 'br-col' + (fuera ? ' fuera' : '') + (c.c.p !== undefined && c.c.p !== p ? ' mov' : ''), p);
       c.c.p = p;
     }
     this.auxs.forEach((c, k) => {
       const v = S.aux[k];
       if (v == null) { set(c, 'cls', 'br-aux oculto', t => { c.el.className = t; }); return; }
-      pinta(c, g.x0 + k * g.sw, g.auxY, v, null, 'br-aux');
+      pinta(c, g.x0 + k * g.sw, g.auxY, v, null, 'br-aux', k);
     });
+    // fila auxiliar sin usar: se atenúa (la escala de la escena no cambia, así que no hay saltos)
+    const vacio = def.aux > 0 && S.aux.every(v => v == null);
+    if (vacio !== this.auxVacio) { this.auxVacio = vacio; this.root.classList.toggle('aux-vacio', vacio); }
     // Punteros: cada nombre tiene su nodo; los que no están se atenúan; al reaparecer se colocan sin deslizarse
     const vistos = new Set();
     for (const { nombre, i, nivel } of colocarMarcas(S.marcas)) {
@@ -315,15 +397,19 @@ export class Escena {
     const ks = Object.keys(S.cont), lang = idioma(), clave = lang + '|' + ks.join('|');
     if (clave !== this.contClave) {
       this.contClave = clave;
-      this.cont.replaceChildren(...ks.map(k => { const s = document.createElement('span'); s.innerHTML = '<i></i><b></b>'; s.firstChild.textContent = L(def.etiquetasCont[k]) || k; return s; }));
+      this.cont.replaceChildren(...ks.map(k => { const s = document.createElement('span'); s.innerHTML = '<i></i><b></b>'; etiqueta(s.firstChild, String(L(def.etiquetasCont[k]) || k)); return s; }));
     }
     ks.forEach((k, j) => { const b = this.cont.children[j].lastChild, t = String(S.cont[k]); if (b.textContent !== t) b.textContent = t; });
     this.root.setAttribute('aria-label', S.arr.join(', '));
+    this.tip.refrescar();
   }
 
   repintar(ms) { if (this.ult) this.pintar(this.ult, ms); }
 
   // ── Arrastre («ordénalo tú») ────────────────────────────────────────────────────────────────────
+  // La barra agarrada sigue al puntero a través de dos Muelle (x, y): se mueve con «peso», y al soltar conserva la velocidad
+  // y se asienta en su hueco sin saltos. Un único trabajo por fotograma (tarea compartida) escribe su transform; la
+  // posición de las demás barras y el hueco punteado de destino solo cambian cuando cambia el índice de inserción.
   /** ids = true (todas) | [ids] | null (desactiva). cb(desde, hasta): índices de inserción al soltar (o con ← →). */
   arrastre(ids, cb) {
     this.ids = ids === true ? true : Array.isArray(ids) && ids.length ? new Set(ids) : null; this.cb = cb;
@@ -331,7 +417,7 @@ export class Escena {
     for (const c of this.cols) {
       const on = this.ids === true || !!this.ids?.has(c.id);
       if (on) c.el.tabIndex = 0; else c.el.removeAttribute('tabindex');
-      c.c.cls = null; // fuerza reescribir la clase (arr) en el siguiente pintar
+      c.c.cls = null; c.c.al = null; // fuerza reescribir clase (arr) y etiqueta accesible en el siguiente pintar
     }
     if (this.ult) this.repintar(false);
   }
@@ -340,50 +426,102 @@ export class Escena {
     const col = e.target.closest?.('.br-col.arr');
     if (!col || !this.cb || this.d || e.button > 0) return;
     e.preventDefault();
-    const g = this.g, id = +col.dataset.id, desde = this.posDe[id], r = this.root.getBoundingClientRect(), k = r.width / g.W;
-    this.d = { id, desde, hasta: desde, r, k, pid: e.pointerId, col, off: (e.clientX - r.left) / k - (g.x0 + desde * g.sw) };
+    this.fin(false);
+    const g = this.g, id = +col.dataset.id, desde = this.posDe[id], r = this.root.getBoundingClientRect(), k = r.width / g.W, x0 = g.x0 + desde * g.sw;
+    this.d = {
+      id, desde, hasta: desde, r, k, pid: e.pointerId, col, cc: this.cols[id], off: (e.clientX - r.left) / k - x0,
+      mx: new Muelle(x0, 34), my: new Muelle(g.topY, 34), cancela: null,
+    };
     this.root.setPointerCapture(e.pointerId);
     col.classList.add('agarrada'); col.focus({ preventScroll: true });
     this.root.style.setProperty('--br-ms', (this.red ? 0 : 160) + 'ms'); this.ms = -1;
+    this.slot.classList.add('sa', 'on'); this.slot.style.transform = `translate(${x0}px,${g.topY}px)`;
+    this.tip.pausa(true);
     this.mueve(e);
   }
 
   mueve(e) {
     const d = this.d, g = this.g;
     if (!d || e.pointerId !== d.pid) return;
-    const x = clamp((e.clientX - d.r.left) / d.k - d.off, g.x0 - g.sw / 2, g.x0 + g.sw * (g.n - .5));
-    d.col.style.transform = `translate(${x}px,${g.topY - 6}px)`;
+    const x = clamp((e.clientX - d.r.left) / d.k - d.off, g.x0 - g.sw / 2, g.x0 + g.sw * (g.n - .5)), y = g.topY - 6;
+    d.mx.ir(x); d.my.ir(y);
+    if (this.red) { d.mx.salto(x); d.my.salto(y); this.ponerArr(d); } else this.tareaArr(d);
     const hasta = indiceDeX(g, x + g.sw / 2);
     if (hasta === d.hasta) return;
     d.hasta = hasta;
+    this.slot.classList.remove('sa'); this.slot.style.transform = `translate(${g.x0 + hasta * g.sw}px,${g.topY}px)`;
     const np = posTrasMover(g.n, d.desde, hasta);
     for (const c of this.cols) if (c.id !== d.id) c.el.style.transform = `translate(${g.x0 + np[this.posDe[c.id]] * g.sw}px,${g.topY}px)`;
+  }
+
+  /** Escribe el transform de la columna agarrada/asentándose desde sus muelles. */
+  ponerArr(d) { d.col.style.transform = `translate(${d.mx.x.toFixed(1)}px,${d.my.x.toFixed(1)}px)`; }
+
+  /** Un único trabajo por fotograma mientras los muelles se mueven; al reposar termina el asentamiento. */
+  tareaArr(d) {
+    if (d.cancela) return;
+    d.cancela = tarea((_, dt) => {
+      d.mx.paso(dt); d.my.paso(dt); this.ponerArr(d);
+      if (!(d.mx.quieto && d.my.quieto)) return true;
+      d.cancela = null;
+      if (this.as === d) this.fin(true);
+      return false;
+    });
   }
 
   suelta(e, cancelado = false) {
     const d = this.d;
     if (!d || e.pointerId !== d.pid) return;
     if (this.root.hasPointerCapture(d.pid)) this.root.releasePointerCapture(d.pid);
-    this.cancelar();
+    this.cancelar(true);
     const np = this.np;
     if (!cancelado && d.hasta !== d.desde && this.cb) this.cb(d.desde, d.hasta);
     if (this.np === np) this.repintar(260); // nadie repintó (soltó en su sitio o se canceló): vuelve a su hueco
+    this.asentar(d);
   }
 
-  /** Deja el arrastre en curso sin efecto (los nodos se reescribirán en el siguiente pintar). */
-  cancelar() {
+  /** La barra soltada se asienta en su hueco con los mismos muelles (conservan la velocidad del arrastre). */
+  asentar(d) {
+    if (this.red || !this.g || !d.col.isConnected) { d.cancela?.(); d.cancela = null; return; }
+    const g = this.g, p = this.posDe[d.id];
+    d.mx.w = d.my.w = 15; d.mx.ir(g.x0 + p * g.sw); d.my.ir(g.topY);
+    this.as = d; d.col.classList.add('asienta'); this.ponerArr(d); this.tareaArr(d);
+  }
+
+  /** Termina el asentamiento. final = true: la deja exactamente en su hueco; false (interrumpido): conserva donde esté y pintar() la recoloca. */
+  fin(final = true) {
+    const d = this.as;
+    if (!d) return;
+    this.as = null; d.cancela?.(); d.cancela = null; d.col.classList.remove('asienta');
+    if (!final || !this.g) { d.cc.c.t = null; return; }
+    const t = `translate(${this.g.x0 + this.posDe[d.id] * this.g.sw}px,${this.g.topY}px)`;
+    d.col.style.transform = t; d.cc.c.t = t;
+  }
+
+  /** Deja el arrastre en curso sin efecto (los nodos se reescribirán en el siguiente pintar). conservar = true: los muelles siguen (asentamiento). */
+  cancelar(conservar = false) {
     const d = this.d;
     if (!d) return;
     this.d = null; d.col.classList.remove('agarrada');
+    if (!conservar) { d.cancela?.(); d.cancela = null; }
+    this.slot?.classList.remove('on');
+    this.tip.pausa(false);
     for (const c of this.cols) { c.c.t = null; c.c.cls = null; }
   }
 
-  /** Teclado: ← → mueven la barra enfocada un hueco (guia.js usa esas teclas para cambiar de paso: no se propagan). */
+  /** Teclado: ← → mueven la barra enfocada un hueco; Inicio/Fin la llevan a un extremo (guia.js usa esas teclas para cambiar de paso: no se propagan). */
   tecla(e) {
-    const col = e.target.closest?.('.br-col.arr'), dir = { ArrowLeft: -1, ArrowRight: 1 }[e.key];
-    if (!col || !dir || !this.cb) return;
+    const col = e.target.closest?.('.br-col.arr');
+    if (!col || !this.cb || !this.g) return;
+    const id = +col.dataset.id, i = this.posDe[id], n = this.g.n, j = { ArrowLeft: i - 1, ArrowRight: i + 1, Home: 0, End: n - 1 }[e.key];
+    if (j === undefined) return;
     e.preventDefault(); e.stopPropagation();
-    const i = this.posDe[+col.dataset.id], j = i + dir;
-    if (j >= 0 && j < this.g.n) this.cb(i, j);
+    if (j >= 0 && j < n && j !== i) { this.cb(i, j); this.anunciar(id); }
+  }
+
+  /** Anuncia la nueva posición a los lectores de pantalla (región aria-live). */
+  anunciar(id) {
+    const u = TXT[idioma()], p = this.posDe[id];
+    this.sr.textContent = `${this.ult?.arr[p] ?? ''}: ${u.pos} ${p + 1} / ${this.g.n}`;
   }
 }

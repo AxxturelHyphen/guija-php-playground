@@ -9,7 +9,7 @@ const sinc = x => (x === 0 ? NaN : Math.sin(x) / x);
 const cosq = x => (x === 0 ? NaN : (1 - Math.cos(x)) / (x * x));
 
 const VA = { x: [-3, 5], y: [-9, 9] };
-const CURVAS_A = [{ id: 'f', nombre: 'f(x)', f: f1 }, { id: 'df', nombre: 'f′(x)', f: df1 }, { id: 'ddf', nombre: 'f″(x)', f: ddf1 }];
+const CURVAS_A = [{ id: 'f', nombre: '$f(x)$', f: f1 }, { id: 'df', nombre: '$f\'(x)$', f: df1 }, { id: 'ddf', nombre: '$f\'\'(x)$', f: ddf1 }];
 const DESL_X = { par: 'x0', min: -3, max: 5, paso: .05, es: 'Posición x₀', en: 'Position x₀' };
 const flecha = d => (d > .02 ? '↗ ↑' : d < -.02 ? '↘ ↓' : '→');
 
@@ -113,7 +113,7 @@ export default {
 
     // ── Optimización ──
     { sec: { es: 'Optimización: la caja', en: 'Optimization: the box' },
-      funcion: { x: [-1, 16], y: [-400, 2500], curvas: [{ id: 'V', nombre: 'V(x)', f: caja }, { id: 'dV', nombre: 'V′(x)', f: dcaja }], ver: ['V'], par: { x0: 3 }, arrastrar: 'x0',
+      funcion: { x: [-1, 16], y: [-400, 2500], curvas: [{ id: 'V', nombre: '$V(x)$', f: caja }, { id: 'dV', nombre: '$V\'(x)$', f: dcaja }], ver: ['V'], par: { x0: 3 }, arrastrar: 'x0',
         deslizadores: [{ par: 'x0', min: 0, max: 15, paso: .1, es: 'Recorte x (cm)', en: 'Cut x (cm)' }],
         capas: [{ tipo: 'tangente', c: 'V', x: 'x0' }],
         etiqueta: { es: 'Volumen de la caja en función del recorte x', en: 'Volume of the box as a function of the cut x' } },
@@ -155,7 +155,7 @@ export default {
 
     // ── Newton-Raphson ──
     { sec: { es: 'Newton-Raphson', en: 'Newton-Raphson' },
-      funcion: { x: [0, 3], y: [-3, 7], curvas: [{ id: 'f', nombre: 'x² − 2', f: x => x * x - 2 }], par: { x0: 2, n: 0 }, arrastrar: 'x0',
+      funcion: { x: [0, 3], y: [-3, 7], curvas: [{ id: 'f', nombre: '$x^2-2$', f: x => x * x - 2 }], par: { x0: 2, n: 0 }, arrastrar: 'x0',
         deslizadores: [{ par: 'n', min: 0, max: 6, paso: 1, dec: 0, es: 'Iteraciones n', en: 'Iterations n' }, { par: 'x0', min: .3, max: 3, paso: .05, es: 'Punto de partida x₀', en: 'Starting point x₀' }],
         capas: [{ tipo: 'newton', c: 'f', x: 'x0', n: 'n' }, { tipo: 'punto', x: Math.SQRT2, y: 0, abierto: true }],
         etiqueta: { es: 'Iteraciones de Newton-Raphson para x² − 2', en: 'Newton-Raphson iterations for x² − 2' } },
@@ -203,7 +203,7 @@ export default {
 
     // ── L'Hôpital ──
     { sec: { es: 'Regla de L\'Hôpital', en: 'L\'Hôpital\'s rule' },
-      funcion: { x: [-4, 4], y: [-1.5, 1.5], curvas: [{ id: 'q', nombre: { es: 'sen x / x', en: 'sin x / x' }, f: sinc }, { id: 'num', nombre: { es: 'sen x', en: 'sin x' }, f: Math.sin }, { id: 'den', nombre: 'x', f: x => x }, { id: 'q2', nombre: '(1−cos x)/x²', f: cosq }],
+      funcion: { x: [-4, 4], y: [-1.5, 1.5], curvas: [{ id: 'q', nombre: { es: '$\\operatorname{sen} x / x$', en: '$\\sin x / x$' }, f: sinc }, { id: 'num', nombre: { es: '$\\operatorname{sen} x$', en: '$\\sin x$' }, f: Math.sin }, { id: 'den', nombre: '$x$', f: x => x }, { id: 'q2', nombre: '$\\dfrac{1-\\cos x}{x^2}$', f: cosq }],
         ver: ['q'], capas: [{ tipo: 'punto', x: 0, y: 1, abierto: true }],
         etiqueta: { es: 'Gráfica de sen x / x, con un hueco en x = 0', en: 'Graph of sin x / x, with a hole at x = 0' } },
       es: '$\\displaystyle\\lim_{x\\to0}\\dfrac{\\operatorname{sen}x}{x}$ da $\\tfrac00$, una **forma indeterminada**: sustituir no sirve. La gráfica sugiere que el límite es $1$ y que en $x=0$ solo falta el punto (el hueco).',
@@ -230,7 +230,7 @@ export default {
 
     // ── Teorema del valor medio ──
     { sec: { es: 'Teorema del valor medio', en: 'Mean value theorem' },
-      funcion: { x: [-1, 3.5], y: [-2.5, 9], curvas: [{ id: 'f', nombre: 'f(x)', f: x => x ** 3 / 3 - x }], par: { x0: .5, a: 0, h: 3 }, arrastrar: 'x0',
+      funcion: { x: [-1, 3.5], y: [-2.5, 9], curvas: [{ id: 'f', nombre: '$f(x)$', f: x => x ** 3 / 3 - x }], par: { x0: .5, a: 0, h: 3 }, arrastrar: 'x0',
         deslizadores: [{ par: 'x0', min: 0, max: 3, paso: .01, es: 'Punto x₀', en: 'Point x₀' }],
         capas: [{ tipo: 'secante', c: 'f', x: 'a', h: 'h' }, { tipo: 'tangente', c: 'f', x: 'x0' }],
         etiqueta: { es: 'Secante entre x = 0 y x = 3 y tangente móvil', en: 'Secant between x = 0 and x = 3 and a movable tangent' } },
@@ -252,7 +252,7 @@ export default {
         ],
         arrastrables: true, soltar: (v, par, val) => { v[par] = val; },
       } },
-    { funcion: { x: [-2, 2], y: [-.5, 2], curvas: [{ id: 'f', nombre: '|x|', f: Math.abs }], par: { a: -1, h: 2 },
+    { funcion: { x: [-2, 2], y: [-.5, 2], curvas: [{ id: 'f', nombre: '$|x|$', f: Math.abs }], par: { a: -1, h: 2 },
         capas: [{ tipo: 'secante', c: 'f', x: 'a', h: 'h' }, { tipo: 'tangente', c: 'f', x: -.5 }, { tipo: 'tangente', c: 'f', x: .5 }],
         etiqueta: { es: 'Valor absoluto con secante horizontal y tangentes de pendiente ±1', en: 'Absolute value with a horizontal secant and tangents of slope ±1' } },
       es: 'Las hipótesis importan. $f(x)=|x|$ es continua en $[-1,1]$ pero no derivable en $0$. La secante es horizontal (pendiente $0$) y, sin embargo, ninguna tangente lo es: $f\'=-1$ a la izquierda y $f\'=1$ a la derecha.',

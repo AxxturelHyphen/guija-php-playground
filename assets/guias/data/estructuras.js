@@ -225,7 +225,7 @@ function conNiveles(tr) {
   return tr.frames.map(fr => {
     if (!fr['+nodos']) return fr;
     T = parchar(T, { '+nodos': fr['+nodos'], ...(fr['+aristas'] && { '+aristas': fr['+aristas'] }) });
-    return { ...fr, etiquetas: { [T.nodos[0].id]: `h=${altura(T) + 1}` } };
+    return { ...fr, etiquetas: { [T.nodos[0].id]: `$h=${altura(T) + 1}$` } };
   });
 }
 const DEG = trazaInsertar([1, 2, 3, 4, 5, 6, 7]), BAL = trazaInsertar([4, 2, 6, 1, 3, 5, 7]);
@@ -253,7 +253,7 @@ const juegoLecturas = (v, cx) => {
   return [
     { expr: 'n', valor: n },
     { expr: 'h', valor: h },
-    { expr: '⌈log₂(n+1)⌉', valor: min || '—' },
+    { expr: '$\\lceil \\log_2(n+1) \\rceil$', valor: min || '—' },
     { expr: 'h / mín', valor: n ? (h / min).toFixed(1) : '—', malo: n > 3 && h >= 2 * min },
   ];
 };
@@ -547,7 +547,7 @@ export default {
     { arbol: { ...arbolVacio(), cabida: CAB_DEG }, code: C_INS, line: null, traza: conNiveles(BAL),
       es: 'Los mismos 7 valores en otro orden (4, 2, 6, 1, 3, 5, 7) dan un árbol **equilibrado**: 3 niveles. Buscar cuesta como mucho 3 comparaciones en lugar de 7.',
       en: 'The same 7 values in another order (4, 2, 6, 1, 3, 5, 7) give a **balanced** tree: 3 levels. A search costs at most 3 comparisons instead of 7.' },
-    { '+nodos': BAL.arbol.nodos, '+aristas': BAL.arbol.aristas, est: null, etiquetas: { n4: 'h=3' }, line: null,
+    { '+nodos': BAL.arbol.nodos, '+aristas': BAL.arbol.aristas, est: null, etiquetas: { n4: '$h=3$' }, line: null,
       es: 'Con $n$ nodos, un ABB tiene $h$ niveles con $\\lceil \\log_2(n+1) \\rceil \\le h \\le n$. Las operaciones cuestan $O(h)$: entre $O(\\log n)$ y $O(n)$. Con $n=10^6$, eso son 20 niveles frente a un millón.',
       en: 'With $n$ nodes, a BST has $h$ levels with $\\lceil \\log_2(n+1) \\rceil \\le h \\le n$. Operations cost $O(h)$: between $O(\\log n)$ and $O(n)$. With $n=10^6$, that is 20 levels versus a million.' },
     { line: null,

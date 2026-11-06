@@ -4,12 +4,12 @@
 // Formato de los parches: ver la cabecera de assets/guias/grafica.js.
 const lg = n => Math.log2(Math.max(1, n));
 const CURVAS = [
-  { id: 'c1', nombre: 'O(1)', f: () => 1 },
-  { id: 'log', nombre: 'O(log n)', f: lg },
-  { id: 'n', nombre: 'O(n)', f: n => n },
-  { id: 'nlogn', nombre: 'O(n log n)', f: n => n * lg(n) },
-  { id: 'n2', nombre: 'O(n²)', f: n => n * n },
-  { id: 'exp', nombre: 'O(2ⁿ)', f: n => 2 ** n },
+  { id: 'c1', nombre: '$O(1)$', f: () => 1 },
+  { id: 'log', nombre: '$O(\\log n)$', f: lg },
+  { id: 'n', nombre: '$O(n)$', f: n => n },
+  { id: 'nlogn', nombre: '$O(n \\log n)$', f: n => n * lg(n) },
+  { id: 'n2', nombre: '$O(n^2)$', f: n => n * n },
+  { id: 'exp', nombre: '$O(2^n)$', f: n => 2 ** n },
 ];
 const TODAS = CURVAS.map(c => c.id);
 const BASE = { curvas: CURVAS, nmax: 30 };

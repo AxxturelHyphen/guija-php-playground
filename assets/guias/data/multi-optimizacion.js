@@ -42,13 +42,13 @@ const LAG_J = {
       { expr: 'f = xy', valor: cx.fmt(cx.f(x, y)), malo: x * y < 0 },
       { expr: '∇f = (y, x)', valor: `(${cx.fmt(y)}, ${cx.fmt(x)})` },
       { expr: '∇g = (2x, 2y)', valor: `(${cx.fmt(2 * x)}, ${cx.fmt(2 * y)})` },
-      { expr: 'fₓ·g_y − f_y·gₓ', valor: cx.fmt(limpio(2 * (y * y - x * x))) },
+      { expr: '$f_xg_y-f_yg_x$', valor: cx.fmt(limpio(2 * (y * y - x * x))) },
     ];
   },
   arrastrables: true, soltar: (v, par, val) => { v[par] = val; ponerS(v); },
 };
 const lagrange = (extra = {}) => ({ f: fl, ...V, modo: 'nivel', niveles: [-2, -1, -.5, .5, 1, 2], par: circ(0), capas: LAG_CAPAS,
-  deslizadores: [{ par: 's', min: 0, max: 360, paso: 5, es: 'Posición en la restricción s (grados)', en: 'Position on the constraint s (degrees)' }],
+  deslizadores: [{ par: 's', min: 0, max: 360, paso: 5, es: 'Posición en la restricción $s$ (grados)', en: 'Position on the constraint $s$ (degrees)' }],
   etiqueta: { es: 'Mapa de nivel de f = xy y la restricción x² + y² = 2', en: 'Contour map of f = xy and the constraint x² + y² = 2' }, ...extra });
 
 // Parte B, último paso: el multiplicador como tasa de cambio del óptimo respecto de c
@@ -176,7 +176,7 @@ export default {
       en: 'On the surface $z=xy$, the constraint is a curve raised above the circle. On it $f=xy=\\sin2s$, which oscillates between $-1$ and $1$: two maxima ($s=45^\\circ$, $225^\\circ$) and two minima ($135^\\circ$, $315^\\circ$), exactly the four candidates.' },
     { sec: { es: 'Qué mide λ', en: 'What λ measures' },
       campo: { f: fl, ...V, modo: 'nivel', par: { c: 2, px: 1, py: 1 }, capas: [{ tipo: 'restriccion', g: gl, c: 'c' }, pc('px', 'py')],
-        deslizadores: [{ par: 'c', min: .5, max: 3.5, paso: .1, es: 'Valor de la restricción c', en: 'Constraint value c' }],
+        deslizadores: [{ par: 'c', min: .5, max: 3.5, paso: .1, es: 'Valor de la restricción $c$', en: 'Constraint value $c$' }],
         etiqueta: { es: 'Restricción x² + y² = c y su máximo de f = xy', en: 'Constraint x² + y² = c and its maximum of f = xy' } },
       jugar: {
         botones: [{ label: 'c = 1', ...cDe(1) }, { label: 'c = 2', ...cDe(2) }, { label: 'c = 3', ...cDe(3) }],

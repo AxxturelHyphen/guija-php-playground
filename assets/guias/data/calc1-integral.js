@@ -30,7 +30,7 @@ export default {
   pasos: [
     // ── Sumas de Riemann ──
     { sec: { es: 'Sumas de Riemann', en: 'Riemann sums' },
-      funcion: { ...V1, curvas: [{ id: 'f', nombre: 'x²', f: cuad }], par: { n: 4 }, capas: RIE('izq'), deslizadores: [DESL_N],
+      funcion: { ...V1, curvas: [{ id: 'f', nombre: '$x^2$', f: cuad }], par: { n: 4 }, capas: RIE('izq'), deslizadores: [DESL_N],
         etiqueta: { es: 'Rectángulos bajo x² en [0, 2], extremo izquierdo', en: 'Rectangles under x² on [0, 2], left endpoint' } },
       es: 'Queremos el área bajo $f(x)=x^2$ entre $0$ y $2$. Idea: cubrirla con $n$ rectángulos de ancho $\\Delta x=\\dfrac{b-a}{n}$ y sumar sus áreas. Con $n=4$, $\\Delta x=0{,}5$ y alturas en el **extremo izquierdo**: $L_4=0{,}5\\,(0+0{,}25+1+2{,}25)=1{,}75$.',
       en: 'We want the area under $f(x)=x^2$ between $0$ and $2$. Idea: cover it with $n$ rectangles of width $\\Delta x=\\dfrac{b-a}{n}$ and add their areas. With $n=4$, $\\Delta x=0.5$ and heights at the **left endpoint**: $L_4=0.5\\,(0+0.25+1+2.25)=1.75$.' },
@@ -106,7 +106,7 @@ export default {
 
     // ── Área con signo ──
     { sec: { es: 'Integral definida: área con signo', en: 'Definite integral: signed area' },
-      funcion: { ...VC, curvas: [{ id: 'f', nombre: 'cos x', f: Math.cos }, { id: 'abs', nombre: '|cos x|', f: x => Math.abs(Math.cos(x)) }, { id: 'F', nombre: { es: 'F(x) = sen x', en: 'F(x) = sin x' }, f: Math.sin }],
+      funcion: { ...VC, curvas: [{ id: 'f', nombre: '$\\cos x$', f: Math.cos }, { id: 'abs', nombre: '$|\\cos x|$', f: x => Math.abs(Math.cos(x)) }, { id: 'F', nombre: { es: '$F(x)=\\operatorname{sen} x$', en: '$F(x)=\\sin x$' }, f: Math.sin }],
         ver: ['f'], par: { b: PI / 2 }, arrastrar: 'b', capas: [AREA_B],
         deslizadores: [{ par: 'b', min: .05, max: 6.3, paso: .01, es: 'Límite superior b', en: 'Upper limit b' }],
         etiqueta: { es: 'Área bajo cos x entre 0 y b', en: 'Area under cos x between 0 and b' } },
@@ -172,7 +172,7 @@ export default {
       es: '**TFC, parte 1**: si $f$ es continua, $F\'(x)=f(x)$. La pendiente de la función área es la altura de $f$: donde $f>0$, $F$ sube; donde $f=0$ ($x=\\tfrac\\pi2$), $F$ alcanza su máximo, $F(\\tfrac\\pi2)=1$; donde $f<0$, $F$ baja.',
       en: '**FTC, part 1**: if $f$ is continuous, $F\'(x)=f(x)$. The slope of the area function is the height of $f$: where $f>0$, $F$ rises; where $f=0$ ($x=\\tfrac\\pi2$), $F$ reaches its maximum, $F(\\tfrac\\pi2)=1$; where $f<0$, $F$ falls.' },
     { sec: { es: 'Evaluar con primitivas', en: 'Evaluating with antiderivatives' },
-      funcion: { ...V1, curvas: [{ id: 'f', nombre: 'x²', f: cuad }], capas: [{ tipo: 'riemann', c: 'f', a: 0, b: 2, n: 1, m: 'exacta' }],
+      funcion: { ...V1, curvas: [{ id: 'f', nombre: '$x^2$', f: cuad }], capas: [{ tipo: 'riemann', c: 'f', a: 0, b: 2, n: 1, m: 'exacta' }],
         etiqueta: { es: 'Área exacta bajo x² en [0, 2]', en: 'Exact area under x² on [0, 2]' } },
       es: '**TFC, parte 2**: si $G\'=f$, entonces $\\displaystyle\\int_a^b f(x)\\,dx=G(b)-G(a)$. Para $x^2$, $G=\\tfrac{x^3}{3}$: $\\displaystyle\\int_0^2x^2\\,dx=\\tfrac{2^3}{3}-0=\\tfrac83$, el valor al que tendían las sumas de Riemann, sin sumar nada. La constante $C$ se cancela.',
       en: '**FTC, part 2**: if $G\'=f$, then $\\displaystyle\\int_a^b f(x)\\,dx=G(b)-G(a)$. For $x^2$, $G=\\tfrac{x^3}{3}$: $\\displaystyle\\int_0^2x^2\\,dx=\\tfrac{2^3}{3}-0=\\tfrac83$, the value the Riemann sums were heading to, without adding anything. The constant $C$ cancels.' },
@@ -205,7 +205,7 @@ export default {
 
     // ── Sustitución ──
     { sec: { es: 'Integración por sustitución', en: 'Integration by substitution' },
-      funcion: { ...VS, curvas: [{ id: 'f', nombre: { es: '2x·e^(x²)', en: '2x·e^(x²)' }, f: x => 2 * x * Math.exp(x * x) }, { id: 'g', nombre: 'eᵘ', f: Math.exp }],
+      funcion: { ...VS, curvas: [{ id: 'f', nombre: { es: '$2x\\,e^{x^2}$', en: '$2x\\,e^{x^2}$' }, f: x => 2 * x * Math.exp(x * x) }, { id: 'g', nombre: '$e^u$', f: Math.exp }],
         ver: ['f'], par: { b: 1 }, capas: [{ tipo: 'riemann', c: 'f', a: 0, b: 1, n: 1, m: 'exacta' }],
         deslizadores: [{ par: 'b', min: .05, max: 1.2, paso: .01, es: 'Límite superior b', en: 'Upper limit b' }],
         etiqueta: { es: 'Área bajo 2x·e^(x²) en [0, 1]', en: 'Area under 2x·e^(x²) on [0, 1]' } },

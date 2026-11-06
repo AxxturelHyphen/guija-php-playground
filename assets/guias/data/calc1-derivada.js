@@ -3,7 +3,7 @@
 const cubica = x => x ** 3 / 6 - x / 2 + 1;
 const dcubica = x => x * x / 2 - .5;
 const VENT = { x: [-3, 3], y: [-3, 5] };
-const CURVA = [{ id: 'f', nombre: 'f(x)', f: cubica }];
+const CURVA = [{ id: 'f', nombre: '$f(x)$', f: cubica }];
 const SEC = [{ tipo: 'secante', c: 'f', x: 'x0', h: 'h' }];
 const TAN = [{ tipo: 'tangente', c: 'f', x: 'x0' }];
 
@@ -78,14 +78,14 @@ export default {
 
     // ── Reglas ──
     { sec: { es: 'Reglas de derivación', en: 'Differentiation rules' },
-      funcion: { x: [-3, 3], y: [-4, 6], curvas: [{ id: 'f', nombre: 'f(x)', f: cubica }, { id: 'df', nombre: { es: 'f′(x)', en: 'f′(x)' }, f: dcubica }], par: { x0: 1.5 }, arrastrar: 'x0', capas: [{ tipo: 'tangente', c: 'f', x: 'x0' }, { tipo: 'punto', c: 'df', x: 'x0' }] },
+      funcion: { x: [-3, 3], y: [-4, 6], curvas: [{ id: 'f', nombre: '$f(x)$', f: cubica }, { id: 'df', nombre: { es: '$f\'(x)$', en: '$f\'(x)$' }, f: dcubica }], par: { x0: 1.5 }, arrastrar: 'x0', capas: [{ tipo: 'tangente', c: 'f', x: 'x0' }, { tipo: 'punto', c: 'df', x: 'x0' }] },
       es: 'Calcular el límite cada vez sería agotador. Las **reglas** lo hacen por nosotros: $(x^n)\'=nx^{n-1}$, $(cf)\'=cf\'$ y $(f+g)\'=f\'+g\'$. Aquí $f\'(x)=\\tfrac{x^2}{2}-\\tfrac12$ es la segunda curva: su altura en $x_0$ **es** la pendiente de la tangente de $f$.',
       en: 'Computing the limit every time would be exhausting. The **rules** do it for us: $(x^n)\'=nx^{n-1}$, $(cf)\'=cf\'$ and $(f+g)\'=f\'+g\'$. Here $f\'(x)=\\tfrac{x^2}{2}-\\tfrac12$ is the second curve: its height at $x_0$ **is** the slope of the tangent of $f$.' },
     { sec: { es: 'Producto y cociente', en: 'Product and quotient' },
       es: 'El producto **no** se deriva factor a factor: $(fg)\'=f\'g+fg\'$. Y el cociente: $\\left(\\dfrac fg\\right)\'=\\dfrac{f\'g-fg\'}{g^2}$. Ejemplo: $(x\\,e^x)\'=e^x+x\\,e^x=(1+x)e^x$. Si derivases factor a factor saldría $1\\cdot e^x$, y faltaría el término $x\\,e^x$.',
       en: 'The product is **not** differentiated factor by factor: $(fg)\'=f\'g+fg\'$. And the quotient: $\\left(\\dfrac fg\\right)\'=\\dfrac{f\'g-fg\'}{g^2}$. Example: $(x\\,e^x)\'=e^x+x\\,e^x=(1+x)e^x$. Differentiating factor by factor would give $1\\cdot e^x$, missing the term $x\\,e^x$.' },
     { sec: { es: 'Regla de la cadena', en: 'The chain rule' },
-      funcion: { x: [-2.5, 2.5], y: [-3, 3], curvas: [{ id: 'f', nombre: 'sen(x²)', f: x => Math.sin(x * x) }, { id: 'df', nombre: '2x·cos(x²)', f: x => 2 * x * Math.cos(x * x) }], par: { x0: .8 }, arrastrar: 'x0', capas: [{ tipo: 'tangente', c: 'f', x: 'x0' }, { tipo: 'punto', c: 'df', x: 'x0' }] },
+      funcion: { x: [-2.5, 2.5], y: [-3, 3], curvas: [{ id: 'f', nombre: '$\\operatorname{sen}(x^2)$', f: x => Math.sin(x * x) }, { id: 'df', nombre: '$2x\\cos(x^2)$', f: x => 2 * x * Math.cos(x * x) }], par: { x0: .8 }, arrastrar: 'x0', capas: [{ tipo: 'tangente', c: 'f', x: 'x0' }, { tipo: 'punto', c: 'df', x: 'x0' }] },
       es: 'Si una función está *dentro* de otra, la derivada multiplica las dos tasas: $\\bigl(f(g(x))\\bigr)\'=f\'(g(x))\\cdot g\'(x)$. Para $\\operatorname{sen}(x^2)$: la de fuera da $\\cos(x^2)$ y la de dentro $2x$. Resultado: $2x\\cos(x^2)$. Arrastra el punto: la altura de la segunda curva sigue a la pendiente de la tangente.',
       en: 'When one function sits *inside* another, the derivative multiplies the two rates: $\\bigl(f(g(x))\\bigr)\'=f\'(g(x))\\cdot g\'(x)$. For $\\sin(x^2)$: the outer one gives $\\cos(x^2)$ and the inner one $2x$. Result: $2x\\cos(x^2)$. Drag the point: the height of the second curve follows the slope of the tangent.',
       jugar: {
@@ -117,7 +117,7 @@ export default {
 
     // ── Implícita ──
     { sec: { es: 'Derivación implícita', en: 'Implicit differentiation' },
-      funcion: { x: [-7, 7], y: [-6.2, 6.2], igual: true, curvas: [{ id: 'c', nombre: 'x² + y² = 25', param: { x: t => 5 * Math.cos(t), y: t => 5 * Math.sin(t), t: [0, 2 * Math.PI] } }],
+      funcion: { x: [-7, 7], y: [-6.2, 6.2], igual: true, curvas: [{ id: 'c', nombre: '$x^2+y^2=25$', param: { x: t => 5 * Math.cos(t), y: t => 5 * Math.sin(t), t: [0, 2 * Math.PI] } }],
         par: circ(rad(37)), capas: [{ tipo: 'linea', x1: 'x1', y1: 'y1', x2: 'x2', y2: 'y2' }, { tipo: 'punto', x: 'px', y: 'py' }] },
       es: 'Una circunferencia no es la gráfica de una sola función $y=f(x)$, pero tiene tangente en cada punto. Derivamos **ambos lados respecto de $x$**, recordando que $y$ depende de $x$: $2x+2y\\,y\'=0$, y de ahí $y\'=-\\dfrac xy$.',
       en: 'A circle is not the graph of a single function $y=f(x)$, yet it has a tangent at every point. We differentiate **both sides with respect to $x$**, remembering that $y$ depends on $x$: $2x+2y\\,y\'=0$, so $y\'=-\\dfrac xy$.',

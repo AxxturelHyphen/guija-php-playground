@@ -117,25 +117,25 @@ const CURVAS_FIB = [
 // ── 3. Cómo crece el coste ───────────────────────────────────────────────────────────────────────────────────────
 const lg = n => Math.log2(Math.max(1, n));
 const CURVAS = [
-  { id: 'c1', nombre: 'O(1)', f: () => 1 },
-  { id: 'log', nombre: 'O(log n)', f: lg },
-  { id: 'n', nombre: 'O(n)', f: n => n },
-  { id: 'nlogn', nombre: 'O(n log n)', f: n => n * lg(n) },
-  { id: 'n2', nombre: 'O(n²)', f: n => n * n },
-  { id: 'exp', nombre: 'O(2ⁿ)', f: n => 2 ** n },
+  { id: 'c1', nombre: '$O(1)$', f: () => 1 },
+  { id: 'log', nombre: '$O(\\log n)$', f: lg },
+  { id: 'n', nombre: '$O(n)$', f: n => n },
+  { id: 'nlogn', nombre: '$O(n \\log n)$', f: n => n * lg(n) },
+  { id: 'n2', nombre: '$O(n^2)$', f: n => n * n },
+  { id: 'exp', nombre: '$O(2^n)$', f: n => 2 ** n },
 ];
 const TODAS = CURVAS.map(c => c.id);
 const BASE = { curvas: CURVAS, nmax: 30 };
-const CLASES = [['c1', 'O(1)'], ['log', 'O(log n)'], ['n', 'O(n)'], ['nlogn', 'O(n log n)'], ['n2', 'O(n²)'], ['exp', 'O(2ⁿ)']];
+const CLASES = [['c1', '$O(1)$'], ['log', '$O(\\log n)$'], ['n', '$O(n)$'], ['nlogn', '$O(n \\log n)$'], ['n2', '$O(n^2)$'], ['exp', '$O(2^n)$']];
 
 // Tiempo según n: n = 10^k, velocidad = 10^vel operaciones por segundo (el estado extra vive en la vista `v`)
 const K = v => v.k ?? 6, VEL = v => v.vel ?? 9;
-const TIEMPOS = [['log', 'O(log n)'], ['n', 'O(n)'], ['nlogn', 'O(n log n)'], ['n2', 'O(n²)'], ['exp', 'O(2ⁿ)']];
+const TIEMPOS = [['log', '$O(\\log n)$'], ['n', '$O(n)$'], ['nlogn', '$O(n \\log n)$'], ['n2', '$O(n^2)$'], ['exp', '$O(2^n)$']];
 
 const CURVAS_T = [
-  { id: 't', nombre: '3n²+5n+20', f: n => 3 * n * n + 5 * n + 20 },
-  { id: 'n2', nombre: 'n²', f: n => n * n },
-  { id: 'c28', nombre: '28n²', f: n => 28 * n * n },
+  { id: 't', nombre: '$3n^2+5n+20$', f: n => 3 * n * n + 5 * n + 20 },
+  { id: 'n2', nombre: '$n^2$', f: n => n * n },
+  { id: 'c28', nombre: '$28n^2$', f: n => 28 * n * n },
 ];
 
 // ── 4. Recurrencias ──────────────────────────────────────────────────────────────────────────────────────────────

@@ -13,7 +13,7 @@ const V1 = { x: [-1, 3], y: [-1, 4] };
 const LIN = { tipo: 'linea', x1: 1, y1: -5, x2: 1, y2: 5 };
 const LATERALES = [LIN, { tipo: 'punto', c: 'f', x: 'xl' }, { tipo: 'punto', c: 'f', x: 'xr' }];
 const SALTO = [LIN, { tipo: 'punto', x: 1, y: 1 }, { tipo: 'punto', x: 1, y: 2, abierto: true }, { tipo: 'punto', x: 1, y: 3, abierto: true },
-  { tipo: 'texto', x: .92, y: 2.25, s: '2', ancla: 'end' }, { tipo: 'texto', x: 1.08, y: 3.25, s: '3' }, { tipo: 'texto', x: 1.08, y: .85, s: 'f(1) = 1' }];
+  { tipo: 'texto', x: .92, y: 2.25, s: '$2$', ancla: 'end' }, { tipo: 'texto', x: 1.08, y: 3.25, s: '$3$' }, { tipo: 'texto', x: 1.08, y: .85, s: '$f(1)=1$' }];
 const lado = (v, d) => { v.d = d; v.xl = +(1 - d).toFixed(5); v.xr = +(1 + d).toFixed(5); };
 
 // Escena 3 y 4: ε-δ. `cabe` comprueba, muestreando, que f(x) queda a menos de ε de L para 0 < |x − a| < δ
@@ -34,7 +34,7 @@ export default {
   pasos: [
     // ── Límites laterales ──
     { sec: { es: 'Límites laterales', en: 'One-sided limits' },
-      funcion: { ...V1, curvas: [{ id: 'f', nombre: 'f(x)', f: salto }], par: { xl: 0, xr: 2, d: 1 }, capas: LATERALES,
+      funcion: { ...V1, curvas: [{ id: 'f', nombre: '$f(x)$', f: salto }], par: { xl: 0, xr: 2, d: 1 }, capas: LATERALES,
         etiqueta: { es: 'Gráfica de una función con un salto en x = 1', en: 'Graph of a function with a jump at x = 1' } },
       es: 'El límite no pregunta cuánto *vale* $f$ en un punto, sino hacia dónde *se dirige* cuando $x$ se acerca a él. Aquí $f(x)=x+1$ si $x<1$ y $f(x)=4-x$ si $x>1$. Dos puntos se acercan a $x=1$, uno desde cada lado.',
       en: 'A limit does not ask what $f$ *equals* at a point, but where it is *heading* as $x$ gets close to it. Here $f(x)=x+1$ for $x<1$ and $f(x)=4-x$ for $x>1$. Two points approach $x=1$, one from each side.' },
@@ -83,8 +83,8 @@ export default {
       es: '$f$ es **continua** en $a$ si (1) $f(a)$ existe, (2) $\\lim_{x\\to a}f(x)$ existe y (3) ambos coinciden: $\\lim_{x\\to a}f(x)=f(a)$. Gráficamente, se traza sin levantar el lápiz. La función de arriba falla la condición (2) en $x=1$.',
       en: '$f$ is **continuous** at $a$ if (1) $f(a)$ exists, (2) $\\lim_{x\\to a}f(x)$ exists and (3) they agree: $\\lim_{x\\to a}f(x)=f(a)$. Graphically, you can draw it without lifting the pencil. The function above fails condition (2) at $x=1$.' },
     { sec: { es: 'Tipos de discontinuidad', en: 'Types of discontinuity' },
-      funcion: { x: [-2, 4], y: [-2, 6], curvas: [{ id: 'ev', nombre: 'f(x)', f: evitable }, { id: 'sa', nombre: 'g(x)', f: salto }, { id: 'inf', nombre: 'h(x)', f: infinita }, { id: 'k', nombre: 'k(x)', f: x => (x === 2 ? NaN : (x * x - 4) / (x - 2)) }],
-        ver: ['ev'], capas: [{ tipo: 'punto', x: 1, y: 2, abierto: true }, { tipo: 'texto', x: 1.12, y: 1.8, s: '(1, 2)' }],
+      funcion: { x: [-2, 4], y: [-2, 6], curvas: [{ id: 'ev', nombre: '$f(x)$', f: evitable }, { id: 'sa', nombre: '$g(x)$', f: salto }, { id: 'inf', nombre: '$h(x)$', f: infinita }, { id: 'k', nombre: '$k(x)$', f: x => (x === 2 ? NaN : (x * x - 4) / (x - 2)) }],
+        ver: ['ev'], capas: [{ tipo: 'punto', x: 1, y: 2, abierto: true }, { tipo: 'texto', x: 1.12, y: 1.8, s: '$(1,2)$' }],
         etiqueta: { es: 'Discontinuidad evitable en x = 1', en: 'Removable discontinuity at x = 1' } },
       es: '**Evitable**: el límite existe pero $f(a)$ no existe o vale otra cosa. $f(x)=\\dfrac{x^2-1}{x-1}=x+1$ para $x\\ne1$: el límite en $1$ es $2$ y falta un punto. Se repara definiendo $f(1)=2$.',
       en: '**Removable**: the limit exists but $f(a)$ does not exist or is something else. $f(x)=\\dfrac{x^2-1}{x-1}=x+1$ for $x\\ne1$: the limit at $1$ is $2$ and one point is missing. It is repaired by defining $f(1)=2$.' },
@@ -110,7 +110,7 @@ export default {
 
     // ── ε-δ ──
     { sec: { es: 'La definición ε-δ', en: 'The ε-δ definition' },
-      funcion: { x: [0, 4], y: [-1.5, 7], curvas: [{ id: 'f', nombre: 'f(x)', f: lineal }], par: { eps: 1, delta: .5 },
+      funcion: { x: [0, 4], y: [-1.5, 7], curvas: [{ id: 'f', nombre: '$f(x)$', f: lineal }], par: { eps: 1, delta: .5 },
         capas: [{ tipo: 'epsdelta', x: 2, L: 3, eps: 'eps', delta: 'delta' }, { tipo: 'punto', c: 'f', x: 2, abierto: true }],
         deslizadores: [{ par: 'eps', min: .2, max: 2, paso: .05, es: 'Tolerancia ε', en: 'Tolerance ε' }, { par: 'delta', min: .02, max: 2, paso: .01, es: 'Distancia δ', en: 'Distance δ' }],
         etiqueta: { es: 'Banda ε alrededor de L = 3 y banda δ alrededor de x = 2', en: 'ε band around L = 3 and δ band around x = 2' } },
@@ -135,7 +135,7 @@ export default {
         ],
         arrastrables: true, soltar: (v, par, val) => { v[par] = val; },
       } },
-    { funcion: { x: [0, 2.5], y: [-.5, 4], curvas: [{ id: 'f', nombre: 'f(x)', f: cuadrada }], par: { eps: .5, delta: .6 },
+    { funcion: { x: [0, 2.5], y: [-.5, 4], curvas: [{ id: 'f', nombre: '$f(x)$', f: cuadrada }], par: { eps: .5, delta: .6 },
         capas: [{ tipo: 'epsdelta', x: 1, L: 1, eps: 'eps', delta: 'delta' }, { tipo: 'punto', c: 'f', x: 1, abierto: true }],
         deslizadores: [{ par: 'eps', min: .1, max: 1.5, paso: .05, es: 'Tolerancia ε', en: 'Tolerance ε' }, { par: 'delta', min: .02, max: 1, paso: .01, es: 'Distancia δ', en: 'Distance δ' }],
         etiqueta: { es: 'Banda ε y banda δ para x² en x = 1', en: 'ε and δ bands for x² at x = 1' } },
@@ -174,7 +174,7 @@ export default {
 
     // ── Límites infinitos y asíntotas ──
     { sec: { es: 'Límites infinitos y asíntotas', en: 'Infinite limits and asymptotes' },
-      funcion: { x: [-4, 6], y: [-6, 10], curvas: [{ id: 'f', nombre: 'f(x)', f: racional }], par: { d: 1, xl: 0, xr: 2 }, capas: [{ tipo: 'asintota', x: 1 }],
+      funcion: { x: [-4, 6], y: [-6, 10], curvas: [{ id: 'f', nombre: '$f(x)$', f: racional }], par: { d: 1, xl: 0, xr: 2 }, capas: [{ tipo: 'asintota', x: 1 }],
         etiqueta: { es: 'Gráfica de (2x+1)/(x−1) con asíntota vertical en x = 1', en: 'Graph of (2x+1)/(x−1) with a vertical asymptote at x = 1' } },
       es: '$f(x)=\\dfrac{2x+1}{x-1}$ no está definida en $x=1$ y cerca de él se dispara: $\\displaystyle\\lim_{x\\to1^+}f(x)=+\\infty$ y $\\displaystyle\\lim_{x\\to1^-}f(x)=-\\infty$. No tiende a un número: crece sin cota. La recta $x=1$ es una **asíntota vertical**.',
       en: '$f(x)=\\dfrac{2x+1}{x-1}$ is undefined at $x=1$ and blows up near it: $\\displaystyle\\lim_{x\\to1^+}f(x)=+\\infty$ and $\\displaystyle\\lim_{x\\to1^-}f(x)=-\\infty$. It does not approach a number: it grows without bound. The line $x=1$ is a **vertical asymptote**.' },

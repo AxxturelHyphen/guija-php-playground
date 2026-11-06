@@ -28,6 +28,7 @@ module.exports = () => {
       if (c.tipo === 'region' && !(rango(c.x) && rango(c.y))) w(q + 'x e y: [min, max]');
       if (c.tipo === 'camino' && !(typeof c.x === 'function' && typeof c.y === 'function' && rango(c.t))) w(q + 'x, y: funciones de t; t: [t0, t1]');
       if (c.tipo === 'texto' && !(typeof c.s === 'string' || (c.s?.es && c.s?.en))) w(q + 's: texto o {es,en}');
+      if (c.tipo === 'texto') for (const t of typeof c.s === 'string' ? [c.s] : [c.s?.es, c.s?.en]) if (typeof t === 'string' && (t.match(/\$/g) || []).length % 2) w(q + `s: «$» sin cerrar en «${t}»`);
     });
   };
 
@@ -53,6 +54,7 @@ module.exports = () => {
       if (!num(d.min) || !num(d.max) || d.min >= d.max) w(q + 'min < max');
       else if (num(par[d.par]) && (par[d.par] < d.min || par[d.par] > d.max)) w(q + `valor inicial ${par[d.par]} fuera de [${d.min}, ${d.max}]`);
       if (!(d.es && d.en)) w(q + 'necesita es y en');
+      for (const t of [d.es, d.en]) if (typeof t === 'string' && (t.match(/\$/g) || []).length % 2) w(q + `«$» sin cerrar en «${t}»`);
     });
     if (g.arrastrar !== undefined && !(Array.isArray(g.arrastrar) && g.arrastrar.length === 2 && g.arrastrar.every(k => k in par))) w('arrastrar: [parX, parY] con parámetros existentes');
     def = g; capas(g.capas ?? [], w);

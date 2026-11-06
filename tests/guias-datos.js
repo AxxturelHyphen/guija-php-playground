@@ -23,6 +23,26 @@ const todas = require('../contenido/guias.json').guias.map(g => g.id);
 const ids = (process.argv.slice(2).length ? process.argv.slice(2) : todas)
   .filter(id => fs.existsSync(path.join(ROOT, 'assets/guias/data', id + '.js')));
 const L = (x, lang) => (x && typeof x === 'object' && 'es' in x ? x[lang] : x) ?? '';
+// KaTeX local (el mismo que carga la guía): todo `$…$` debe compilar con throwOnError; y no debe quedar LaTeX suelto fuera de `$…$`
+let katexLocal;
+const sinCodigo = s => s.replace(/`[^`]*`/g, '');
+const CMD_TEX = /\\(?:d?frac|tfrac|sqrt|sum|int|lim|infty|alpha|beta|delta|varepsilon|epsilon|theta|pi|sigma|nabla|partial|cdot|times|le|ge|ne|to|vec|operatorname|sin|cos|tan|ln|log|left|right|mathbb|displaystyle)\b|[_^]\{/;
+function revisarMates(s, w, donde) {
+  katexLocal ??= require(path.join(ROOT, 'assets/vendor/katex/katex.min.js'));
+  const base = sinCodigo(s);
+  for (const m of base.matchAll(/\$([^$]+)\$/g)) {
+    try { katexLocal.renderToString(m[1], { throwOnError: true }); }
+    catch (e) { w(`${donde}: LaTeX inválido «${m[1]}» (${String(e.message).replace(/^KaTeX parse error: /, '')})`); }
+  }
+  const suelto = base.replace(/\$([^$]+)\$/g, '').match(CMD_TEX);
+  if (suelto) w(`${donde}: LaTeX fuera de $…$ («${suelto[0]}»)`);
+}
+// Recorre datos puros (sin funciones ni `code`, que lleva fuente con `\` y `$` legítimos) y revisa cada cadena con `$…$`
+function recorrerMates(x, w, donde = '') {
+  if (typeof x === 'string') { if (x.includes('$')) revisarMates(x, w, donde); }
+  else if (Array.isArray(x)) x.forEach((v, i) => recorrerMates(v, w, `${donde}[${i}]`));
+  else if (x && typeof x === 'object') for (const [k, v] of Object.entries(x)) if (k !== 'code') recorrerMates(v, w, donde ? `${donde}.${k}` : k);
+}
 const validadorDe = tipo => {
   const f = path.join(__dirname, 'guias', `validar-${tipo}.js`);
   return fs.existsSync(f) ? require(f)() : null;
@@ -100,9 +120,11 @@ async function validar(id) {
       else {
         if ((t.match(/`/g) || []).length % 2) w(`${lang}: backticks desparejados`);
         if ((t.match(/\$/g) || []).length % 2) w(`${lang}: $ desparejados`);
+        else if (!t.includes('$')) { const s = t.replace(/`[^`]*`/g, '').match(CMD_TEX); if (s) w(`${lang}: LaTeX fuera de $…$ («${s[0]}»)`); }
         if (t.length > 420) w(`${lang}: texto largo (${t.length} car.); el panel muestra ~6 líneas, divide el paso`);
       }
     }
+    recorrerMates(p, w);
     if (typeof p.line === 'number' && (p.line < 1 || p.line > nl())) w(`line ${p.line} fuera del código (${nl()} líneas)`);
     if (p.leyenda !== undefined) {
       if (!Array.isArray(p.leyenda) || !p.leyenda.length) w('leyenda: lista no vacía de claves');

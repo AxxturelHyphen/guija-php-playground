@@ -393,7 +393,7 @@ export default {
         lecturas: v => [
           { expr: 'pq.top()', valor: v.hn ? v.h0 : '—' },
           { expr: 'pq.size()', valor: v.hn },
-          { expr: '⌊log₂ n⌋', valor: v.hn ? Math.floor(Math.log2(v.hn)) : '—' },
+          { expr: '$\\lfloor \\log_2 n \\rfloor$', valor: v.hn ? Math.floor(Math.log2(v.hn)) : '—' },
         ],
         hl: v => ({ ...(v.hn ? { h0: 'b' } : {}), ...(v.hn > 1 ? { ['h' + (v.hn - 1)]: 'a' } : {}) }),
       } },

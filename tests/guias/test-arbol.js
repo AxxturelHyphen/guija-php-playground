@@ -229,6 +229,24 @@ const cruzan = (p, q, r, s) => {
     ok(jugadas > 0, 'los botones de jugar se ejecutan sin errores');
   }
 
+  // ── Tooltip: describirNodo (pura) ──
+  {
+    const B = A.arbolCompleto(3, (nv, i) => 'v' + nv + i), s = plegar(undefined, { arbol: { nodos: B.nodos, aristas: B.aristas, raiz: B.raiz } });
+    const n1 = A.describirNodo({ ...s, est: { m1: 'ok' }, etiquetas: { m1: 'h=1' } }, 'm1', 'arbol');
+    igual([n1.id, n1.val, n1.etiqueta, n1.est, n1.nivel], ['m1', 'v10', 'h=1', 'ok', 1], 'describirNodo: nodo interno');
+    igual([n1.padre.id, n1.hijos.map(h => h.id), n1.hijos.map(h => h.lado)], ['m0', ['m3', 'm4'], ['i', 'd']], 'describirNodo: padre e hijos con su lado');
+    const r = A.describirNodo(s, 'm0', 'arbol'); ok(r.padre === null && r.nivel === 0 && r.hijos.length === 2, 'describirNodo: raíz sin padre, nivel 0');
+    igual(A.describirNodo({ ...s }, 'm0', 'arbol', { m0: 'c' }).est, 'mal', 'describirNodo: hl a/b/c → activo/ok/mal');
+    ok(A.describirNodo(s, 'no-existe', 'arbol') === null, 'describirNodo: id desconocido → null');
+    const G = plegar(undefined, { arbol: { modo: 'libre', nodos: [{ id: 'a', val: 0, x: .2, y: .2 }, { id: 'b', val: 1, x: .8, y: .2 }, { id: 'c', val: 2, x: .5, y: .8 }], aristas: [{ a: 'a', b: 'b', peso: 4, dir: true }, { a: 'c', b: 'a', peso: 7 }] } });
+    const g = A.describirNodo(G, 'a', 'libre');
+    igual(g.vecinos.map(v => [v.id, v.peso, v.dir]), [['b', '4', 'sale'], ['c', '7', null]], 'describirNodo (grafo): vecinos con peso y sentido');
+    ok(g.nivel === null && g.padre === null && g.hijos.length === 0, 'describirNodo (grafo): sin nivel ni jerarquía');
+    const ciclo = plegar(undefined, { arbol: { nodos: [{ id: 'x', val: 1 }, { id: 'y', val: 2 }], aristas: [{ a: 'x', b: 'y' }, { a: 'y', b: 'x' }] } });
+    ok(Number.isInteger(A.describirNodo(ciclo, 'x', 'arbol').nivel), 'describirNodo: un ciclo no cuelga el cálculo del nivel');
+    for (const k of ['activo', 'visitado', 'camino', 'ok', 'mal']) ok(A.NOMBRE_EST[k].es && A.NOMBRE_EST[k].en, 'NOMBRE_EST.' + k);
+  }
+
   console.log(`${fallos ? '✗' : '✓'} test-arbol: ${total - fallos}/${total} comprobaciones`);
   process.exitCode = fallos ? 1 : 0;
 })().catch(e => { console.log('✗ test-arbol: ' + (e.stack || e)); process.exitCode = 1; });

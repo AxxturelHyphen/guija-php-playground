@@ -78,13 +78,13 @@ function memoPoda(T) {
 }
 
 // ── 3. Árbol por niveles (teorema maestro): T(n) = 2T(n/2) + n ─────────────────────────────────────────────────────
-const TM = arbolCompleto(4, nv => ['n', 'n/2', 'n/4', 'n/8'][nv]);
+const TM = arbolCompleto(4, nv => ['$n$', '$n/2$', '$n/4$', '$n/8$'][nv]);
 const nivelIds = nv => TM.nodos.filter((_, i) => Math.floor(Math.log2(i + 1)) === nv).map(n => n.id);
 const NOTAS_TM = [
-  { nivel: 0, texto: { es: 'nivel 0: n', en: 'level 0: n' } },
-  { nivel: 1, texto: { es: 'nivel 1: n/2 + n/2 = n', en: 'level 1: n/2 + n/2 = n' } },
-  { nivel: 2, texto: { es: 'nivel 2: 4 · n/4 = n', en: 'level 2: 4 · n/4 = n' } },
-  { nivel: 3, texto: { es: 'nivel 3: 8 · n/8 = n', en: 'level 3: 8 · n/8 = n' } },
+  { nivel: 0, texto: { es: 'nivel 0: $n$', en: 'level 0: $n$' } },
+  { nivel: 1, texto: { es: 'nivel 1: $n/2 + n/2 = n$', en: 'level 1: $n/2 + n/2 = n$' } },
+  { nivel: 2, texto: { es: 'nivel 2: $4 \\cdot n/4 = n$', en: 'level 2: $4 \\cdot n/4 = n$' } },
+  { nivel: 3, texto: { es: 'nivel 3: $8 \\cdot n/8 = n$', en: 'level 3: $8 \\cdot n/8 = n$' } },
 ];
 const activarNivel = nv => ({ est: { ...Object.fromEntries(TM.nodos.map(n => [n.id, 'ok']).slice(0, 2 ** nv - 1)), ...Object.fromEntries(nivelIds(nv).map(id => [id, 'activo'])) } });
 const TRAZA_TM = [
@@ -92,7 +92,7 @@ const TRAZA_TM = [
   ...[1, 2, 3].map(nv => f({ ...activarNivel(nv), notas: NOTAS_TM.slice(0, nv + 1) },
     [`Nivel 1: 2 subproblemas de tamaño n/2; el trabajo de combinar suma n/2 + n/2 = n.`, 'Nivel 2: 4 subproblemas de tamaño n/4; cada uno cuesta n/4, en total n.', 'Nivel 3: 8 subproblemas de tamaño n/8; otra vez n en total.'][nv - 1],
     ['Level 1: 2 subproblems of size n/2; the combine work adds up to n/2 + n/2 = n.', 'Level 2: 4 subproblems of size n/4; each costs n/4, n in total.', 'Level 3: 8 subproblems of size n/8; n in total again.'][nv - 1])),
-  f({ est: Object.fromEntries(TM.nodos.map(n => [n.id, 'ok'])), etiquetas: { m0: 'n log n' } }, 'Cada nivel cuesta n y hay log n niveles: T(n) = n · log n.', 'Every level costs n and there are log n levels: T(n) = n · log n.'),
+  f({ est: Object.fromEntries(TM.nodos.map(n => [n.id, 'ok'])), etiquetas: { m0: '$n\\log n$' } }, 'Cada nivel cuesta n y hay log n niveles: T(n) = n · log n.', 'Every level costs n and there are log n levels: T(n) = n · log n.'),
 ];
 
 // ── 4. ABB: inserción, búsqueda y borrado ejecutando el algoritmo ──────────────────────────────────────────────────

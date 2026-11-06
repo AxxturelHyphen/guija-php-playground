@@ -64,5 +64,27 @@ const ok = (nombre, fn) => { fn(); n++; };
     v.x0 = 3; const s2 = F.conVista(s, v); assert.strictEqual(s2.par.x0, 3); assert.strictEqual(s.par.x0, 2);
     const cx = F.ctx(s2); c(cx.f('f', 3), 9); c(cx.d('f', 3), 6, 1e-5); c(cx.integral('f', 0, 3), 9, 1e-8); assert.ok(Number.isNaN(cx.f('zz', 1)));
   });
+  ok('puntoMasCercano: snap a la muestra más próxima, ignora NaN y vacío', () => {
+    const xs = [0, 1, 2, 3, 4], ys = [0, 1, NaN, 9, 16], px = x => x * 10, py = y => 100 - y; // 10 px por unidad
+    const p = F.puntoMasCercano(xs, ys, px, py, 29, 91); assert.strictEqual(p.j, 3); c(p.x, 30); c(p.y, 91); c(p.d, 1, 1e-9);
+    assert.strictEqual(F.puntoMasCercano(xs, ys, px, py, 20, 98).j, 1); // la muestra 2 es NaN: se salta
+    assert.strictEqual(F.puntoMasCercano([], [], px, py, 0, 0), null);
+    assert.strictEqual(F.puntoMasCercano([NaN], [1], px, py, 0, 0), null);
+  });
+  ok('cercana: el de menor distancia dentro del radio', () => {
+    const cs = [{ i: 0, d: 25 }, { i: 1, d: 8 }, { i: 2, d: 12 }];
+    assert.strictEqual(F.cercana(cs, 30).i, 1); assert.strictEqual(F.cercana(cs, 10).i, 1); assert.strictEqual(F.cercana(cs, 5), null); assert.strictEqual(F.cercana([], 30), null);
+  });
+  ok('subdiv: 2 → 4 (de 0,5), 1 y 5 → 5, en cualquier década', () => {
+    assert.strictEqual(F.subdiv(1), 5); assert.strictEqual(F.subdiv(5), 5); assert.strictEqual(F.subdiv(2), 4);
+    assert.strictEqual(F.subdiv(0.2), 4); assert.strictEqual(F.subdiv(50), 5); assert.strictEqual(F.subdiv(0.001), 5); assert.strictEqual(F.subdiv(200), 4);
+  });
+  ok('menores: rejilla menor sin los múltiplos del paso mayor y sin deriva', () => {
+    const m = F.menores(0, 2, 1, 5); assert.strictEqual(m.length, 8); c(m[0], 0.2); c(m.at(-1), 1.8); assert.ok(!m.some(v => Math.abs(v - Math.round(v)) < 1e-9));
+    const n = F.menores(-1, 1, 1, 5); assert.strictEqual(n.length, 8); assert.ok(n.includes(-0.2 * 4) || n.some(v => Math.abs(v + 0.8) < 1e-12));
+    const d = F.menores(0, 4, 2, 4); assert.deepStrictEqual(d.map(v => +v.toFixed(9)), [0.5, 1, 1.5, 2.5, 3, 3.5]);
+    assert.deepStrictEqual(F.menores(0, 1, 0, 5), []); assert.deepStrictEqual(F.menores(0, 1e9, 1, 5), []); // paso inválido o demasiadas líneas
+    const g = F.menores(0.1, 0.3, 0.1, 5); assert.ok(g.every(v => v >= 0.1 - 1e-9 && v <= 0.3 + 1e-9));
+  });
   console.log(`test-funcion: ${n} pruebas OK`);
 })().catch(e => { console.error(e); process.exit(1); });

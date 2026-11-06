@@ -29,6 +29,7 @@
 import { idioma, iniciarIdioma } from './idioma.js';
 import { resaltar } from './cpp.js';
 import { fuenteHtml } from './fuentes.js';
+import { fmt, iniciarKatex } from './mates.js'; // fórmulas y texto con formato (KaTeX local); lo comparten las escenas
 
 const MODS = { celdas: () => import('./escena.js'), barras: () => import('./barras.js'), arbol: () => import('./arbol.js'), grafica: () => import('./grafica.js'), tabla: () => import('./tabla.js'), funcion: () => import('./funcion.js'), campo: () => import('./campo.js') };
 const UI = {
@@ -44,36 +45,17 @@ const REDUCIDO = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = id => document.getElementById(id);
 const L = x => (x && typeof x === 'object' && 'es' in x ? x[idioma()] : x) ?? '';
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
-const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
-// Texto del paso → HTML seguro. Código y fórmulas se apartan antes de aplicar negrita/cursiva (llevan `*` y `_`).
-const fmt = s => {
-  const guardado = [];
-  const aparta = h => { guardado.push(h); return `\u0000${guardado.length - 1}\u0000`; };
-  return String(s).replace(/[&<>"]/g, c => ESC[c])
-    .replace(/`([^`]+)`/g, (_, c) => aparta(`<code>${c}</code>`))
-    .replace(/\$([^$]+)\$/g, (_, t) => aparta(`<span class="tex" data-tex="${t}">${t}</span>`))
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\*([^*]+)\*/g, '<em>$1</em>')
-    .replace(/\u0000(\d+)\u0000/g, (_, i) => guardado[i]);
-};
-
-// KaTeX (cdnjs) solo se descarga la primera vez que un texto lleva fórmulas
-const KATEX = 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/';
-let katex;
-const cargarKatex = () => katex ??= new Promise((ok, ko) => {
-  document.head.append(Object.assign(el('link'), { rel: 'stylesheet', href: KATEX + 'katex.min.css' }));
-  document.head.append(Object.assign(el('script'), { src: KATEX + 'katex.min.js', onload: () => ok(window.katex), onerror: ko }));
-});
-const tex = root => {
-  const xs = root.querySelectorAll('.tex');
-  if (xs.length) cargarKatex().then(k => xs.forEach(x => k.render(x.dataset.tex, x, { throwOnError: false }))).catch(() => {});
-};
 const aparecer = e => { if (!REDUCIDO) e.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'ease-out' }); };
 
 const G = (await import(`./data/${document.body.dataset.guia}.js`)).default;
 const pasos = G.pasos;
 // Solo se descargan los módulos de escena que la guía usa
 const claves = [...new Set(pasos.flatMap(p => Object.keys(p).filter(k => k in MODS)))];
+// KaTeX solo si algún texto, pregunta o lectura lleva `$…$` (las funciones se miran por su código fuente; `${` no cuenta)
+const usaMates = (() => { try { return /\$(?!\{)/.test(JSON.stringify(G, (_, v) => typeof v === 'function' ? v.toString() : v)); } catch { return true; } })();
+const cargaKatex = usaMates ? iniciarKatex() : null;
 const mods = Object.fromEntries(await Promise.all(claves.map(async k => [k, await MODS[k]()])));
+await cargaKatex;
 const viewport = $('viewport'), escenas = {};
 // Fila de leyenda: solo existe si algún paso la usa, y entonces reserva su alto para que la escena no cambie de escala
 const ley = pasos.some(p => p.leyenda) ? el('div', 'ley') : null;
@@ -150,6 +132,7 @@ function pintarCodigo(code, line) {
 function jugar(p, S, tipo, caja) {
   const J = p.jugar, mod = mods[tipo], sc = activo.sc, cx = mod.ctx ? mod.ctx(S) : {}, v = mod.vista(S);
   const fila = el('div', 'botones'), tabla = el('div', 'lect');
+  let filas = [];
   const btns = J.botones.map(d => {
     const b = el('button', 'btn mono', L(d.label));
     b.onclick = () => { d.hacer(v, cx); refrescar(); };
@@ -158,11 +141,19 @@ function jugar(p, S, tipo, caja) {
   const refrescar = () => {
     sc.pintar({ ...mod.conVista(S, v), hl: J.hl ? J.hl(v, cx) : p.hl }, true);
     for (const [b, d] of btns) b.disabled = !!(d.off && d.off(v, cx));
-    tabla.replaceChildren(...J.lecturas(v, cx).map(r => {
-      const f = el('div', 'fila' + (r.malo ? ' malo' : ''));
-      f.append(el('span', 'expr', r.expr && typeof r.expr === 'object' ? r.expr[idioma()] : r.expr), el('span', 'res', String(r.valor)));
-      return f;
-    }));
+    // Filas persistentes: al mover un deslizador solo cambia el texto de `.res`; `expr` (con `$…$` → KaTeX) se pinta una vez
+    const ls = J.lecturas(v, cx);
+    if (filas.length !== ls.length) {
+      filas = ls.map(() => ({ f: el('div', 'fila'), ex: el('span', 'expr'), re: el('span', 'res'), clave: null, val: null }));
+      filas.forEach(r => r.f.append(r.ex, r.re));
+      tabla.replaceChildren(...filas.map(r => r.f));
+    }
+    ls.forEach((r, i) => {
+      const F = filas[i], txt = String(r.expr && typeof r.expr === 'object' ? r.expr[idioma()] : r.expr), val = String(r.valor);
+      if (F.clave !== txt) { F.clave = txt; if (txt.includes('$')) F.ex.innerHTML = fmt(txt); else F.ex.textContent = txt; }
+      if (F.val !== val) { F.val = val; F.re.textContent = val; }
+      F.f.classList.toggle('malo', !!r.malo);
+    });
   };
   caja.append(el('p', 'sub', UI[idioma()].jugar), fila, tabla);
   if (J.arrastrables && sc.arrastre) sc.arrastre(J.arrastrables, (...args) => { J.soltar(v, ...args, cx); refrescar(); }); // soltar(v, …args del módulo, ctx)
@@ -188,7 +179,7 @@ function traza(p, S0, line0, tipo, caja) {
     sc.pintar({ ...estados[pos], hl: pos ? undefined : p.hl }, REDUCIDO ? false : ms);
     pintarCodigo(estadoCodigo, lineas[pos]);
     const f = p.traza[pos - 1], t = f && f[idioma()];
-    subt.innerHTML = t ? fmt(t) : ''; tex(subt);
+    subt.innerHTML = t ? fmt(t) : '';
     bPlay.textContent = repro ? '⏸' : '▶'; bPlay.title = repro ? u.pausa : u.play;
     bIni.disabled = bAtr.disabled = pos === 0; bAdel.disabled = pos === N;
   };
@@ -216,7 +207,7 @@ function pregunta(q, caja) {
       caja.querySelectorAll('.opc').forEach(x => { x.disabled = true; });
       b.classList.add(o.ok ? 'ok' : 'no');
       if (!o.ok) caja.querySelector('.opc[data-ok]').classList.add('ok');
-      fb.hidden = false; fb.innerHTML = `<strong>${UI[idioma()][o.ok ? 'ok' : 'no']}</strong> ${fmt(L(q.why))}`; tex(fb); aparecer(fb);
+      fb.hidden = false; fb.innerHTML = `<strong>${UI[idioma()][o.ok ? 'ok' : 'no']}</strong> ${fmt(L(q.why))}`; aparecer(fb);
     };
     caja.append(b);
   }
@@ -229,7 +220,7 @@ function ir(k) {
   n = i; estadoCodigo = code;
   document.title = `${L(G.titulo)} · Guija`;
   $('meta').replaceChildren(...(sec ? [el('span', 'sec', L(sec)), ' · '] : []), `${u.paso} ${i + 1} / ${pasos.length}`);
-  const t = $('texto'); t.innerHTML = fmt(p[idioma()]); tex(t);
+  const t = $('texto'); t.innerHTML = fmt(p[idioma()]);
   if (previo !== i) aparecer(t);
   pintarLeyenda(p.leyenda);
   pintarCodigo(code, line);

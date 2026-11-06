@@ -28,7 +28,7 @@ export default {
   pasos: [
     // ── sen x ──
     { sec: { es: 'Aproximar con polinomios', en: 'Approximating with polynomials' },
-      funcion: { x: [-7.5, 7.5], y: [-3, 3], curvas: [{ id: 'f', nombre: { es: 'sen x', en: 'sin x' }, f: Math.sin }], par: par0(Math.sin, cs, 1, 1), arrastrar: 'x0',
+      funcion: { x: [-7.5, 7.5], y: [-3, 3], curvas: [{ id: 'f', nombre: { es: '$\\operatorname{sen} x$', en: '$\\sin x$' }, f: Math.sin }], par: par0(Math.sin, cs, 1, 1), arrastrar: 'x0',
         deslizadores: [{ par: 'g', min: 0, max: 21, paso: 1, es: 'Grado n', en: 'Degree n', dec: 0 }], capas: [TAY(cs)],
         etiqueta: { es: 'Gráfica de sen x y su polinomio de Taylor', en: 'Graph of sin x and its Taylor polynomial' } },
       es: 'Cerca de un punto $a$, una función suave se parece a su recta tangente: $f(x)\\approx f(a)+f\'(a)(x-a)$. Para $\\operatorname{sen}x$ en $a=0$ esa recta es $y=x$ (curva punteada). ¿Y si usamos un polinomio de mayor grado para pegarnos más, y durante más tiempo?',
@@ -81,17 +81,17 @@ export default {
         lecturas: (v, cx) => [
           { expr: 'n', valor: cx.fmt(v.g) },
           { expr: 'x₀', valor: cx.fmt(v.x0) },
-          { expr: 'P_n(x₀)', valor: cx.fmt(v.yb) },
+          { expr: '$P_n(x_0)$', valor: cx.fmt(v.yb) },
           { expr: 'sen x₀', valor: cx.fmt(v.ya) },
           { expr: { es: 'error', en: 'error' }, valor: cx.fmt(Math.abs(v.ya - v.yb)) },
-          { expr: { es: 'cota |x₀|^(n+1)/(n+1)!', en: 'bound |x₀|^(n+1)/(n+1)!' }, valor: cx.fmt(Math.abs(v.x0) ** (v.g + 1) / fact(v.g + 1)) },
+          { expr: { es: 'cota $|x_0|^{n+1}/(n+1)!$', en: 'bound $|x_0|^{n+1}/(n+1)!$' }, valor: cx.fmt(Math.abs(v.x0) ** (v.g + 1) / fact(v.g + 1)) },
         ],
         arrastrables: true, soltar: asigna(sincS),
       } },
 
     // ── eˣ ──
     { sec: { es: 'eˣ: converge en todas partes', en: 'eˣ: converges everywhere' },
-      funcion: { x: [-4, 3.2], y: [-3, 24], curvas: [{ id: 'f', nombre: 'eˣ', f: Math.exp }], par: { g: 2 },
+      funcion: { x: [-4, 3.2], y: [-3, 24], curvas: [{ id: 'f', nombre: '$e^x$', f: Math.exp }], par: { g: 2 },
         deslizadores: [{ par: 'g', min: 0, max: 10, paso: 1, es: 'Grado n', en: 'Degree n', dec: 0 }], capas: [TAY(ce)],
         etiqueta: { es: 'Gráfica de e^x y su polinomio de Taylor', en: 'Graph of e^x and its Taylor polynomial' } },
       es: 'Para $e^x$ todas las derivadas valen $1$ en $0$, así que $c_k=\\dfrac1{k!}$: $e^x=\\displaystyle\\sum_{k=0}^{\\infty}\\dfrac{x^k}{k!}=1+x+\\dfrac{x^2}2+\\dfrac{x^3}6+\\dfrac{x^4}{24}+\\cdots$ Mueve el grado: el polinomio sube hasta alcanzar la curva.',
@@ -127,7 +127,7 @@ export default {
 
     // ── 1/(1−x) ──
     { sec: { es: 'Radio de convergencia', en: 'Radius of convergence' },
-      funcion: { x: [-2.5, 2.5], y: [-4, 6], curvas: [{ id: 'f', nombre: '1/(1−x)', f: F1 }], par: par0(F1, cg, 4, .5), arrastrar: 'x0',
+      funcion: { x: [-2.5, 2.5], y: [-4, 6], curvas: [{ id: 'f', nombre: '$\\dfrac{1}{1-x}$', f: F1 }], par: par0(F1, cg, 4, .5), arrastrar: 'x0',
         deslizadores: [{ par: 'g', min: 0, max: 20, paso: 1, es: 'Grado n', en: 'Degree n', dec: 0 }], capas: [TAY(cg), { tipo: 'asintota', x: 1 }],
         etiqueta: { es: 'Gráfica de 1/(1−x) con su asíntota y su polinomio de Taylor', en: 'Graph of 1/(1−x) with its asymptote and Taylor polynomial' } },
       es: '$\\dfrac1{1-x}$ cumple $f^{(k)}(0)=k!$, así que todos los coeficientes valen $1$: $\\dfrac1{1-x}=1+x+x^2+x^3+\\cdots$ Es la serie geométrica con $r=x$. La función no existe en $x=1$: asíntota vertical. Sube el grado y observa.',
@@ -141,7 +141,7 @@ export default {
       ],
       es: 'Reproduce la traza. Entre $-1$ y $1$ los polinomios se acercan a $f$ al subir el grado; para $x>1$ o $x<-1$ ocurre lo contrario: oscilan o se disparan más cuanto mayor es $n$. La zona buena parece acabar justo en la asíntota.',
       en: 'Play the trace. Between $-1$ and $1$ the polynomials approach $f$ as the degree grows; for $x>1$ or $x<-1$ the opposite happens: they oscillate or blow up more the larger $n$ is. The good zone seems to end right at the asymptote.' },
-    { par: { g: 6 }, capas: [TAY(cg), { tipo: 'asintota', x: 1 }, { tipo: 'linea', x1: -1, y1: -4, x2: -1, y2: 6 }, { tipo: 'texto', x: 0, y: 5.2, s: '|x| < 1', ancla: 'middle' }],
+    { par: { g: 6 }, capas: [TAY(cg), { tipo: 'asintota', x: 1 }, { tipo: 'linea', x1: -1, y1: -4, x2: -1, y2: 6 }, { tipo: 'texto', x: 0, y: 5.2, s: '$|x|<1$', ancla: 'middle' }],
       es: 'El **radio de convergencia** $R$ dice hasta dónde converge la serie alrededor de $a$. Aquí $R=1$: converge si $|x|<1$ y diverge si $|x|>1$. Es la distancia de $a=0$ a la asíntota. En $x=-1$ la función es regular ($f(-1)=\\tfrac12$), pero la serie $1-1+1-\\cdots$ no converge.',
       en: 'The **radius of convergence** $R$ says how far the series converges around $a$. Here $R=1$: it converges if $|x|<1$ and diverges if $|x|>1$. It is the distance from $a=0$ to the asymptote. At $x=-1$ the function is regular ($f(-1)=\\tfrac12$), yet the series $1-1+1-\\cdots$ does not converge.' },
     { par: { g: 6 },
@@ -162,7 +162,7 @@ export default {
         lecturas: (v, cx) => [
           { expr: 'n', valor: cx.fmt(v.g) },
           { expr: 'x₀', valor: cx.fmt(v.x0) },
-          { expr: 'P_n(x₀)', valor: cx.fmt(v.yb) },
+          { expr: '$P_n(x_0)$', valor: cx.fmt(v.yb) },
           { expr: 'f(x₀)', valor: cx.fmt(F1(v.x0)) },
           { expr: { es: 'error', en: 'error' }, valor: cx.fmt(Math.abs(F1(v.x0) - v.yb)), malo: Math.abs(v.x0) >= 1 },
           { expr: '|x₀| < 1', valor: Math.abs(v.x0) < 1 ? '✓' : '✗', malo: Math.abs(v.x0) >= 1 },

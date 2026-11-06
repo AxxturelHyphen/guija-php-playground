@@ -402,5 +402,14 @@ function montarDom() {
     assert.ok(F.celdas.every(k => !k.el._cls.has('jg')));
   });
 
+  prueba('relaciones: qué lee una celda y a quién alimenta (sin repetidos, orden de deps)', () => {
+    const deps = [[0, 1, 1, 1], [1, 0, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 1, 2, 2]];
+    assert.deepEqual(T.relaciones(deps, 1, 1), { de: [[0, 1], [1, 0], [0, 0]], a: [[2, 2]] });
+    assert.deepEqual(T.relaciones(deps, 0, 1), { de: [], a: [[1, 1]] });
+    assert.deepEqual(T.relaciones(deps, 2, 0), { de: [], a: [] }, 'sin dependencias → vacías (no hay tooltip)');
+    assert.deepEqual(T.relaciones(null, 0, 0), { de: [], a: [] });
+    assert.deepEqual(T.relaciones([[1, 1, 1, 1]], 1, 1), { de: [[1, 1]], a: [] }, 'una auto-dependencia cuenta una vez');
+  });
+
   console.log(`\n✓ ${n} pruebas de tabla`);
 })().catch(e => { console.error('\n✗ ' + (e.stack || e)); process.exit(1); });

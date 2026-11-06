@@ -69,5 +69,59 @@ const ok = (nombre, fn) => { fn(); n++; };
     const s2 = C.conVista(s, v); assert.strictEqual(s2.par.x0, 4); assert.strictEqual(s.par.x0, 1);
     const cx = C.ctx(s2); c(cx.f(2, 3), 6); c(cx.grad(2, 3)[0], 3, 1e-4); c(cx.integral(0, 1, 0, 1, 50), .25, 1e-3);
   });
+  // ── Superficie WebGL: lógica pura de campo-gl.js ──
+  const G = await import(pathToFileURL(path.join(__dirname, '../../assets/guias/campo-gl.js')).href);
+  ok('limitarElev: acota la elevación', () => { c(C.limitarElev(-1), .1); c(C.limitarElev(9), 1.45); c(C.limitarElev(.7), .7); });
+  ok('alturas: normaliza a ±ZS, acota fuera de rango y conserva NaN', () => {
+    const M = C.malla((x, y) => x, [0, 1], [0, 1], 4), h = G.alturas(M, 0, 1);
+    c(h[0], -C.ZS); c(h[4], C.ZS); c(h[2], 0);
+    const A = G.alturas(M, .25, .75); c(A[0], -C.ZS); c(A[4], C.ZS); // z acotada al rango dado
+    assert.ok(Number.isNaN(G.alturas({ z: new Float64Array([NaN, 1]) }, 0, 1)[0]));
+  });
+  ok('normales: unitarias; plano horizontal → (0,0,1); plano inclinado → inclinación correcta; hueco → arriba', () => {
+    const N = 6, plano = G.normales(new Float32Array(49), N);
+    for (let k = 0; k < 49; k++) { c(plano[3 * k], 0); c(plano[3 * k + 1], 0); c(plano[3 * k + 2], 1); }
+    const h = new Float32Array(49); for (let j = 0; j <= N; j++) for (let i = 0; i <= N; i++) h[j * 7 + i] = .5 * (-1 + 2 * i / N); // z = 0,5·nx
+    const n = G.normales(h, N), k = 3 * (3 * 7 + 3), l = Math.hypot(.5, 1);
+    c(n[k], -.5 / l, 1e-6); c(n[k + 1], 0, 1e-6); c(n[k + 2], 1 / l, 1e-6);
+    for (let q = 0; q < 49; q++) c(Math.hypot(n[3 * q], n[3 * q + 1], n[3 * q + 2]), 1, 1e-5);
+    h[24] = NaN; const m = G.normales(h, N); c(m[3 * 24 + 2], 1); // vértice no finito
+  });
+  ok('índices: 2 triángulos por celda, se saltan celdas con NaN; la malla fina incluye bordes', () => {
+    const N = 8, h = new Float32Array(81); assert.strictEqual(G.indicesRelleno(h, N).length, N * N * 6);
+    h[4 * 9 + 4] = NaN; assert.strictEqual(G.indicesRelleno(h, N).length, (N * N - 4) * 6);
+    assert.ok(Math.max(...G.indicesRelleno(h, N)) <= 80 && !G.indicesRelleno(h, N).includes(40));
+    const L = G.indicesMalla(new Float32Array(81), N, 4); assert.strictEqual(L.length, 2 * 2 * N * 3); // líneas 0, 4 y 8 en cada sentido
+    assert.strictEqual(G.indicesMalla(new Float32Array(81), N, 3).length % 2, 0);
+  });
+  ok('matriz: coincide con proyectar() y con la posición en píxeles de campo.js (CAM, TAM)', () => {
+    for (const [rot, el, nx, ny, nz] of [[.75, .6, .3, -.8, .2], [2.2, 1.2, -1, 1, -C.ZS], [0, .1, 0, 0, C.ZS]]) {
+      const m = G.matriz(rot, el), p = C.proyectar(nx, ny, nz, rot, el);
+      const X = m[0] * nx + m[4] * ny + m[8] * nz + m[12], Y = m[1] * nx + m[5] * ny + m[9] * nz + m[13], Z = m[2] * nx + m[6] * ny + m[10] * nz + m[14];
+      c((X + 1) / 2 * C.TAM.W, C.CAM.cx + p.sx * C.CAM.sc, 1e-3); c((1 - Y) / 2 * C.TAM.H, C.CAM.cy - p.sy * C.CAM.sc, 1e-3); c(Z, p.prof / 3, 1e-6);
+      assert.ok(Math.abs(Z) < 1, 'dentro del volumen de recorte');
+    }
+  });
+  ok('caja: esquina trasera = la de mayor profundidad; aristas del suelo más cercanas', () => {
+    for (const rot of [0, .75, 2.2, 4, 5.5]) {
+      const cj = G.caja(rot, .6), prof = (a, b) => C.proyectar(a, b, 0, rot, .6).prof, mx = Math.max(prof(1, 1), prof(1, -1), prof(-1, 1), prof(-1, -1));
+      c(prof(cj.ax, cj.ay), mx, 1e-9);
+      assert.ok(prof(0, cj.yf) <= prof(0, -cj.yf) + 1e-9 && prof(cj.xf, 0) <= prof(-cj.xf, 0) + 1e-9);
+      const sx = (a, b) => C.proyectar(a, b, 0, rot, .6).sx; assert.ok(sx(cj.ix, cj.iy) <= Math.min(sx(1, 1), sx(1, -1), sx(-1, 1), sx(-1, -1)) + 1e-2);
+    }
+  });
+  ok('lineasCaja: segmentos completos y dentro del búfer', () => {
+    const t = { x: [-1, 0, 1], y: [-.5, .5], z: [-.3, .3] }, out = new Float32Array(G.MAX_VERT_CAJA * 3), [vp, vs] = G.lineasCaja(G.caja(.75, .6), t, out);
+    assert.strictEqual(vp, 10); assert.strictEqual(vs, 8 + 2 * (3 + 2 + 2)); assert.ok(vp + vs <= G.MAX_VERT_CAJA);
+    for (let i = 0; i < (vp + vs) * 3; i++) assert.ok(Number.isFinite(out[i]) && Math.abs(out[i]) <= 1.08 + 1e-6);
+  });
+  ok('colores por vértice: la rampa de campo.js', () => {
+    const M = C.malla((x, y) => x, [0, 1], [0, 1], 2), col = G.colores(M, 0, 1);
+    assert.deepStrictEqual([...col.slice(0, 3)], C.rampa(0)); assert.deepStrictEqual([...col.slice(6, 9)], C.rampa(1)); // vértices 0 (x=0) y 2 (x=1)
+  });
+  ok('colorGL: hex, rgb() y valor por defecto', () => {
+    assert.deepStrictEqual(G.colorGL('#fff'), [1, 1, 1, 1]); c(G.colorGL('#3A3D42')[0], 58 / 255); c(G.colorGL('#00000080')[3], 128 / 255);
+    assert.deepStrictEqual(G.colorGL('rgba(255, 0, 0, .5)'), [1, 0, 0, .5]); assert.deepStrictEqual(G.colorGL('rarito', [0, 0, 0, 1]), [0, 0, 0, 1]);
+  });
   console.log(`test-campo: ${n} pruebas OK`);
 })().catch(e => { console.error(e); process.exit(1); });

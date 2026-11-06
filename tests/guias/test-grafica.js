@@ -192,5 +192,15 @@ const ok = (nombre, fn) => { fn(); n++; };
     assert.strictEqual(cx.fmt(2 ** 40), '1,1e12'); assert.strictEqual(cx.nombre('b'), 'lineal');
   });
 
+  ok('plano: etiquetas con $…$ a texto plano (aria-label, anchos)', () => {
+    assert.strictEqual(G.plano('$O(n \\log n)$'), 'O(n log n)');
+    assert.strictEqual(G.plano('$O(2^n)$'), 'O(2ⁿ)');
+    assert.strictEqual(G.plano('$3n^2+5n+20$'), '3n²+5n+20');
+    assert.strictEqual(G.plano('$\\log_2(n!)$'), 'log₂(n!)');
+    assert.strictEqual(G.plano('$n^{10}$'), 'n¹⁰');
+    assert.strictEqual(G.plano('O(1)'), 'O(1)', 'texto plano intacto');
+    assert.strictEqual(G.plano(undefined), '');
+  });
+
   console.log(`✓ test-grafica: ${n} grupos de pruebas correctos`);
 })().catch(e => { console.error('✗ test-grafica:', e.message); console.error(e.stack.split('\n').slice(1, 4).join('\n')); process.exit(1); });

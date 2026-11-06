@@ -32,7 +32,7 @@ module.exports = () => {
       else if (vistos.has(c.id)) w(q + 'id repetido');
       vistos.add(c.id);
       if (typeof c.f !== 'function') return w(q + 'f debe ser una función (n) => número');
-      if (!(typeof c.nombre === 'string' ? c.nombre : c.nombre?.es && c.nombre?.en)) w(q + 'nombre: texto o {es,en}');
+      if (!(typeof c.nombre === 'string' ? c.nombre : c.nombre?.es && c.nombre?.en)) w(q + 'nombre: texto (con $…$ opcional) o {es,en}');
       if (c.color !== undefined && !/^#[0-9a-fA-F]{6}$/.test(c.color)) w(q + 'color: #rrggbb');
       for (const x of [0, 1, 7, g.nmax || 10]) {
         let y; try { y = c.f(x); } catch (e) { w(q + `f(${x}) lanza: ${e.message}`); break; }

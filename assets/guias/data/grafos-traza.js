@@ -133,7 +133,7 @@ export function trazaBFS(G, s = 0) {
   const f = (l, a, b) => fr(l, a, b, { est, etiquetas: et, aristaEst: ar });
   let tmp = null;
   const limpia = () => { if (tmp) { delete ar[tmp]; tmp = null; } };
-  dist[s] = 0; q.push(s); est[vid(s)] = 'visitado'; et[vid(s)] = 'd=0';
+  dist[s] = 0; q.push(s); est[vid(s)] = 'visitado'; et[vid(s)] = '$d=0$';
   f(4, `Origen ${s}: \`dist[${s}] = 0\` y entra en la cola. Cola: ${Q(q)}.`, `Source ${s}: \`dist[${s}] = 0\` and it enters the queue. Queue: ${Q(q)}.`);
   while (q.length) {
     const u = q.shift(); orden.push(u); limpia();
@@ -145,7 +145,7 @@ export function trazaBFS(G, s = 0) {
       const k = claveE(G, u, v);
       if (dist[v] === -1) {
         dist[v] = dist[u] + 1; padre[v] = u; q.push(v);
-        est[vid(v)] = 'visitado'; et[vid(v)] = `d=${dist[v]}`; ar[k] = 'camino';
+        est[vid(v)] = 'visitado'; et[vid(v)] = `$d=${dist[v]}$`; ar[k] = 'camino';
         f(9, `${v} sin visitar: \`dist[${v}] = ${dist[v]}\`, \`padre[${v}] = ${u}\` y a la cola. Cola: ${Q(q)}.`, `${v} unvisited: \`dist[${v}] = ${dist[v]}\`, \`padre[${v}] = ${u}\` and into the queue. Queue: ${Q(q)}.`);
       } else if (ar[k] === 'camino') {
         f(8, `${v} ya tiene distancia ${dist[v]} (es la arista por la que llegamos a ${u}): se ignora.`, `${v} already has distance ${dist[v]} (it is the edge we used to reach ${u}): ignored.`);

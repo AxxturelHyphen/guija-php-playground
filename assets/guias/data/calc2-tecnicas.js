@@ -7,15 +7,15 @@ const lim = (x, a, b) => Math.min(b, Math.max(a, x));
 
 // ── 1. Partes: y = ln x entre 1 y e ──
 const PARTES = [
-  { id: 'f', nombre: 'ln x', f: x => Math.log(x) },
-  { id: 'top', nombre: 'y = 1', f: () => 1 },
-  { id: 'lnp', nombre: 'max(0, ln x)', f: x => (x <= 1 ? 0 : Math.log(x)) },
+  { id: 'f', nombre: '$\\ln x$', f: x => Math.log(x) },
+  { id: 'top', nombre: '$y=1$', f: () => 1 },
+  { id: 'lnp', nombre: '$\\max(0,\\ln x)$', f: x => (x <= 1 ? 0 : Math.log(x)) },
 ];
 const BAJO = { tipo: 'riemann', c: 'f', a: 1, b: Math.E, n: 1, m: 'exacta' };
 const IZQ = { tipo: 'entre', c: 'top', g: 'lnp', a: 0, b: Math.E };
 const PUNTOS = [{ tipo: 'punto', c: 'f', x: 1 }, { tipo: 'punto', c: 'f', x: Math.E }];
-const ROT1 = { tipo: 'texto', x: 1.55, y: .27, s: { es: '∫ y dx = 1', en: '∫ y dx = 1' } };
-const ROT2 = { tipo: 'texto', x: .06, y: .5, s: { es: '∫ x dy = e − 1', en: '∫ x dy = e − 1' } };
+const ROT1 = { tipo: 'texto', x: 1.55, y: .27, s: { es: '$\\int y\\,dx=1$', en: '$\\int y\\,dx=1$' } };
+const ROT2 = { tipo: 'texto', x: .06, y: .5, s: { es: '$\\int x\\,dy=e-1$', en: '$\\int x\\,dy=e-1$' } };
 
 // ── 2. Fracciones parciales: f = 2/(x−1) − 1/(x+2) ──
 const P = x => 2 / (x - 1), Q = x => -1 / (x + 2), FN = x => (x + 5) / ((x - 1) * (x + 2));
@@ -36,10 +36,10 @@ const capasTri = k => [
   { tipo: 'riemann', c: 'f', a: 0, b: k.px, n: 1, m: 'exacta' },
   { tipo: 'linea', x1: 0, y1: 0, x2: k.px, y2: 0 }, { tipo: 'linea', x1: k.px, y1: 0, x2: k.px, y2: k.py }, { tipo: 'linea', x1: 0, y1: 0, x2: k.px, y2: k.py },
   { tipo: 'punto', c: 'f', x: k.px },
-  { tipo: 'texto', x: k.ax, y: k.ay, s: 'x', ancla: 'middle' },
-  { tipo: 'texto', x: k.bx, y: k.by, s: '√(4 − x²)' },
-  { tipo: 'texto', x: k.hx, y: k.hy, s: '2', ancla: 'end' },
-  { tipo: 'texto', x: k.qx, y: k.qy, s: 'θ', ancla: 'end' },
+  { tipo: 'texto', x: k.ax, y: k.ay, s: '$x$', ancla: 'middle' },
+  { tipo: 'texto', x: k.bx, y: k.by, s: '$\\sqrt{4-x^2}$' },
+  { tipo: 'texto', x: k.hx, y: k.hy, s: '$2$', ancla: 'end' },
+  { tipo: 'texto', x: k.qx, y: k.qy, s: '$\\theta$', ancla: 'end' },
 ];
 const NOM = Object.fromEntries(Object.keys(tri(1)).map(k => [k, k]));
 
@@ -84,7 +84,7 @@ export default {
     // ── Fracciones parciales ──
     { sec: { es: 'Fracciones parciales', en: 'Partial fractions' },
       funcion: { x: [-4, 7], y: [-5, 5],
-        curvas: [{ id: 'f', nombre: 'f(x)', f: FN }, { id: 'p', nombre: '2/(x−1)', f: P }, { id: 'q', nombre: '−1/(x+2)', f: Q }],
+        curvas: [{ id: 'f', nombre: '$f(x)$', f: FN }, { id: 'p', nombre: '$\\dfrac{2}{x-1}$', f: P }, { id: 'q', nombre: '$-\\dfrac{1}{x+2}$', f: Q }],
         par: { x0: 3, yp: P(3), yf: FN(3), ...est2(3, KU) }, arrastrar: 'x0',
         etiqueta: { es: 'Gráfica de f y de sus dos fracciones parciales', en: 'Graph of f and its two partial fractions' } },
       ver: ['f'],
@@ -139,7 +139,7 @@ export default {
 
     // ── Sustitución trigonométrica ──
     { sec: { es: 'Sustitución trigonométrica', en: 'Trigonometric substitution' },
-      funcion: { x: [-.6, 2.9], y: [-.6, 2.5], igual: true, curvas: [{ id: 'f', nombre: '√(4−x²)', f: x => Math.sqrt(4 - x * x) }],
+      funcion: { x: [-.6, 2.9], y: [-.6, 2.5], igual: true, curvas: [{ id: 'f', nombre: '$\\sqrt{4-x^2}$', f: x => Math.sqrt(4 - x * x) }],
         par: tri(1), arrastrar: 'px', deslizadores: [{ par: 'px', min: 0, max: 2, paso: .01, es: 'Posición x', en: 'Position x' }],
         capas: capasTri(tri(1)), etiqueta: { es: 'Cuarto de circunferencia de radio 2 con un triángulo rectángulo', en: 'Quarter circle of radius 2 with a right triangle' } },
       es: 'En $\\int\\sqrt{4-x^2}\\,dx$ aparece $a^2-x^2$ con $a=2$. Se dibuja un triángulo rectángulo de hipotenusa $2$ y cateto horizontal $x$: el otro cateto mide $\\sqrt{4-x^2}$, justo el radicando. Si $\\theta$ es el ángulo opuesto a $x$, entonces $x=2\\operatorname{sen}\\theta$.',
@@ -185,7 +185,7 @@ export default {
 
     // ── Impropias ──
     { sec: { es: 'Integrales impropias', en: 'Improper integrals' },
-      funcion: { x: [0, 12.5], y: [-.3, 2.3], curvas: [{ id: 'f1', nombre: '1/x', f: x => 1 / x }, { id: 'f2', nombre: '1/x²', f: x => 1 / (x * x) }],
+      funcion: { x: [0, 12.5], y: [-.3, 2.3], curvas: [{ id: 'f1', nombre: '$\\dfrac{1}{x}$', f: x => 1 / x }, { id: 'f2', nombre: '$\\dfrac{1}{x^2}$', f: x => 1 / (x * x) }],
         par: { b: 3 }, arrastrar: 'b', deslizadores: [{ par: 'b', min: 1, max: BMAX, paso: .05, es: 'Límite superior b', en: 'Upper limit b' }],
         etiqueta: { es: 'Gráficas de 1/x y 1/x² para x ≥ 1', en: 'Graphs of 1/x and 1/x² for x ≥ 1' } },
       es: '¿Puede un área infinitamente larga ser finita? $\\displaystyle\\int_1^\\infty f\\,dx$ se define como $\\displaystyle\\lim_{b\\to\\infty}\\int_1^b f\\,dx$. Comparamos $\\tfrac1x$ y $\\tfrac1{x^2}$: las dos decrecen hacia $0$, pero no igual de rápido.',
