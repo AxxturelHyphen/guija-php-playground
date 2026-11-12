@@ -36,6 +36,16 @@ if ($pgGuia !== null) {
     }
     $actual ?? pg_send(404, 'text/plain; charset=utf-8', 'No encontrado');
 }
+// Enlace opcional «Practícalo en código»: solo con lenguaje conocido y id de lección con forma válida
+$practica = null;
+if ($actual && is_array($actual['practica'] ?? null)) {
+    $pl = $actual['practica']['lang'] ?? null;
+    $pn = $actual['practica']['leccion'] ?? null;
+    if (is_string($pl) && in_array($pl, \Playground\Core\Languages::IDS, true) && is_string($pn) && preg_match('/^[a-z0-9-]+$/', $pn) === 1) {
+        $practica = ['lang' => $pl, 'leccion' => $pn];
+    }
+}
+$practicaLang = ['php' => 'PHP', 'python' => 'Python', 'java' => 'Java', 'cpp' => 'C++'];
 $title = $actual ? $actual['titulo']['es'] . ' · Guija' : 'Guías visuales · Guija';
 ?>
 <!doctype html>
@@ -65,6 +75,12 @@ try { var l = new URLSearchParams(location.search).get('lang') || localStorage.g
     <p class="meta" id="meta"></p>
     <div class="texto" id="texto" aria-live="polite"></div>
     <pre class="codigo" id="codigo" hidden></pre>
+<?php if ($practica): ?>
+    <a class="practica" href="/<?= $h($practica['lang']) ?>?l=<?= $h($practica['leccion']) ?>" target="_blank" rel="noopener">
+      <span class="p-titulo"><?= $b(['es' => 'Practícalo en código', 'en' => 'Practice it in code']) ?> <span aria-hidden="true">↗</span></span>
+      <span class="p-sub"><?= $b(['es' => 'Ejercicios con tests en ' . $practicaLang[$practica['lang']], 'en' => 'Exercises with tests in ' . $practicaLang[$practica['lang']]]) ?></span>
+    </a>
+<?php endif; ?>
     <details class="fuentes" id="fuentes" hidden><summary><?= $b(['es' => 'Fuentes y recursos', 'en' => 'Sources and resources']) ?></summary><ol></ol></details>
   </section>
   <section class="der">

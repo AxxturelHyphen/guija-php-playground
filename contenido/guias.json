@@ -1,5 +1,5 @@
 {
-  "descripcion": "Índice de guías visuales (/guias), agrupadas por área. Una guía aparece solo si existe assets/guias/data/<id>.js. 'leccion' es la lección del temario de C++ (área dsa) o el número dentro del curso (área calculo).",
+  "descripcion": "Índice de guías visuales (/guias), agrupadas por área. Una guía aparece solo si existe assets/guias/data/<id>.js. 'leccion' es la lección del temario de C++ (área dsa) o el número dentro del curso (área calculo). 'practica' (opcional) enlaza la guía con una lección de código del IDE: {\"lang\": <lenguaje>, \"leccion\": <id de lección de temario.json>}; la guía muestra «Practícalo en código» y abre /<lang>?l=<id>; tests/paridad.php comprueba que existan.",
   "guias": [
     {
       "id": "punteros",
@@ -122,6 +122,10 @@
       "id": "calc1-limites",
       "area": "calculo",
       "grupo": "calc1",
+      "practica": {
+        "lang": "python",
+        "leccion": "mates-derivadas"
+      },
       "leccion": "1",
       "titulo": {
         "es": "Límites y continuidad",
@@ -136,6 +140,10 @@
       "id": "calc1-derivada",
       "area": "calculo",
       "grupo": "calc1",
+      "practica": {
+        "lang": "python",
+        "leccion": "mates-derivadas"
+      },
       "leccion": "2",
       "titulo": {
         "es": "La derivada",
@@ -150,6 +158,10 @@
       "id": "calc1-aplicaciones",
       "area": "calculo",
       "grupo": "calc1",
+      "practica": {
+        "lang": "python",
+        "leccion": "mates-raices"
+      },
       "leccion": "3",
       "titulo": {
         "es": "Aplicaciones de la derivada",
@@ -164,6 +176,10 @@
       "id": "calc1-integral",
       "area": "calculo",
       "grupo": "calc1",
+      "practica": {
+        "lang": "python",
+        "leccion": "mates-integracion"
+      },
       "leccion": "4",
       "titulo": {
         "es": "La integral",
@@ -178,6 +194,10 @@
       "id": "calc2-tecnicas",
       "area": "calculo",
       "grupo": "calc2",
+      "practica": {
+        "lang": "python",
+        "leccion": "mates-integracion"
+      },
       "leccion": "1",
       "titulo": {
         "es": "Técnicas de integración",
@@ -192,6 +212,10 @@
       "id": "calc2-aplicaciones",
       "area": "calculo",
       "grupo": "calc2",
+      "practica": {
+        "lang": "python",
+        "leccion": "mates-integracion"
+      },
       "leccion": "2",
       "titulo": {
         "es": "Aplicaciones de la integral",
@@ -206,6 +230,10 @@
       "id": "calc2-series",
       "area": "calculo",
       "grupo": "calc2",
+      "practica": {
+        "lang": "python",
+        "leccion": "mates-series"
+      },
       "leccion": "3",
       "titulo": {
         "es": "Sucesiones y series",
@@ -220,6 +248,10 @@
       "id": "calc2-taylor",
       "area": "calculo",
       "grupo": "calc2",
+      "practica": {
+        "lang": "python",
+        "leccion": "mates-series"
+      },
       "leccion": "4",
       "titulo": {
         "es": "Series de potencias y Taylor",
@@ -248,6 +280,10 @@
       "id": "multi-funciones",
       "area": "calculo",
       "grupo": "multi",
+      "practica": {
+        "lang": "python",
+        "leccion": "mates-gradiente"
+      },
       "leccion": "1",
       "titulo": {
         "es": "Funciones de varias variables",
@@ -262,6 +298,10 @@
       "id": "multi-derivadas",
       "area": "calculo",
       "grupo": "multi",
+      "practica": {
+        "lang": "python",
+        "leccion": "mates-gradiente"
+      },
       "leccion": "2",
       "titulo": {
         "es": "Derivadas parciales y gradiente",
@@ -276,6 +316,10 @@
       "id": "multi-optimizacion",
       "area": "calculo",
       "grupo": "multi",
+      "practica": {
+        "lang": "python",
+        "leccion": "mates-gradiente"
+      },
       "leccion": "3",
       "titulo": {
         "es": "Optimización",
@@ -290,6 +334,10 @@
       "id": "multi-integrales",
       "area": "calculo",
       "grupo": "multi",
+      "practica": {
+        "lang": "python",
+        "leccion": "mates-integracion"
+      },
       "leccion": "4",
       "titulo": {
         "es": "Integrales múltiples",

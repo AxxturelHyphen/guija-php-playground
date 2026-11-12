@@ -177,5 +177,23 @@ foreach (Languages::IDS as $langId) {
     }
 }
 
+// Guías visuales: cada «practica» de contenido/guias.json debe apuntar a una lección con archivo en ese lenguaje
+$guiasJson = json_decode((string) @file_get_contents(PG_CONTENIDO . '/guias.json'), true)['guias'] ?? [];
+foreach ($guiasJson as $g) {
+    if (!isset($g['practica'])) {
+        continue;
+    }
+    $pl = (string) ($g['practica']['lang'] ?? '');
+    $pn = (string) ($g['practica']['leccion'] ?? '');
+    $found = null;
+    foreach ($lessons as $l) {
+        if ($l['id'] === $pn) {
+            $found = $l;
+        }
+    }
+    $report(in_array($pl, Languages::IDS, true), "guía {$g['id']}: practica.lang «{$pl}» no es un lenguaje conocido");
+    $report(is_array($found) && isset($found[$pl]['archivo']), "guía {$g['id']}: practica apunta a la lección «{$pn}», que no existe en el temario de {$pl} (o no tiene archivo)");
+}
+
 echo $fail ? "\n{$fail} FALLOS de paridad ({$okCount} comprobaciones bien)\n" : "PARIDAD OK ({$okCount} comprobaciones)\n";
 exit($fail ? 1 : 0);

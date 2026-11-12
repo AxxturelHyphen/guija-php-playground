@@ -244,6 +244,14 @@ path.vivo { fill: none; stroke: var(--g-activo); stroke-width: 2; stroke-dasharr
 .indice .desc { grid-column: 2; color: var(--muted); font-size: var(--t-1); }
 .indice .tag { font: 12px var(--ui); color: var(--muted); }
 
+/* Enlace «Practícalo en código» (opcional por guía): tarjeta sobria, solo borde y color de texto en hover/foco (sin cambio de tamaño) */
+.practica { flex: none; display: flex; flex-direction: column; gap: 2px; width: fit-content; max-width: 100%; padding: 10px 14px; background: var(--island); border: 1px solid var(--line2); border-radius: var(--g-r2); }
+.practica .p-titulo { font: 600 .9375rem/1.3 var(--ui); color: var(--text); }
+.practica .p-sub { font-size: .8125rem; line-height: 1.4; color: var(--muted); }
+.practica:hover { border-color: var(--g-activo); }
+.practica:hover .p-titulo { color: var(--g-activo); }
+.practica:focus-visible { border-color: var(--g-activo); }
+
 /* Fuentes y recursos (opcional por guía): plegado, discreto, sangría francesa */
 .fuentes { flex: none; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--line); font-size: .8125rem; line-height: 1.5; color: var(--faint); }
 .fuentes summary { cursor: pointer; width: fit-content; list-style-position: inside; }
