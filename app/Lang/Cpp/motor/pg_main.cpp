@@ -1043,6 +1043,10 @@ void* hiloPosix(void* p)
 #elif defined(_WIN32)
 DWORD WINAPI hiloWindows(LPVOID p)
 {
+    // Reserva pila para el filtro de excepciones: sin esto, tras un desbordamiento el propio filtro vuelve a desbordar
+    // (según lo que quede de la última página) y el proceso muere con 0xC0000005 sin poder explicar nada.
+    ULONG reserva = 64u << 10;
+    SetThreadStackGuarantee(&reserva);
     ejecutarUsuario(static_cast<Arranque*>(p));
     return 0;
 }
