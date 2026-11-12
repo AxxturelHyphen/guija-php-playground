@@ -1078,6 +1078,244 @@
       ]
     },
     {
+      "id": "voraces",
+      "tema": "Algoritmos voraces",
+      "cpp": {
+        "archivo": "13-voraces.cpp",
+        "titulo": "13 · Algoritmos voraces"
+      },
+      "ejercicios": [
+        {
+          "cpp": "cambioVoraz",
+          "tipo": "function",
+          "bigo": "1",
+          "medir": true
+        },
+        {
+          "cpp": "seleccionActividades",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "cpp": "repostajes",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "minimoAndenes",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "cpp": "mochilaFraccionaria",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "cpp": "costeHuffman",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "cpp": "planificarConPlazos",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "cpp": "primerContraejemplo",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        }
+      ]
+    },
+    {
+      "id": "backtracking",
+      "tema": "Backtracking a fondo",
+      "cpp": {
+        "archivo": "14-backtracking.cpp",
+        "titulo": "14 · Backtracking a fondo"
+      },
+      "ejercicios": [
+        {
+          "cpp": "generarParentesis",
+          "tipo": "function",
+          "bigo": "exp",
+          "medir": true
+        },
+        {
+          "cpp": "permutacionesUnicas",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "combinacionesQueSuman",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "particionesPalindromos",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "palabraEnTablero",
+          "tipo": "function",
+          "bigo": "n2",
+          "medir": true
+        },
+        {
+          "cpp": "colorearGrafo",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "particionKIguales",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "resolverSudoku",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        }
+      ]
+    },
+    {
+      "id": "hash-avl",
+      "tema": "Tablas hash y árboles equilibrados",
+      "cpp": {
+        "archivo": "15-hash-y-avl.cpp",
+        "titulo": "15 · Tablas hash y árboles AVL"
+      },
+      "ejercicios": [
+        {
+          "cpp": "cubeta",
+          "tipo": "function",
+          "bigo": "1",
+          "medir": true
+        },
+        {
+          "cpp": "minimoNodosAVL",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": false
+        },
+        {
+          "cpp": "TablaHashEncadenada",
+          "tipo": "type",
+          "bigo": "1",
+          "medir": true
+        },
+        {
+          "cpp": "TablaHashLineal",
+          "tipo": "type",
+          "bigo": "1",
+          "medir": true
+        },
+        {
+          "cpp": "rotarDerecha",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "rotarIzquierda",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "esAVL",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "ArbolAVL",
+          "tipo": "type",
+          "bigo": "log",
+          "medir": true
+        }
+      ]
+    },
+    {
+      "id": "amortizado",
+      "tema": "Análisis amortizado y recurrencias",
+      "cpp": {
+        "archivo": "16-amortizado-y-recurrencias.cpp",
+        "titulo": "16 · Análisis amortizado y recurrencias"
+      },
+      "ejercicios": [
+        {
+          "cpp": "casoMaestro",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "recurrenciaLineal",
+          "tipo": "function",
+          "bigo": "n2",
+          "medir": true
+        },
+        {
+          "cpp": "recurrenciaDividir",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "cpp": "recurrenciaHojas",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "ContadorBinario",
+          "tipo": "type",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "ArrayDinamico",
+          "tipo": "type",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "copiasCrecimientoFijo",
+          "tipo": "function",
+          "bigo": "n2",
+          "medir": true
+        },
+        {
+          "cpp": "PilaMultipop",
+          "tipo": "type",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "ColaAmortizada",
+          "tipo": "type",
+          "bigo": "n",
+          "medir": true
+        }
+      ]
+    },
+    {
       "id": "numpy",
       "tema": "NumPy y matplotlib",
       "python": {
