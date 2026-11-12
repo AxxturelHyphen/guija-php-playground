@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "descripcion": "Fuente común del temario. Cada lección tiene, por lenguaje, su archivo y título; 'ejercicios' lista los nombres en cada lenguaje (null = no existe en ese lenguaje), el @bigo esperado y si se mide con medir(). Las lecciones con solo un lenguaje (numpy, audio en Python; dp, rangos, bits-mates, strings en C++) son propias de ese temario. 'paridad' recoge las diferencias justificadas entre lenguajes; tests/paridad.php comprueba el resto.",
+  "descripcion": "Fuente común del temario. Cada lección tiene, por lenguaje, su archivo y título; 'ejercicios' lista los nombres en cada lenguaje (null = no existe en ese lenguaje), el @bigo esperado y si se mide con medir(). Las lecciones con solo un lenguaje (numpy, audio y mates en código en Python; dp, rangos, bits-mates, strings y discreta en C++) son propias de ese temario. 'paridad' recoge las diferencias justificadas entre lenguajes; tests/paridad.php comprueba el resto.",
   "lecciones": [
     {
       "id": "fundamentos",
@@ -1373,6 +1373,416 @@
         ]
       },
       "ejercicios": []
+    },
+    {
+      "id": "mates-derivadas",
+      "tema": "Mates en código: límites y derivadas",
+      "python": {
+        "archivo": "10-limites-y-derivadas.py",
+        "titulo": "10 · Límites y derivadas numéricas"
+      },
+      "ejercicios": [
+        {
+          "python": "limite_numerico",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "derivada_adelante",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "derivada_centrada",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "orden_del_error",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "Dual",
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "seno",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "exponencial",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "derivar",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        }
+      ]
+    },
+    {
+      "id": "mates-raices",
+      "tema": "Mates en código: raíces y optimización",
+      "python": {
+        "archivo": "11-raices-y-optimizacion.py",
+        "titulo": "11 · Raíces y optimización en 1D"
+      },
+      "ejercicios": [
+        {
+          "python": "biseccion",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "raiz_entera",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "newton",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "descenso_1d",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "python": "minimo_ternario",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        }
+      ]
+    },
+    {
+      "id": "mates-integracion",
+      "tema": "Mates en código: integrales",
+      "python": {
+        "archivo": "12-integracion-numerica.py",
+        "titulo": "12 · Integración numérica y Monte Carlo"
+      },
+      "ejercicios": [
+        {
+          "python": "riemann",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "trapecios",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "python": "simpson",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "python": "es_primitiva",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "pi_montecarlo",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "python": "esperanza",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        }
+      ]
+    },
+    {
+      "id": "mates-series",
+      "tema": "Mates en código: series y Taylor",
+      "python": {
+        "archivo": "13-series-y-taylor.py",
+        "titulo": "13 · Series y Taylor"
+      },
+      "ejercicios": [
+        {
+          "python": "armonico",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "python": "geometrica",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "suma_multiplos",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "python": "copias_al_crecer",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "python": "copias_en_pasos",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "exp_taylor",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "sin_taylor",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "terminos_para_error",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        }
+      ]
+    },
+    {
+      "id": "mates-gradiente",
+      "tema": "Mates en código: gradiente y backprop",
+      "python": {
+        "archivo": "14-gradiente-y-autodiff.py",
+        "titulo": "14 · Gradiente, descenso y autodiff"
+      },
+      "ejercicios": [
+        {
+          "python": "gradiente_numerico",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "descenso_gradiente",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "regresion_gd",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "Valor",
+          "tipo": "type",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "entrenar_neurona",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        }
+      ]
+    },
+    {
+      "id": "mates-algebra",
+      "tema": "Mates en código: álgebra lineal",
+      "python": {
+        "archivo": "15-algebra-lineal.py",
+        "titulo": "15 · Álgebra lineal numérica"
+      },
+      "ejercicios": [
+        {
+          "python": "coseno",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "proyeccion",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "resolver",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "minimos_cuadrados",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "autovalor_dominante",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "pca",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "aproximacion_rango",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        }
+      ]
+    },
+    {
+      "id": "mates-probabilidad",
+      "tema": "Mates en código: probabilidad y estadística",
+      "python": {
+        "archivo": "16-probabilidad.py",
+        "titulo": "16 · Probabilidad y estadística"
+      },
+      "ejercicios": [
+        {
+          "python": "prob_cumpleanos",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "bayes",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "media_varianza",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "mle_gaussiana",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "entropia_cruzada",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "kl",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "sigmoide",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "python": "regresion_logistica",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        }
+      ]
+    },
+    {
+      "id": "discreta",
+      "tema": "Matemática discreta para DSA",
+      "cpp": {
+        "archivo": "17-matematica-discreta.cpp",
+        "titulo": "17 · Matemática discreta"
+      },
+      "ejercicios": [
+        {
+          "cpp": "mcdExtendido",
+          "tipo": "function",
+          "bigo": "log",
+          "medir": true
+        },
+        {
+          "cpp": "diofantica",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "contarDivisores",
+          "tipo": "function",
+          "bigo": "nlogn",
+          "medir": true
+        },
+        {
+          "cpp": "phiHasta",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "binomialPascal",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "inclusionExclusion",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        },
+        {
+          "cpp": "cuponesEsperados",
+          "tipo": "function",
+          "bigo": "n",
+          "medir": true
+        },
+        {
+          "cpp": "probColision",
+          "tipo": "function",
+          "bigo": null,
+          "medir": false
+        }
+      ]
     }
   ],
   "paridad": [
