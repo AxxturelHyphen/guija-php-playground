@@ -594,7 +594,7 @@ $info2 = json_decode((string) @file_get_contents($infoFile), true);
 check('analizador muerto: la siguiente petición se atiende (se relanza otro, con otro pid)', count($rk['units']) === 1 && is_array($info2) && $info2['pid'] !== $info['pid'], json_encode($info2));
 
 // ═══════════════════════════════════════ 12. contenido ═══════════════════════════════════════
-if (is_dir($py->examplesDir())) {
+if (!$fast && is_dir($py->examplesDir())) {
     require_once __DIR__ . '/../content_check.php';
     section('Contenido: ejemplos y soluciones de Python');
     $skipped = [];

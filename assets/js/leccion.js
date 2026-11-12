@@ -8,7 +8,7 @@ import { ctx } from './ctx.js';
 import { LANG } from './lang.js';
 import * as P from './progreso.js';
 
-const REFRESCO_TEMARIO = 6 * 3_600_000;   // el temario casi no cambia: se reutiliza la caché unas horas
+const REFRESCO_TEMARIO = 6 * 3_600_000;   // el temario casi no cambia: se reutiliza la caché unas horas (el árbol la corrige si hay lecciones nuevas)
 
 /** Pide el temario de este lenguaje (una petición pequeña) salvo que la caché sea reciente. Nunca lanza. */
 export async function cargarTemario({ forzar = false } = {}) {
@@ -134,6 +134,8 @@ export async function abrirDesdeUrl() {
   if (!l) return;
   history.replaceState(null, '', location.pathname);
   await cargarTemario();
+  // Enlace profundo a una lección recién añadida: la caché puede no conocerla todavía, así que se refresca una vez.
+  if (!P.temarioDe(LANG.id).some(x => x.id === l)) await cargarTemario({ forzar: true });
   if (e) await abrirEjercicio(l, e);
   else {
     const lec = P.temarioDe(LANG.id).find(x => x.id === l);
@@ -230,7 +232,22 @@ export function marcarArbol() {
   }
 }
 
+// ── Caché del temario ↔ contenido real ──────────────────────
+// Si el árbol trae lecciones que la caché aún no conoce (contenido recién añadido), se refresca una sola vez.
+let faltantesTemario = new Set();
+function revisarTemario() {
+  const lecs = P.temarioDe(LANG.id);
+  if (!lecs.length) return;   // el arranque ya lo está pidiendo; al llegar, P.alCambiar avisa
+  const conocidos = new Set(lecs.map(l => l.archivo));
+  const faltan = (state.tree?.ejemplos ?? []).map(f => f.name).filter(n => !conocidos.has(n));
+  if (!faltan.length || faltan.every(n => faltantesTemario.has(n))) return;
+  faltantesTemario = new Set(faltan);
+  cargarTemario({ forzar: true });
+}
+
 export function initLeccion() {
+  on('tree', revisarTemario);
+  revisarTemario();
   on('active', actualizar);
   on('ran', registrar);
   on('run', () => { pintarSelector(); pintarVeredicto(); });
