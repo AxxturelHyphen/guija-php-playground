@@ -28,7 +28,7 @@
 // La lógica pura (geometría, plegar, helpers) no toca el DOM al importar, así se prueba en Node.
 import { idioma } from './idioma.js';
 import { etiqueta } from './mates.js';
-import { Muelle, tarea } from './movimiento.js';
+import { Muelle, tarea, REDUCIDO } from './movimiento.js';
 import { crearTip } from './tip.js';
 
 export const clave = 'barras';
@@ -251,7 +251,6 @@ const inyectarCSS = () => {
   if (document.getElementById('css-barras')) return;
   const s = document.createElement('style'); s.id = 'css-barras'; s.textContent = CSS; document.head.append(s);
 };
-const reducido = () => !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 // ── Escena (DOM) ─────────────────────────────────────────────────────────────────────────────────
 export const crear = stage => new Escena(stage);
@@ -261,7 +260,7 @@ export class Escena {
     inyectarCSS();
     this.stage = stage; this.def = null; this.g = null; this.ult = null; this.d = null; this.np = 0; this.ms = -1;
     this.nuevo = false; this.cols = []; this.auxs = []; this.mk = new Map(); this.nuevos = []; this.posDe = []; this.cb = null; this.ids = null;
-    this.red = reducido(); this.contClave = '';
+    this.contClave = '';
     const r = this.root = document.createElement('div'); r.className = 'br'; r.setAttribute('role', 'group'); stage.append(r);
     r.addEventListener('pointerdown', e => this.abajo(e));
     r.addEventListener('pointermove', e => this.mueve(e));
@@ -339,7 +338,7 @@ export class Escena {
     if (S.def !== this.def) this.fijar(S.def);
     this.cancelar(); this.fin(false); this.ult = S; this.np++;
     const g = this.g, def = this.def, max = def.max, n = g.n;
-    const ms = this.nuevo || this.red ? 0 : clamp(animar === true ? 520 : +animar || 0, 0, 3000);
+    const ms = this.nuevo || REDUCIDO ? 0 : clamp(animar === true ? 520 : +animar || 0, 0, 3000);
     this.nuevo = false;
     if (ms !== this.ms) { this.root.style.setProperty('--br-ms', ms + 'ms'); this.ms = ms; }
     for (const e of this.nuevos) e.classList.remove('nuevo');
@@ -434,7 +433,7 @@ export class Escena {
     };
     this.root.setPointerCapture(e.pointerId);
     col.classList.add('agarrada'); col.focus({ preventScroll: true });
-    this.root.style.setProperty('--br-ms', (this.red ? 0 : 160) + 'ms'); this.ms = -1;
+    this.root.style.setProperty('--br-ms', (REDUCIDO ? 0 : 160) + 'ms'); this.ms = -1;
     this.slot.classList.add('sa', 'on'); this.slot.style.transform = `translate(${x0}px,${g.topY}px)`;
     this.tip.pausa(true);
     this.mueve(e);
@@ -445,7 +444,7 @@ export class Escena {
     if (!d || e.pointerId !== d.pid) return;
     const x = clamp((e.clientX - d.r.left) / d.k - d.off, g.x0 - g.sw / 2, g.x0 + g.sw * (g.n - .5)), y = g.topY - 6;
     d.mx.ir(x); d.my.ir(y);
-    if (this.red) { d.mx.salto(x); d.my.salto(y); this.ponerArr(d); } else this.tareaArr(d);
+    if (REDUCIDO) { d.mx.salto(x); d.my.salto(y); this.ponerArr(d); } else this.tareaArr(d);
     const hasta = indiceDeX(g, x + g.sw / 2);
     if (hasta === d.hasta) return;
     d.hasta = hasta;
@@ -482,7 +481,7 @@ export class Escena {
 
   /** La barra soltada se asienta en su hueco con los mismos muelles (conservan la velocidad del arrastre). */
   asentar(d) {
-    if (this.red || !this.g || !d.col.isConnected) { d.cancela?.(); d.cancela = null; return; }
+    if (REDUCIDO || !this.g || !d.col.isConnected) { d.cancela?.(); d.cancela = null; return; }
     const g = this.g, p = this.posDe[d.id];
     d.mx.w = d.my.w = 15; d.mx.ir(g.x0 + p * g.sw); d.my.ir(g.topY);
     this.as = d; d.col.classList.add('asienta'); this.ponerArr(d); this.tareaArr(d);

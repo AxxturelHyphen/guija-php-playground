@@ -40,8 +40,66 @@ function pg_json(int $status, array $data): never
 }
 
 const PG_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; "
-    . "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
+    . "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; "
     . "img-src 'self' data:; worker-src 'self' blob: data:; connect-src 'self'; frame-ancestors 'none'";
+
+/** URL versionada de un asset (?v=mtime): index.php la sirve como immutable y cambia sola al editar el archivo. */
+function pg_asset(string $rel): string
+{
+    $f = PG_ROOT . '/assets/' . $rel;
+    return '/assets/' . $rel . '?v=' . (is_file($f) ? (string) filemtime($f) : '0');
+}
+
+/**
+ * Módulos ES alcanzables con `import … from './x.js'` estáticos desde $entry (ruta relativa a assets/, p. ej. 'js/main.js').
+ * Sirve para precargarlos en paralelo (modulepreload) y para versionar sus URLs con un import map: los imports relativos
+ * no heredan el ?v= del módulo que los carga, y sin versión el navegador tendría que revalidar cada uno en cada recarga.
+ *
+ * @return list<string> rutas relativas a assets/, la entrada incluida
+ */
+function pg_modulos(string $entry): array
+{
+    $vistos = [];
+    $pila = [$entry];
+    while ($pila) {
+        $rel = array_pop($pila);
+        if (isset($vistos[$rel]) || !is_file(PG_ROOT . '/assets/' . $rel)) {
+            continue;
+        }
+        $vistos[$rel] = true;
+        $js = (string) file_get_contents(PG_ROOT . '/assets/' . $rel);
+        if (!preg_match_all('#(?:^|[;\s])(?:import|export)\s+(?:[^\'";]*?\sfrom\s*)?[\'"](\.{1,2}/[^\'"]+\.js)[\'"]#m', $js, $m)) {
+            continue;
+        }
+        foreach ($m[1] as $spec) {
+            $partes = [];
+            foreach (explode('/', dirname($rel) . '/' . $spec) as $p) {
+                if ($p === '..') {
+                    array_pop($partes);
+                } elseif ($p !== '.' && $p !== '') {
+                    $partes[] = $p;
+                }
+            }
+            $pila[] = implode('/', $partes);
+        }
+    }
+    return array_keys($vistos);
+}
+
+/** <script type="importmap"> + <link rel="modulepreload"> de $entry y todo lo que importa (HTML ya escapado). */
+function pg_cabecera_modulos(string $entry): string
+{
+    $mods = pg_modulos($entry);
+    $mapa = [];
+    $links = '';
+    foreach ($mods as $rel) {
+        if ($rel !== $entry) {
+            $mapa['/assets/' . $rel] = pg_asset($rel);
+        }
+        $links .= '<link rel="modulepreload" href="' . htmlspecialchars(pg_asset($rel), ENT_QUOTES) . "\">\n";
+    }
+    return '<script type="importmap">' . json_encode(['imports' => $mapa], JSON_UNESCAPED_SLASHES) . "</script>\n" . $links;
+}
 
 // ── API ─────────────────────────────────────────────────────────────────
 if ($path === '/api') {
@@ -71,9 +129,24 @@ if (str_starts_with($path, '/assets/') && in_array($method, ['GET', 'HEAD'], tru
         ];
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
         if (isset($types[$ext])) {
-            // Librerías de terceros (KaTeX…) no cambian entre ejecuciones: caché de un día para no volver a bajar fuentes en cada guía
-            $cache = str_starts_with($file, $root . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR) ? 'public, max-age=86400' : 'no-cache';
-            pg_send(200, $types[$ext], (string) file_get_contents($file), ['Cache-Control' => $cache]);
+            // Con ?v=<mtime> actual la URL identifica este contenido exacto: se cachea un año y no se vuelve a pedir.
+            // Sin versión (imports de módulos que no la llevan, guías…) se revalida con ETag: 304 si no ha cambiado.
+            $mtime = (int) filemtime($file);
+            $etag = '"' . dechex($mtime) . '-' . dechex((int) filesize($file)) . '"';
+            $ver = (string) ($_GET['v'] ?? '');
+            if ($ver !== '' && ctype_digit($ver) && (int) $ver === $mtime) {
+                $cache = 'public, max-age=31536000, immutable';
+            } elseif (str_starts_with($file, $root . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR)) {
+                $cache = 'public, max-age=86400';   // librerías de terceros (KaTeX…): no cambian entre ejecuciones
+            } else {
+                $cache = 'no-cache';
+            }
+            $headers = ['Cache-Control' => $cache, 'ETag' => $etag];
+            $quiere = (string) ($_SERVER['HTTP_IF_NONE_MATCH'] ?? '');
+            if ($quiere !== '' && ($quiere === '*' || in_array($etag, array_map(static fn(string $t): string => ltrim(trim($t), 'W/'), explode(',', $quiere)), true))) {
+                pg_send(304, $types[$ext], '', $headers);
+            }
+            pg_send(200, $types[$ext], (string) file_get_contents($file), $headers);
         }
     }
     pg_send(404, 'text/plain; charset=utf-8', 'No encontrado');

@@ -32,7 +32,7 @@
 // (tests/guias/test-grafica.js).
 import { idioma } from './idioma.js';
 import { etiqueta } from './mates.js';
-import { tarea, ease, easeOut } from './movimiento.js';
+import { tarea, ease, easeOut, REDUCIDO } from './movimiento.js';
 
 export const clave = 'grafica';
 
@@ -320,7 +320,6 @@ export class Grafica {
     this.def = null; this.cur = null; this.obj = null; this.tw = null; this.paro = null; this.cb = null;
     this.W = W; this.H = 400; this.cache = new Map(); this.sKey = this.tKey = '';
     this.rc = null; this.pend = false; this.cx = null;
-    this.reducido = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   }
 
   get tam() { return { W: this.W, H: this.H }; }
@@ -399,7 +398,7 @@ export class Grafica {
     this.hit.addEventListener('pointerup', fin); this.hit.addEventListener('pointercancel', fin);
     this.hit.addEventListener('pointerleave', e => { // vista previa de ratón: al salir vuelve al n del estado
       this.cx = null;
-      if (!this.arr && e.pointerType === 'mouse' && !this.cb && this.obj) this.tween({ ...copia(this.obj) }, this.reducido() ? 0 : 200);
+      if (!this.arr && e.pointerType === 'mouse' && !this.cb && this.obj) this.tween({ ...copia(this.obj) }, REDUCIDO ? 0 : 200);
     });
     // Teclado: sin deslizador nativo, el propio lienzo es el deslizador (role=slider, flechas, Inicio/Fin, Re/Av Pág)
     if (!def.deslizador) {
@@ -443,7 +442,7 @@ export class Grafica {
 
   /** S = estado de plegar + `hl` (ignorado); animar = false | true | ms. */
   pintar(S, animar = true) {
-    const dur = animar === true ? 520 : +animar || 0, anim = dur > 0 && !this.reducido();
+    const dur = animar === true ? 520 : +animar || 0, anim = dur > 0 && !REDUCIDO;
     const D = this.def, idi = lang(), dom = dominioY(D.curvas, S.nmax, S.ymax);
     const to = { n: S.n, nmax: S.nmax, k: S.escala === 'log' ? 1 : 0, yl: dom.lin[1], lg: Math.log10(dom.log[1]), op: {}, tr: {} };
     if (!this.cur) this.cur = { ...copia(to), op: Object.fromEntries(D.curvas.map(c => [c.id, 0])), tr: Object.fromEntries(D.curvas.map(c => [c.id, 0])) };

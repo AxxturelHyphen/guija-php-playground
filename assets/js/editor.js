@@ -39,6 +39,7 @@ function monacoEditor(monaco, actions) {
   };
 
   registerIde(monaco, { onCommand: actions.command });
+  const reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;   // sin cursor ni scroll animados si el sistema lo pide
   const host = $('#editor');
   host.replaceChildren();
   const s = state.settings;
@@ -47,7 +48,7 @@ function monacoEditor(monaco, actions) {
     fontFamily: '"JetBrains Mono", Consolas, monospace', fontSize: s.fontSize, lineHeight: Math.round(s.fontSize * 1.57), fontLigatures: false,
     tabSize: 4, insertSpaces: true, automaticLayout: true, wordWrap: s.wordWrap ? 'on' : 'off',
     minimap: { enabled: s.minimap }, scrollBeyondLastLine: false, padding: { top: 12, bottom: 12 },
-    smoothScrolling: true, cursorBlinking: 'smooth', cursorSmoothCaretAnimation: 'on',
+    smoothScrolling: !reducido, cursorBlinking: reducido ? 'solid' : 'smooth', cursorSmoothCaretAnimation: reducido ? 'off' : 'on',
     bracketPairColorization: { enabled: false }, guides: { indentation: true, bracketPairs: false, highlightActiveBracketPair: false },
     renderLineHighlight: 'line', lineNumbersMinChars: 3, glyphMargin: true,
     showFoldingControls: 'mouseover', stickyScroll: { enabled: false },
@@ -176,6 +177,8 @@ function monacoEditor(monaco, actions) {
     },
   };
 
+  // JetBrains Mono es autoalojada: si llega después de crear el editor, hay que remedir los anchos de carácter
+  document.fonts?.load('14px "JetBrains Mono"').then(() => monaco.editor.remeasureFonts?.()).catch(() => {});
   ed.onDidChangeCursorPosition(e => emit('cursor', { line: e.position.lineNumber, col: e.position.column }));
   return api;
 }

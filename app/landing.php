@@ -4,10 +4,7 @@ declare(strict_types=1);
 defined('PG_ROOT') or exit;
 
 // Pantalla de inicio: eliges con qué lenguaje practicar. Las tarjetas se rellenan con lo que hay instalado (api ?action=langs).
-$v = static function (string $rel): string {
-    $f = PG_ROOT . '/assets/' . $rel;
-    return '/assets/' . $rel . '?v=' . (is_file($f) ? (string) filemtime($f) : '0');
-};
+$v = static fn(string $rel): string => pg_asset($rel);
 $cards = [
     ['php', 'PHP', 'PHP', '#8892BF', '#4F5B93', 'El lenguaje, POO a fondo y algoritmos, explicado para quien viene de Java.'],
     ['python', 'Python', 'PY', '#4B8BBE', '#306998', 'Estructuras de datos y algoritmos, y la base para IA/ML: numpy, matplotlib y audio con librosa.'],
@@ -22,15 +19,16 @@ $cards = [
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guija Playground · elige lenguaje</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%234F5B93'/%3E%3Ctext x='16' y='21' font-family='monospace' font-size='13' font-weight='700' text-anchor='middle' fill='white'%3EG%3C/text%3E%3C/svg%3E">
-<link rel="preload" href="/assets/fonts/atkinson-hyperlegible-next-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="<?= $v('fonts/atkinson-hyperlegible-next-latin-400-normal.woff2') ?>" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="<?= $v('css/app.css') ?>">
+<?= pg_cabecera_modulos('js/landing.js') ?>
 <style>
 /* Landing: tipografía autoalojada (el IDE no se toca). Licencias OFL en assets/fonts/LICENSES.txt */
-@font-face { font-family: "Atkinson Hyperlegible Next"; font-style: normal; font-weight: 400; font-display: swap; src: url(/assets/fonts/atkinson-hyperlegible-next-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: "Atkinson Hyperlegible Next"; font-style: normal; font-weight: 600; font-display: swap; src: url(/assets/fonts/atkinson-hyperlegible-next-latin-600-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: "Source Serif 4"; font-style: normal; font-weight: 600; font-display: swap; src: url(/assets/fonts/source-serif-4-latin-600-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url(/assets/fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 600; font-display: swap; src: url(/assets/fonts/jetbrains-mono-latin-600-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Atkinson Hyperlegible Next"; font-style: normal; font-weight: 400; font-display: swap; src: url(<?= $v('fonts/atkinson-hyperlegible-next-latin-400-normal.woff2') ?>) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Atkinson Hyperlegible Next"; font-style: normal; font-weight: 600; font-display: swap; src: url(<?= $v('fonts/atkinson-hyperlegible-next-latin-600-normal.woff2') ?>) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Source Serif 4"; font-style: normal; font-weight: 600; font-display: swap; src: url(<?= $v('fonts/source-serif-4-latin-600-normal.woff2') ?>) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url(<?= $v('fonts/jetbrains-mono-latin-400-normal.woff2') ?>) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 600; font-display: swap; src: url(<?= $v('fonts/jetbrains-mono-latin-600-normal.woff2') ?>) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 body.landing { --ui: "Atkinson Hyperlegible Next", system-ui, "Segoe UI", sans-serif; --display: "Source Serif 4", Georgia, serif; }
 body.landing .landing-head h1, body.landing .lang-name { font-family: var(--display); font-weight: 600; }
 </style>
@@ -40,6 +38,8 @@ body.landing .landing-head h1, body.landing .lang-name { font-family: var(--disp
   <header class="landing-head">
     <h1>Guija Playground</h1>
     <p class="muted">Mini-IDE local para aprender programación: ejecuta, mide la complejidad real de tu código y compáralo con la solución óptima.</p>
+    <p id="hoy" class="landing-hoy muted" aria-live="polite"></p>
+    <div id="siguiente" class="sig sig-lg"></div>
     <p class="landing-q">¿Con qué lenguaje quieres practicar?</p>
   </header>
   <div class="lang-cards" id="lang-cards">
@@ -50,7 +50,8 @@ body.landing .landing-head h1, body.landing .lang-name { font-family: var(--disp
               $logoFile = $logo === 'PY' ? 'PYTHON_LOGO.webp' :
                            ($logo === 'C++' ? 'cpp_LOGO.webp' : $logo . '_LOGO.webp');
           ?>
-          <img src="<?= $v($logoFile) ?>" class="logo lang-logo">
+          <?php [$lw, $lh] = @getimagesize(PG_ROOT . '/assets/' . $logoFile) ?: [96, 96]; ?>
+          <img src="<?= $v($logoFile) ?>" class="logo lang-logo" width="<?= $lw ?>" height="<?= $lh ?>" alt="" decoding="async">
       <span class="lang-name"><?= $name ?></span>
       <span class="lang-desc"><?= htmlspecialchars($desc, ENT_QUOTES, 'UTF-8') ?></span>
       <span class="lang-status" data-status>Comprobando qué hay instalado…</span>
@@ -59,6 +60,11 @@ body.landing .landing-head h1, body.landing .lang-name { font-family: var(--disp
     </a>
 <?php endforeach; ?>
   </div>
+  <section id="repaso" class="repaso" aria-labelledby="repaso-t" hidden>
+    <h2 id="repaso-t" tabindex="-1">Repaso de hoy</h2>
+    <p class="muted repaso-ayuda">Lo que hiciste hace unos días, para que no se te olvide. Son pocos y cortos.</p>
+    <ul id="repaso-lista" class="repaso-lista"></ul>
+  </section>
   <p class="muted landing-foot">Pulsa <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd> o <kbd>4</kbd> para elegir. Desde el editor vuelves aquí haciendo clic en el logo.
     Todo se ejecuta en tu PC: el servidor solo escucha en 127.0.0.1.</p>
 </main>

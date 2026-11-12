@@ -1,7 +1,7 @@
 // Escena «celdas» (memoria): celdas con dirección/valor y flechas de puntero que se mueven suavemente entre estados,
 // con zonas (pila/heap dibujados detrás), grupos (marcos de función, objetos) y arrastre de punteros.
 // Las celdas ocupan huecos fijos (posición = orden en `celdas` dentro de su columna), así que el layout no salta.
-// Las flechas se calculan con aritmética (sin medir el DOM) y se interpolan en un único requestAnimationFrame.
+// Las flechas se calculan con aritmética (sin medir el DOM) y se interpolan en el planificador único de movimiento.js (tarea).
 // Implementa el contrato de escena descrito en guia.js: clave, plegar, crear (+ vista/conVista/ctx para `jugar`).
 //
 // Interacción (sin cambiar el formato de datos): tooltip al pasar el puntero o enfocar una celda (nombre, tipo, dirección,
@@ -12,15 +12,13 @@
 // Los textos de zonas, grupos, columnas, nombres y tipos admiten `$…$` (KaTeX vía mates.etiqueta, solo si cambian).
 import { idioma } from './idioma.js';
 import { etiqueta } from './mates.js';
-import { Muelle, tarea } from './movimiento.js';
+import { Muelle, tarea, ease, REDUCIDO } from './movimiento.js';
 import { crearTip } from './tip.js';
 
 export const clave = 'celdas';
 export const COLW = 230, CELLH = 50, ROWH = 58, GUT = 96, GAP = 130, HEAD = 26, PAD = 6, PX = 18, HG = 22, GP = 8, GG = 12;
 const NS = 'http://www.w3.org/2000/svg';
 const NUM = ['sx', 'sy', 'ex', 'ey', 'o1', 'o2', 'head', 'bar', 'op'];
-const ease = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-const REDUCIDO = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const L = x => (x && typeof x === 'object' ? x[idioma()] : x) ?? '';
 const TXT = {
   es: { tipo: 'Tipo', dir: 'Dirección', val: 'Valor', apunta: 'Apunta a', apuntada: 'Apuntada por', estado: 'Estado', grupo: 'En', nulo: 'nada (nulo)', fan: 'liberada o fuera de ámbito', nada: '—', agarra: 'puntero: Intro para elegir a qué celda apunta', elige: 'Elige destino', sin: 'sin destino', fin: 'apunta ahora a' },
@@ -73,7 +71,7 @@ export class Escena {
     this.def = null; this.por = new Map(); this.els = new Map(); this.extras = []; this.gr = new Map(); this.vis = new Set();
     this.arr = new Map(); this.cur = new Map(); this.txt = new Map(); this.W = this.H = 0;
     this.svg = svg('svg', 'flechas'); stage.append(this.svg);
-    this.raf = 0; this.tween = null; this.drag = null; this.vivo = null; this.kb = null; this.ptr = new Map(); this.hov = null; this.ult = null;
+    this.raf = null; this.tween = null; this.drag = null; this.vivo = null; this.kb = null; this.ptr = new Map(); this.hov = null; this.ult = null;
     inyectarCss();
     this.sr = Object.assign(document.createElement('div'), { className: 'pg-sr' }); this.sr.setAttribute('role', 'status'); this.sr.setAttribute('aria-live', 'polite'); stage.append(this.sr);
     this.tip = crearTip(stage, { objetivo: n => this.tipClave(n), datos: id => this.tipDatos(id), sobre: id => { this.hov = id; this.aplicarHover(); } });
@@ -89,7 +87,7 @@ export class Escena {
 
   fijar(def) {
     if (def === this.def) return;
-    cancelAnimationFrame(this.raf); this.vivoFuera(); this.tip.ocultar(); this.ptr = new Map(); this.ult = null;
+    this.raf?.(); this.raf = null; this.vivoFuera(); this.tip.ocultar(); this.ptr = new Map(); this.ult = null;
     for (const el of [...this.els.values(), ...this.extras]) { el.classList.remove('arrastrable'); el.removeAttribute('tabindex'); el.classList.add('sale'); setTimeout(() => el.remove(), 260); }
     for (const r of this.arr.values()) r.g.remove();
     this.def = def; this.els = new Map(); this.extras = []; this.gr = new Map(); this.vis = new Set();
@@ -192,9 +190,9 @@ export class Escena {
       to.set(id, t);
       this.garr(id).g.setAttribute('class', t.cls);
     }
-    cancelAnimationFrame(this.raf);
+    this.raf?.(); this.raf = null; // cancela la transición en curso (si la hay) y arranca la nueva en el planificador común
     this.tween = { t0: performance.now(), dur: anim ? dur : 0, from, to };
-    this.frame(this.tween.t0);
+    if (this.frame(this.tween.t0)) this.raf = tarea(this.frame);
     this.ptr = ptrs; this.aplicarHover(); this.tip.refrescar();
   }
 
@@ -263,13 +261,13 @@ export class Escena {
   }
 
   frame = now => {
-    const T = this.tween, k = T.dur ? Math.min(1, (now - T.t0) / T.dur) : 1, e = ease(k);
+    const T = this.tween, k = T.dur ? Math.min(1, Math.max(0, (now - T.t0) / T.dur)) : 1, e = ease(k);
     for (const [id, b] of T.to) {
       const a = T.from.get(id), c = { h: b.h };
       for (const n of NUM) c[n] = a[n] + (b[n] - a[n]) * e;
       this.cur.set(id, c); this.dibujar(id, c);
     }
-    if (k < 1) this.raf = requestAnimationFrame(this.frame);
+    return k < 1; // true mientras la transición siga viva (contrato de tarea)
   };
 
   dibujar(id, a) {

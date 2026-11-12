@@ -38,6 +38,7 @@
 //   ctx(S) = {filas, cols, cabF, cabC, inicial (matriz), def}.
 // La lógica pura (geometría, flechas, plegar, helpers) no toca el DOM al importar, así se prueba en Node.
 import { idioma } from './idioma.js';
+import { REDUCIDO } from './movimiento.js';
 
 export const clave = 'tabla';
 export const MAXN = 14;
@@ -276,7 +277,6 @@ const inyectarCSS = () => {
   const s = document.createElement('style'); s.id = 'css-tabla'; s.textContent = CSS; document.head.append(s);
 };
 const TT = { es: { lee: 'Lee de', sale: 'Alimenta a', vacia: 'sin calcular' }, en: { lee: 'Reads from', sale: 'Feeds', vacia: 'not computed yet' } };
-const reducido = () => !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
 /** Texto de la fórmula → HTML seguro; `código` entre acentos graves. */
 export const htmlFormula = s => String(s).replace(/[&<>"]/g, c => ESC[c]).replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -291,7 +291,7 @@ export class Escena {
   constructor(stage) {
     inyectarCSS();
     this.stage = stage; this.def = null; this.g = null; this.ult = null; this.ms = -1; this.nuevo = false;
-    this.red = reducido(); this.ids = null; this.cb = null; this.foco = null; this.dn = null; this.lang = ''; this.fclave = '';
+    this.ids = null; this.cb = null; this.foco = null; this.dn = null; this.lang = ''; this.fclave = '';
     this.celdas = []; this.mk = new Map(); this.nuevos = []; this.deps = new Map();
     const r = this.root = el('div', 'tb'); r.setAttribute('role', 'group'); stage.append(r);
     r.addEventListener('pointerdown', e => this.abajo(e));
@@ -344,7 +344,7 @@ export class Escena {
     if (S.def !== this.def) this.fijar(S.def);
     this.ult = S;
     const g = this.g, def = this.def, lang = idioma();
-    const ms = this.nuevo || this.red ? 0 : clamp(animar === true ? 520 : +animar || 0, 0, 3000);
+    const ms = this.nuevo || REDUCIDO ? 0 : clamp(animar === true ? 520 : +animar || 0, 0, 3000);
     this.nuevo = false;
     if (ms !== this.ms) { this.root.style.setProperty('--tb-ms', ms + 'ms'); this.ms = ms; }
     for (const e of this.nuevos) e.classList.remove('nuevo');

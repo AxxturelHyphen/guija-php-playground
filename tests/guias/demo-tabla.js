@@ -2,7 +2,7 @@
 // ternas y mapa), est (todos los estados), deps animadas, marcas sobre cabeceras, formula, resaltar, trazas generadas
 // (LCS con traceback, mochila 0/1), matriz de adyacencia y `jugar` con clic en celda.
 // Las trazas se calculan aquí ejecutando el algoritmo y emitiendo frames; se exportan para probarlas en Node.
-import { poner, estado, leer, llave } from '../tabla.js';
+import { poner, estado, leer, llave } from '../../assets/guias/tabla.js';
 
 /** Parche `est` mínimo para pasar de `prev` a `next` (mapas {"r,c": estado}); los que desaparecen van a null. */
 export const difEst = (prev, next) => {

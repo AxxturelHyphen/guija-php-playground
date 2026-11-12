@@ -4,7 +4,7 @@
 // Mantiene su propio estado mínimo (dimensiones y marcas acumuladas) sin importar el módulo ES (la fábrica es síncrona).
 const PARCHES = ['val', 'est', 'deps', 'marcas', 'resaltar', 'formula'];
 const DEF = ['filas', 'cols', 'cab', 'val', 'formula'];
-const PASO = ['es', 'en', 'sec', 'code', 'line', 'hl', 'traza', 'jugar', 'pregunta', 'tabla', ...PARCHES];
+const PASO = ['es', 'en', 'sec', 'code', 'line', 'hl', 'traza', 'jugar', 'pregunta', 'deriva', 'tabla', ...PARCHES];
 const FRAME = ['es', 'en', 'line', ...PARCHES];
 const ESTADOS = ['activa', 'lee', 'hecha', 'camino', 'mal', 'elegida'];
 const MAXN = 14, MAXTXT = 8, MKROWS = 3;

@@ -287,6 +287,19 @@ if ($up) {
     $r = http($port, 'GET', '/api?action=langs');
     $langs = json_decode($r['body'], true)['langs'] ?? [];
     check('GET /api?action=langs → los 4 lenguajes con su estado', $r['status'] === 200 && array_column($langs, 'id') === ['php', 'python', 'java', 'cpp']);
+    // Acción de solo lectura «temario» (progreso del alumno): mismas comprobaciones que el resto de GET y sin código de soluciones
+    $r = http($port, 'GET', '/api?lang=cpp&action=temario');
+    $tem = json_decode($r['body'], true)['lessons'] ?? [];
+    check('GET /api?action=temario → lecciones con ejercicios (clave, nombre, bigo, medir)', $r['status'] === 200 && count($tem) > 0 && isset($tem[0]['ejercicios'][0]['key'], $tem[0]['ejercicios'][0]['medir']));
+    check('temario no expone código de soluciones', !str_contains($r['body'], 'return ') && !str_contains($r['body'], 'soluciones'));
+    $r = http($port, 'GET', '/api?lang=cpp&action=temario', ['Host' => 'evil.example']);
+    check('temario con Host ajeno → 403', $r['status'] === 403);
+    $r = http($port, 'GET', '/api?lang=cpp&action=temario', ['Origin' => 'http://evil.example']);
+    check('temario con Origin ajeno → 403', $r['status'] === 403);
+    $r = http($port, 'GET', '/api?lang=ruby&action=temario');
+    check('temario con lenguaje desconocido → 404', $r['status'] === 404);
+    $r = $post('temario', []);
+    check('temario por POST → 405', $r['status'] === 405);
     foreach (['ruby', '..%2F..%2Fapp', '', 'PHP'] as $badLang) {
         $r = http($port, 'GET', "/api?lang={$badLang}&action=tree");
         check("lang «{$badLang}» desconocido → 404", $badLang === '' ? $r['status'] === 404 || $r['status'] === 200 : $r['status'] === 404, "status {$r['status']}");

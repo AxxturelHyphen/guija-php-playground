@@ -10,9 +10,15 @@
 //
 // REGLAS (prioridad nº 1 = fluidez): en el DOM solo transform/opacity; en SVG solo atributos de geometría; nada de leer
 // layout (getBoundingClientRect…) dentro de una tarea; respetar REDUCIDO (sin movimiento → salto directo al valor final).
+// REDUCIDO es UN valor vivo (binding ES exportado) que sigue al media query: todas las escenas y guia.js lo importan de aquí.
 // Lo puro (ease, Muelle) no toca el DOM al importar: se prueba en Node (tests/guias/test-movimiento.js).
 
-export const REDUCIDO = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+export let REDUCIDO = false;
+if (typeof matchMedia === 'function') {
+  const mq = matchMedia('(prefers-reduced-motion: reduce)');
+  REDUCIDO = mq.matches;
+  mq.addEventListener?.('change', e => { REDUCIDO = e.matches; });
+}
 export const ease = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 export const easeOut = t => 1 - (1 - t) ** 3;
 

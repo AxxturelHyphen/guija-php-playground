@@ -202,7 +202,7 @@ const cruzan = (p, q, r, s) => {
 
   seccion('guía demo: se pliega entera');
   {
-    const G = (await import(pathToFileURL(path.join(RAIZ, 'data', 'demo-arbol.js')).href)).default;
+    const G = (await import(pathToFileURL(path.join(__dirname, 'demo-arbol.js')).href)).default;
     let frames = 0, jugadas = 0;
     // Estado por paso exactamente como lo hace guia.js (plegar 0..k, sin los frames)
     let est = null;

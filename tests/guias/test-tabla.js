@@ -64,7 +64,7 @@ function montarDom() {
 
 (async () => {
   const T = await imp('assets/guias/tabla.js'); // sin DOM: debe poder importarse
-  const D = await imp('assets/guias/data/demo-tabla.js');
+  const D = await imp('tests/guias/demo-tabla.js');
   const { plegar, defDe, geom, flecha, colocarMarcas, vista, conVista, ctx, poner, leer, estado, llave, aplicarVal, esMatriz, tamCelda, centro } = T;
   const abre = (extra = {}, def = { filas: 3, cols: 4 }) => plegar(undefined, { tabla: def, ...extra });
 

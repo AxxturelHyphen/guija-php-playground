@@ -5,8 +5,10 @@ import { LANG } from './lang.js';
 
 const MONACO = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min';
 
+let monacoPromise = null;
+/** Carga Monaco una sola vez: main.js la lanza al arrancar, en paralelo con la petición de meta, y createEditor reutiliza la promesa. */
 export function loadMonaco() {
-  return new Promise((resolve, reject) => {
+  return monacoPromise ??= new Promise((resolve, reject) => {
     const s = document.createElement('script');
     s.src = MONACO + '/vs/loader.min.js';
     s.onerror = () => reject(new Error('Sin conexión con el CDN'));
@@ -87,6 +89,15 @@ function symbolHover(s) {
   return mdLines(...parts);
 }
 
+/** Variables del texto (LANG.varRe), sin repetir. Se recalcula solo si el modelo cambió (versión): getValue + regex en cada tecla era trabajo tirado. */
+let scan = { uri: '', ver: -1, names: [] };
+function varNames(model) {
+  if (!LANG.varRe) return [];
+  const uri = model.uri.toString(), ver = model.getVersionId();
+  if (scan.uri !== uri || scan.ver !== ver) scan = { uri, ver, names: [...new Set([...model.getValue().matchAll(LANG.varRe)].map(m => m[0]))] };
+  return scan.names;
+}
+
 export function registerIde(monaco, { onCommand }) {
   registerTheme(monaco);
   LANG.register?.(monaco);
@@ -108,11 +119,9 @@ export function registerIde(monaco, { onCommand }) {
       if (LANG.noCompletionAfter.includes(before)) return { suggestions: [] };
 
       const seen = new Set();
-      const text = model.getValue();
-      for (const m of LANG.varRe ? text.matchAll(LANG.varRe) : []) {
-        if (seen.has(m[0])) continue;
-        seen.add(m[0]);
-        out.push({ label: m[0], kind: K.Variable, insertText: m[0], range, sortText: '0' + m[0], detail: 'variable' });
+      for (const name of varNames(model)) {
+        seen.add(name);
+        out.push({ label: name, kind: K.Variable, insertText: name, range, sortText: '0' + name, detail: 'variable' });
       }
       // Lo que ha declarado el usuario y se ve aquí (el más interno primero); tras . o -> también campos y métodos
       const SK = { var: K.Variable, param: K.Variable, field: K.Field, function: K.Function, method: K.Method, type: K.Struct, alias: K.TypeParameter,

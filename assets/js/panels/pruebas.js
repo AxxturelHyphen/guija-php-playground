@@ -1,8 +1,10 @@
 // Panel Pruebas: resultado de prueba() / comprueba() / lanza() del archivo, con entrada, esperado y obtenido.
+// Con un ejercicio en foco (selector del editor) solo se ven sus pruebas, precedidas de un veredicto de una línea.
 import { $, el, fmtMs } from '../util.js';
 import { state, on } from '../state.js';
 import { registerPanel, setCount } from '../panels.js';
 import { LANG } from '../lang.js';
+import { ejercicioDeTest, resumir, veredicto, fijarFoco, siguienteEjercicio } from '../leccion.js';
 
 const ICON = { pass: '✓', fail: '✗', error: '!', todo: '⏳' };
 const LABEL = { pass: 'correcta', fail: 'falla', error: 'error', todo: 'pendiente' };
@@ -11,12 +13,24 @@ function render() {
   const host = $('#panel-pruebas');
   const r = state.run;
   host.replaceChildren();
-  const tests = r?.tests ?? [];
-  const s = r?.testSummary ?? { pass: 0, fail: 0, error: 0, todo: 0, total: 0 };
+  const todas = r?.tests ?? [];
+  const lec = state.leccion;
+  const e = lec && state.foco ? lec.ej.find(x => x.k === state.foco) : null;
+  const tests = e ? todas.filter(t => ejercicioDeTest(t, lec.ej) === e.k) : todas;
+  const s = e ? resumir(tests) : r?.testSummary ?? { pass: 0, fail: 0, error: 0, todo: 0, total: 0 };
   const bad = s.fail + s.error;
   setCount('pruebas', s.total ? (bad ? `${s.pass}/${s.total}` : s.todo && !s.pass ? `⏳ ${s.todo}` : `${s.pass}/${s.total}`) : '', bad ? 'err' : s.pass === s.total && s.total ? 'ok' : 'warn');
 
-  if (!tests.length) {
+  if (e) {
+    // Modo enfoque: el veredicto va primero (una línea) y, al lado, la salida a «todas las pruebas»
+    const v = r && !r.syntaxOnly ? veredicto(e, tests) : null;
+    const sig = v?.tipo === 'ok' ? siguienteEjercicio() : null;
+    host.append(el('div', { class: 'enfoque' + (v ? ' ' + v.tipo : '') },
+      el('span', { class: 'enfoque-t', role: 'status' }, v ? v.texto : `Ejecuta (Ctrl+Enter) para ver las pruebas de ${e.n}.`),
+      sig ? el('button', { class: 'btn btn-sm btn-fix', type: 'button', onclick: () => fijarFoco(sig.k) }, `Siguiente: ${sig.n}`) : null,
+      el('button', { class: 'btn btn-sm', type: 'button', onclick: () => fijarFoco(null, { revelar: false }) }, 'Ver todas')));
+    if (!tests.length) return;
+  } else if (!tests.length) {
     host.append(el('div', { class: 'placeholder' }, r
       ? LANG.testsHint
       : 'Ejecuta el archivo para ver las pruebas.'));
@@ -66,4 +80,6 @@ function row(t) {
 registerPanel('pruebas', { onShow: render });
 on('run', render);
 on('active', () => { if (!state.run) render(); });
+on('foco', render);
+on('leccion', render);
 render();

@@ -66,6 +66,7 @@ final class Api
             return match ($action) {
                 'meta' => [200, $this->meta($lang)],
                 'catalog' => [200, $lang->catalog()],
+                'temario' => [200, ['lang' => $lang->id(), 'lessons' => Temario::lessonsWithExercises($lang->id())]],
                 'tree' => [200, $files->tree()],
                 'file' => $files->read((string) ($q['dir'] ?? ''), (string) ($q['name'] ?? '')),
                 'save' => $files->save($body),

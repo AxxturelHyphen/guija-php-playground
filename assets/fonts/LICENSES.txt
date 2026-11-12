@@ -292,3 +292,9 @@ DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
 
+
+==================================================================
+Inter (interfaz del IDE)  ·  fuente: https://github.com/rsms/inter  ·  OFL 1.1, texto completo en inter-LICENSE.txt
+==================================================================
+inter-latin-wght-normal.woff2 es InterVariable.woff2 de la versión 4.1 (release oficial de rsms/inter) con el eje opsz fijado en 14 y
+recortado al subconjunto latin con fonttools (pyftsubset). Mantiene el eje de peso (100-900). Copyright (c) 2016 The Inter Project Authors.

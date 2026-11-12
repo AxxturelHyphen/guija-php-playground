@@ -27,7 +27,7 @@
 import { idioma } from './idioma.js';
 import { ticks125, formatear } from './grafica.js';
 import { etiqueta } from './mates.js';
-import { tarea, Muelle, ease } from './movimiento.js';
+import { tarea, Muelle, ease, REDUCIDO } from './movimiento.js';
 
 export const clave = 'campo';
 
@@ -273,7 +273,6 @@ export class Campo {
     this.stage = stage; stage.classList.add('cp');
     this.def = null; this.cur = this.to = this.tw = null; this.cb = null; this.W = W; this.H = SH;
     this.cancelar = null; this.sucio = false; this.mu = {}; this.gl = this.glcv = this.glMod = this.ejes = this.ro = this.ac = null; this.glEstado = 'no';
-    this.reducido = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   }
 
   get tam() { return { W: this.W, H: this.H }; }
@@ -364,7 +363,7 @@ export class Campo {
     if ((ex ? ex.a : this.cur.par[par]) === v) return;
     if (this.to) this.to.par[par] = v;
     if (this.tw) this.tw.from.par[par] = this.tw.to.par[par] = v;
-    if (suave && !this.reducido()) (this.mu[par] ??= new Muelle(this.cur.par[par], MUELLE[par] ?? 26)).ir(v);
+    if (suave && !REDUCIDO) (this.mu[par] ??= new Muelle(this.cur.par[par], MUELLE[par] ?? 26)).ir(v);
     else { this.cur.par[par] = v; ex?.salto(v); }
     this.cb?.(par, v); this.pedir();
   }
@@ -388,7 +387,7 @@ export class Campo {
     if (this.dx || this.dy) { const dr = this.dx * .01, de = -this.dy * .008; this.dx = this.dy = 0; this.orbitar(dr, de, dt); }
     if (this.suelta) { // inercia: el objetivo se adelanta lo que el gesto llevaba; el Muelle lo recorre suavemente
       this.suelta = false;
-      if (!this.reducido() && performance.now() - (this.tOrb ?? 0) < 90) {
+      if (!REDUCIDO && performance.now() - (this.tOrb ?? 0) < 90) {
         const T = .24, c = v => lim(v, -9, 9);
         this.entrada('rot', this.objetivo('rot') + c(this.vrot) * T, true); this.entrada('elev', limitarElev(this.objetivo('elev') + c(this.velev) * T), true);
       }
@@ -421,7 +420,7 @@ export class Campo {
   }
 
   pintar(S, animar = true) {
-    const dur = animar === true ? 460 : +animar || 0, anim = dur > 0 && !this.reducido(), D = this.def, idi = lang();
+    const dur = animar === true ? 460 : +animar || 0, anim = dur > 0 && !REDUCIDO, D = this.def, idi = lang();
     this.modo = S.modo; this.win = [...D.x, ...D.y]; this.rc = null;
     const a = ajustar(this.win, PW, PH); this.R = { x: ML + a.x, y: MT + a.y, w: a.w, h: a.h };
     if (!this.fondo) this.preparar();

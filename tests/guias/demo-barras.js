@@ -1,7 +1,7 @@
 // Guía demo de la escena «barras» (formato de parches en assets/guias/barras.js). Ejercita TODAS las funciones:
 // barras (cajas y aux), intercambiar, poner, arr, aux, marcas, rango, est, cont, traza generada y jugar con arrastre.
 // Las trazas se calculan aquí ejecutando el algoritmo y emitiendo frames; se exportan para probarlas en Node.
-import { mover, reponer, ordenado } from '../barras.js';
+import { mover, reponer, ordenado } from '../../assets/guias/barras.js';
 
 const ET_BURB = { comparaciones: { es: 'comparaciones', en: 'comparisons' }, intercambios: { es: 'intercambios', en: 'swaps' } };
 

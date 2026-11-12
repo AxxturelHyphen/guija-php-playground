@@ -1,5 +1,5 @@
 // Ventana de herramientas: pestañas, contadores y registro de paneles.
-import { $, $$, store } from './util.js';
+import { $, $$, store, tablist } from './util.js';
 import { ctx } from './ctx.js';
 
 const registry = new Map(); // id -> {render, onShow}
@@ -16,6 +16,7 @@ export function showPanel(id, { focus = false } = {}) {
     const on = tab.dataset.panel === id;
     tab.classList.toggle('active', on);
     tab.setAttribute('aria-selected', String(on));
+    tab.tabIndex = on ? 0 : -1;
   }
   for (const p of $$('.panel')) p.hidden = p.id !== 'panel-' + id;
   registry.get(id).onShow?.();
@@ -42,6 +43,7 @@ export function showTab(id, visible) {
 
 export function initPanels() {
   for (const tab of $$('.tool-tab')) tab.addEventListener('click', () => showPanel(tab.dataset.panel));
+  tablist($('#tool-tabs'), { sel: '.tool-tab', auto: true, activate: tab => showPanel(tab.dataset.panel) });
   ctx.showPanel = showPanel;
   const saved = store.get('pg:panel', 'salida');
   showPanel(registry.has(saved) && saved !== 'solucion' ? saved : 'salida');

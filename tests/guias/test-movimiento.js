@@ -39,5 +39,14 @@ const ok = (nombre, fn) => { fn(); n++; };
     assert.strictEqual(m.x, -4);
   });
   ok('Muelle.salto fija sin animar', () => { const m = new M.Muelle(3).ir(9); m.salto(7); assert.ok(m.quieto && m.x === 7 && m.a === 7); });
+  // REDUCIDO es un valor vivo: sin matchMedia vale false; con él sigue al evento «change» del media query
+  assert.strictEqual(M.REDUCIDO, false); n++;
+  let oyente = null;
+  globalThis.matchMedia = () => ({ matches: true, addEventListener: (_, f) => { oyente = f; } });
+  try {
+    const V = await import(pathToFileURL(path.join(__dirname, '../../assets/guias/movimiento.js')).href + '?vivo');
+    assert.strictEqual(V.REDUCIDO, true); oyente({ matches: false }); assert.strictEqual(V.REDUCIDO, false);
+    oyente({ matches: true }); assert.strictEqual(V.REDUCIDO, true); n++;
+  } finally { delete globalThis.matchMedia; }
   console.log(`✓ test-movimiento: ${n} pruebas`);
 })().catch(e => { console.error('✗', e.message); process.exit(1); });

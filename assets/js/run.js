@@ -65,9 +65,9 @@ export function createRunner(editor) {
       editor.refreshLenses();
       setBusy(null);
       emit('run', data);
-      const errors = data.problems.some(p => p.severity === 'error');
+      emit('ran', { tab, data });   // con la pestaña a la que pertenece (la activa pudo cambiar mientras se ejecutaba)
       if (bench && data.benches?.some(b => b.status === 'ok')) showPanel('analisis');
-      else if (!errors && data.tests?.length) showPanel('pruebas');
+      else if (data.tests?.length) showPanel('pruebas');   // si hay pruebas se enseñan aunque haya un error: los problemas siguen en su pestaña
       else showPanel('salida');
     } catch (e) {
       setBusy(null);
@@ -91,6 +91,7 @@ export function createRunner(editor) {
     runs.set(tab.id, res.data.mine);
     if (activeTab()?.id === tab.id) { state.compare = data; state.run = res.data.mine; }
     emit('run', res.data.mine);
+    emit('ran', { tab, data: res.data.mine });
     emit('compare', data);
     showPanel('solucion');
   }

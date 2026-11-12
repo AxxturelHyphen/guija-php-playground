@@ -1,6 +1,6 @@
 // Panel Solución: tu código frente a la solución de referencia (explicación, complejidad, diff) y la comparación
 // de rendimiento (gráfica con las dos series y veredicto). Oculto detrás de un aviso de spoiler.
-import { $, el, md, fmtMs, fmtBytes, toast } from '../util.js';
+import { $, el, md, fmtMs, fmtBytes, toast, sessionKey } from '../util.js';
 import { state, on, emit, activeTab } from '../state.js';
 import { ctx } from '../ctx.js';
 import { api } from '../api.js';
@@ -10,7 +10,7 @@ import { renderChart } from '../chart.js';
 import { LANG } from '../lang.js';
 
 let unlocked = false;
-try { unlocked = sessionStorage.getItem('pg:spoiler') === '1'; } catch { /* nada */ }
+try { unlocked = sessionStorage.getItem(sessionKey('pg:spoiler')) === '1'; } catch { /* nada */ }
 let disposers = [];
 let inflight = null;
 
@@ -48,7 +48,7 @@ async function render() {
   if (!unlocked) {
     host.append(el('div', { class: 'sol-gate' },
       el('div', { html: md('**¿Seguro?** Aquí está la solución óptima de cada ejercicio, con su explicación. Si la miras antes de intentarlo, te quitas la mitad del aprendizaje.') }),
-      el('button', { class: 'btn', onclick: () => { unlocked = true; try { sessionStorage.setItem('pg:spoiler', '1'); } catch { /* nada */ } render(); } }, 'Mostrar la solución')));
+      el('button', { class: 'btn', onclick: () => { unlocked = true; try { sessionStorage.setItem(sessionKey('pg:spoiler'), '1'); } catch { /* nada */ } render(); } }, 'Mostrar la solución')));
     return;
   }
 

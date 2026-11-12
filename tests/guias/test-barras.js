@@ -17,7 +17,7 @@ const congelar = o => { if (o && typeof o === 'object' && !Object.isFrozen(o)) {
 
 (async () => {
   const B = await imp('assets/guias/barras.js');
-  const D = await imp('assets/guias/data/demo-barras.js');
+  const D = await imp('tests/guias/demo-barras.js');
   const { plegar, defDe, geom, vista, conVista, mover, cambiar, reponer, reconciliar, posTrasMover, moverEn, colocarMarcas, indiceDeX, ordenado } = B;
   const abre = (extra = {}, def = { arr: [5, 2, 8, 1], aux: 4 }) => plegar(undefined, { barras: def, ...extra });
 

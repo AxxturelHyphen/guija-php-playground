@@ -46,7 +46,7 @@
 import { idioma } from './idioma.js';
 import { PALETA, ticks125, formatear, separar, camino } from './grafica.js';
 import { etiqueta } from './mates.js';
-import { tarea, Muelle, trazo, ease } from './movimiento.js';
+import { tarea, Muelle, trazo, ease, REDUCIDO } from './movimiento.js';
 
 export const clave = 'funcion';
 
@@ -395,7 +395,6 @@ export class Funcion {
     this.stage = stage; stage.classList.add('fn');
     this.def = null; this.cur = this.to = this.tw = null; this.cb = null; this.W = W; this.H = SH;
     this.mu = new Map(); this.rect = null; this.hov = null; this.arr = false; this.parar = this.sp = null;
-    this.reducido = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     // El rectángulo del SVG (para pasar de clientX/Y a coordenadas del plano) se lee UNA vez al entrar y se invalida al
     // desplazar o redimensionar: nunca se lee layout en pointermove ni en los fotogramas.
     addEventListener('scroll', () => { this.rect = null; }, { passive: true, capture: true });
@@ -521,7 +520,7 @@ export class Funcion {
     if ((m0 ? m0.a : this.cur.par[par]) === v) return;
     if (this.to) this.to.par[par] = v;
     if (this.tw) this.tw.from.par[par] = this.tw.to.par[par] = v;
-    if (this.reducido() || typeof this.cur.par[par] !== 'number') { this.mu.delete(par); this.cur.par[par] = v; this.dibujar(); }
+    if (REDUCIDO || typeof this.cur.par[par] !== 'number') { this.mu.delete(par); this.cur.par[par] = v; this.dibujar(); }
     else {
       const d = this.def.deslizadores.find(s => s.par === par), rango = d ? d.max - d.min : 10;
       const m = m0 ?? new Muelle(this.cur.par[par], 26, Math.max(1e-6, rango * 2e-4));
@@ -542,7 +541,7 @@ export class Funcion {
   }
 
   pintar(S, animar = true) {
-    const dur = animar === true ? 460 : +animar || 0, anim = dur > 0 && !this.reducido(), D = this.def;
+    const dur = animar === true ? 460 : +animar || 0, anim = dur > 0 && !REDUCIDO, D = this.def;
     const win = ventanaEf(S.ventana, PW, PH, D.igual), idi = lang();
     const numeros = Object.fromEntries(Object.entries(S.par).filter(([, v]) => typeof v === 'number'));
     const to = { win, par: { ...S.par, ...numeros }, op: {} };

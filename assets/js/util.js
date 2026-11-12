@@ -37,7 +37,7 @@ export function md(text) {
  * pestañas y los cambios sin guardar de cada lenguaje no se mezclan. PHP conserva las claves de siempre, y los
  * ajustes de la interfaz (tamaño de letra, paneles) son comunes.
  */
-const SHARED = new Set(['pg:settings', 'pg:side', 'pg:tool', 'pg:sidebar', 'pg:lastLang']);
+const SHARED = new Set(['pg:settings', 'pg:side', 'pg:tool', 'pg:sidebar', 'pg:lastLang', 'pg:zen', 'pg:zenprev']);
 const PAGE_LANG = document.documentElement.dataset.lang || 'php';
 const nsKey = k => (PAGE_LANG === 'php' || SHARED.has(k) || !k.startsWith('pg:') ? k : 'pg:' + PAGE_LANG + ':' + k.slice(3));
 
@@ -81,6 +81,27 @@ export function toast(text, kind = '', ms = 3200) {
   const t = el('div', { class: 'toast ' + kind, role: 'status' }, text);
   toastRoot.append(t);
   setTimeout(() => t.remove(), ms);
+}
+
+/**
+ * Teclado de una lista de pestañas (patrón WAI-ARIA tabs): ←/→ (y Inicio/Fin) mueven el foco con tabindex itinerante,
+ * Enter o Espacio activan. Con { auto: true } mover el foco también activa (si activar no roba el foco).
+ */
+export function tablist(list, { sel = '[role="tab"]', activate, auto = false }) {
+  list.addEventListener('keydown', e => {
+    const cur = e.target.closest?.(sel);
+    if (!cur || !list.contains(cur) || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(cur); return; }
+    const all = $$(sel, list).filter(t => !t.hidden);
+    const i = all.indexOf(cur);
+    const next = e.key === 'ArrowRight' ? all[(i + 1) % all.length] : e.key === 'ArrowLeft' ? all[(i - 1 + all.length) % all.length]
+      : e.key === 'Home' ? all[0] : e.key === 'End' ? all[all.length - 1] : null;
+    if (!next) return;
+    e.preventDefault();
+    for (const t of $$(sel, list)) t.tabIndex = t === next ? 0 : -1;
+    next.focus();
+    if (auto && next !== cur) activate(next);
+  });
 }
 
 export const isMac = /Mac|iPhone|iPad/.test(navigator.platform);

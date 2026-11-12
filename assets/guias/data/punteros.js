@@ -5,7 +5,22 @@
 //   code, line                             listado y línea resaltada (null = ninguna)
 //   hl {id: 'a'|'b'|'c'}                   énfasis solo en este paso (azul, verde, rojo)
 //   sec {es,en}                            título de sección · es / en: texto del paso
-//   jugar {botones, lecturas, hl}          bloque interactivo · pregunta {opc, why}   comprobación
+//   jugar {botones, lecturas, hl}          bloque interactivo · pregunta {opc, why, pistas?}   comprobación
+//
+// PREGUNTA {opc:[{es,en,ok?}…], why:{es,en}, pistas?:[{es,en}…]}   exactamente UNA opción con ok:1. Con reintento: una opción mala se
+//   marca, se descarta y sale una pista graduada (la i-ésima de `pistas` en el i-ésimo fallo; si faltan, se repite la última; sin
+//   `pistas`, la ayuda es `why`). `why` completo al acertar o al quedar solo la correcta. Como mucho (opciones − 2) pistas se llegan
+//   a ver. Puntúa «a la primera» (sin fallos). Se conserva al revisitar el paso y al cambiar de idioma.
+// DERIVA (re-derivación: el alumno se compromete ANTES de ver el resultado), pura datos y bilingüe:
+//   deriva: { pregunta: {es,en},                 se muestra en el panel de texto en lugar del texto del paso
+//             opciones: [{es,en}…],  correcta: i  1) predicción (≥ 2 opciones; índice de la correcta)
+//             razones:  [{es,en}…],  razonCorrecta: j   2) razón (≥ 2; índice de la correcta)
+//             pistas?: [{es,en}…],               pistas bajo demanda (botón «Pista», una por pulsación; no revelan el resultado)
+//             revela: {es,en} }                   explicación del contraste (se muestra al revelar)
+//   Hasta contestar las dos fases la escena y el código son los del paso ANTERIOR (no se filtra el resultado); luego se revela el
+//   paso (su parche, `es`/`en`) y se contrasta con lo elegido: predicción y razón correctas · predicción correcta por otra razón ·
+//   predicción errónea. «Siguiente» sigue disponible (saltarla = sin responder, no puntúa). No puede ser el primer paso ni combinarse
+//   con pregunta/jugar/traza en el mismo paso (se valida en tests/guias-datos.js). Máquina de estados pura: assets/guias/respuestas.js.
 const cel = (id, addr, name, type, size, col = 0, grupo) => ({ id, addr, name, type, size, col, ...(grupo && { grupo }) });
 const ZP = [{ col: 0, titulo: { es: 'Pila (stack)', en: 'Stack' }, tono: 'pila' }]; // la pila dibujada detrás
 
@@ -176,7 +191,33 @@ export default {
       en: 'Inside, the swap works… but on the copies.' },
     { line: 5, ocultar: ['a', 'b', 't'], hl: { x: 'c', y: 'c' },
       es: 'Al volver, las copias desaparecen y `x`, `y` siguen como estaban. Por valor no se puede modificar el original.',
-      en: 'On return the copies vanish and `x`, `y` are as they were. By value you cannot modify the original.' },
+      en: 'On return the copies vanish and `x`, `y` are as they were. By value you cannot modify the original.',
+      deriva: {
+        pregunta: {
+          es: 'Dentro de `swapV` el intercambio ya está hecho (`a` vale 2 y `b` vale 1). Cuando la función **vuelva** a `main`, ¿qué valdrán `x` e `y`?',
+          en: 'Inside `swapV` the swap is already done (`a` is 2 and `b` is 1). When the function **returns** to `main`, what will `x` and `y` hold?',
+        },
+        opciones: [
+          { es: '`x = 2`, `y = 1`: intercambiados', en: '`x = 2`, `y = 1`: swapped' },
+          { es: '`x = 1`, `y = 2`: siguen como estaban', en: '`x = 1`, `y = 2`: unchanged' },
+          { es: '`x` e `y` quedan sin valor definido', en: '`x` and `y` are left undefined' },
+        ],
+        correcta: 1,
+        razones: [
+          { es: 'La función trabaja sobre los propios `x` e `y` y devuelve el resultado al terminar', en: 'The function works on `x` and `y` themselves and hands the result back on return' },
+          { es: 'Los parámetros se inicializan con una **copia**: `a` y `b` son otros objetos, con otras direcciones, y `swapV` solo escribe en ellos', en: 'Parameters are initialised with a **copy**: `a` and `b` are other objects, at other addresses, and `swapV` only writes to them' },
+          { es: 'Al destruirse `t` al terminar, se deshace el intercambio', en: 'When `t` is destroyed on return, the swap is undone' },
+        ],
+        razonCorrecta: 1,
+        pistas: [
+          { es: 'Compara en la escena las direcciones de `x` y de `a`: ¿son la misma celda?', en: 'Compare the addresses of `x` and `a` in the scene: are they the same cell?' },
+          { es: 'En la llamada `swapV(x, y)`, ¿qué se guarda en `a`: la propia `x` o una copia de su valor?', en: 'In the call `swapV(x, y)`, what is stored in `a`: `x` itself or a copy of its value?' },
+        ],
+        revela: {
+          es: 'La llamada inicializa `a` con una copia del valor de `x` (y `b` con el de `y`): son celdas distintas, en `0x7ffe39fc` y `0x7ffe3a14`. El intercambio sí ocurrió, pero en las copias, que mueren con el marco. Lo que decide es la **semántica de copia**, no que una función «no pueda» cambiar variables: con un puntero o una referencia sí podría.',
+          en: 'The call initialises `a` with a copy of the value of `x` (and `b` with that of `y`): different cells, at `0x7ffe39fc` and `0x7ffe3a14`. The swap did happen, but on the copies, which die with the frame. What decides it is **copy semantics**, not a function being unable to change variables: with a pointer or a reference it could.',
+        },
+      } },
     { celdas: E4P, zonas: ZP, grupos: GR4P, line: 6, mostrar: ['x', 'y', 'a', 'b'], val: { x: 1, y: 2, a: '→x', b: '→y' }, hl: { a: 'a', b: 'a' },
       es: 'Pasamos las **direcciones**: `&x` y `&y`. Ahora `a` y `b` son punteros que apuntan a las variables de `main`.',
       en: 'We pass the **addresses**: `&x` and `&y`. Now `a` and `b` are pointers aimed at the variables of `main`.' },
@@ -203,6 +244,7 @@ export default {
           { es: 'Porque `int t` es local y se destruye', en: 'Because `int t` is local and gets destroyed' },
           { es: 'Porque una función no puede modificar variables', en: 'Because a function cannot modify variables' },
         ],
+        pistas: [{ es: 'Piensa en lo que se guarda en `a` y `b` al hacer la llamada: ¿las variables `x` e `y` o algo derivado de ellas?', en: 'Think about what is stored in `a` and `b` at the call: the variables `x` and `y`, or something derived from them?' }],
         why: {
           es: 'Paso por valor = copia. Para modificar el original necesitas su dirección (puntero) o un alias (referencia).',
           en: 'Pass by value = copy. To modify the original you need its address (pointer) or an alias (reference).',

@@ -36,7 +36,7 @@ export function initStatusbar(editor) {
   on('cursor', c => { cursor = c; pos.textContent = `Ln ${c.line}, Col ${c.col}`; renderFn(); });
   on('analysis', a => { renderFn(); if (!a) setLint('idle'); else if (!a.syntax) { const w = a.diagnostics.filter(d => d.severity === 'warning').length; if (w) { lint.className = 'st-item warn'; lint.replaceChildren(el('i', { class: 'dot' }), el('span', {}, `${w} advertencia${w === 1 ? '' : 's'}`)); } } });
   on('lint-state', setLint);
-  on('doc-change', renderSave);
+  on('dirty', renderSave);
   on('active', () => { renderSave(); renderFn(); });
   on('saved', renderSave);
   lint.addEventListener('click', () => showPanel('problemas'));

@@ -4,7 +4,7 @@
 // Mantiene su propio estado mínimo (def y punteros acumulados) sin importar el módulo ES (la fábrica es síncrona).
 const PARCHES = ['intercambiar', 'poner', 'arr', 'aux', 'marcas', 'rango', 'est', 'cont'];
 const DEF = ['arr', 'aux', 'estilo', 'max', 'etiquetas', 'etiquetasCont'];
-const PASO = ['es', 'en', 'sec', 'code', 'line', 'hl', 'traza', 'jugar', 'pregunta', 'barras', ...PARCHES];
+const PASO = ['es', 'en', 'sec', 'code', 'line', 'hl', 'traza', 'jugar', 'pregunta', 'deriva', 'barras', ...PARCHES];
 const FRAME = ['es', 'en', 'line', ...PARCHES];
 const ESTADOS = ['cmp', 'ok', 'piv', 'sel'];
 const MAXN = 32, MKROWS = 3;

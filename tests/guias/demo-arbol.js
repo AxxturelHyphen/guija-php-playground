@@ -1,7 +1,7 @@
 // Guía demo de la escena «arbol» (assets/guias/arbol.js). Ejercita todos los parches (+nodos, +aristas, -nodos, -aristas,
 // val, etiquetas, est, aristaEst, notas), los dos modos (arbol y libre), cabida, trazas generadas ejecutando el algoritmo
 // (fib, ABB, montículo, Dijkstra) y un `jugar` con nodos arrastrables. Formato completo en la cabecera de arbol.js.
-import { arbolVacio, arbolCompleto, arbolDeArray, insertarABB, buscarABB, borrarABB, cabidaDe, cabidaMax, claveArista as K } from '../arbol.js';
+import { arbolVacio, arbolCompleto, arbolDeArray, insertarABB, buscarABB, borrarABB, cabidaDe, cabidaMax, claveArista as K } from '../../assets/guias/arbol.js';
 
 const f = (o, es, en, line) => ({ ...o, es, en, ...(line != null && { line }) });
 const val = (T, id) => T.nodos.find(n => n.id === id).val;

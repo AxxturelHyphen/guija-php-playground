@@ -49,13 +49,11 @@
 
 import { idioma } from './idioma.js';
 import { etiqueta } from './mates.js';
-import { Muelle, tarea } from './movimiento.js';
+import { Muelle, tarea, ease, REDUCIDO } from './movimiento.js';
 import { crearTip } from './tip.js';
 
 export const clave = 'arbol';
 const NS = 'http://www.w3.org/2000/svg';
-const ease = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-const reducido = () => !!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const L = x => ((x && typeof x === 'object' ? x[globalThis.document ? idioma() : 'es'] : x) ?? '');
 const txt = v => String(L(v));
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -418,7 +416,7 @@ export class EscenaArbol {
     inyectarCss();
     this.stage = stage; this.def = null; this.W = this.H = this.Wt = 0; this.R = R0; this.modo = 'arbol';
     this.svg = svg('svg', 'ar-svg'); stage.append(this.svg);
-    this.raf = 0; this.T = null; this.drag = null; this.vivo = null; this.cbSoltar = null;
+    this.raf = null; this.T = null; this.drag = null; this.vivo = null; this.cbSoltar = null;
     this.nd = new Map(); this.ed = new Map(); this.nt = new Map(); this.manual = new Map(); this.firma = '';
     this.asent = null; this.ult = null; this.hov = null; this.hlUlt = {};
     this.sr = Object.assign(document.createElement('div'), { className: 'ar-sr' }); this.sr.setAttribute('role', 'status'); this.sr.setAttribute('aria-live', 'polite'); stage.append(this.sr);
@@ -470,7 +468,7 @@ export class EscenaArbol {
 
   fijar(def) {
     if (def === this.def) return;
-    cancelAnimationFrame(this.raf); this.T = null; this.finVivo(); this.tip.ocultar(); this.ult = null; this.hov = null;
+    this.raf?.(); this.raf = null; this.T = null; this.finVivo(); this.tip.ocultar(); this.ult = null; this.hov = null;
     this.svg.replaceChildren(this.gQ = svg('g'), this.gE = svg('g'), this.gN = svg('g'));
     this.def = def; this.modo = def.modo === 'libre' ? 'libre' : 'arbol'; this.R = radioDe(def);
     const m = medidaDef(def, this.R);
@@ -499,7 +497,7 @@ export class EscenaArbol {
 
   /** S = {nodos, aristas, val, etiquetas, est, aristaEst, notas} (+ hl); animar: false | true | milisegundos */
   pintar(S, animar = true) {
-    const dur = animar === true ? 520 : +animar || 0, anim = dur > 0 && !reducido(), hl = S.hl || {}, R = this.R;
+    const dur = animar === true ? 520 : +animar || 0, anim = dur > 0 && !REDUCIDO, hl = S.hl || {}, R = this.R;
     const firma = S.nodos.map(n => n.id).join() + '|' + S.aristas.map(e => e.a + '-' + e.b + (e.lado || '')).join();
     if (firma !== this.firma) { this.manual.clear(); this.firma = firma; } // el arrastre solo dura hasta el próximo cambio de estructura
     const tr = trazar(S.nodos, S.aristas, this.modo, { r: R, W: this.Wt, H: this.H, raiz: this.def.raiz }), pos = tr.pos;
@@ -547,7 +545,7 @@ export class EscenaArbol {
     for (const [k, r] of this.ed) if (!claves.has(k)) { r.vivo = false; r.a = 0; }
 
     this.notas(S.notas || [], tr);
-    cancelAnimationFrame(this.raf);
+    this.raf?.(); this.raf = null; // cancela la transición en curso (si la hay)
     for (const r of this.nd.values()) r.de = { x: r.x, y: r.y, op: r.op, sc: r.sc };
     for (const r of this.ed.values()) r.de = r.op;
     // un nodo que aún se asienta (o se sostiene) sigue con sus muelles, ahora hacia su posición actual del diseño; la transición no lo toca (r.libre)
@@ -558,7 +556,7 @@ export class EscenaArbol {
       else if (this.vivo !== A) { A.tx = p.x; A.ty = p.y; A.mx.ir(p.x); A.my.ir(p.y); A.ms.ir(1); this.tareaNodo(A); }
     }
     this.T = { t0: performance.now(), dur: anim ? dur : 0 };
-    this.frame(this.T.t0);
+    if (this.frame(this.T.t0)) this.raf = tarea(this.frame);
     this.ult = S; this.hlUlt = hl; this.aplicarHover(); this.tip.refrescar();
   }
 
@@ -570,7 +568,7 @@ export class EscenaArbol {
       if (!q) {
         q = { g: svg('g', 'ar-nota'), ln: svg('line'), t: svg('text') };
         q.t.setAttribute('dy', '.35em'); q.g.append(q.ln, q.t); this.gQ.append(q.g); this.nt.set(nv, q);
-        if (!reducido()) q.g.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+        if (!REDUCIDO) q.g.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
       }
       const y = tr.y(nv);
       q.vivo = true;
@@ -581,7 +579,7 @@ export class EscenaArbol {
     }
     for (const [nv, q] of this.nt) if (!por.has(nv)) {
       this.nt.delete(nv);
-      if (reducido()) q.g.remove(); else q.g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250 }).onfinish = () => q.g.remove();
+      if (REDUCIDO) q.g.remove(); else q.g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250 }).onfinish = () => q.g.remove();
     }
   }
 
@@ -590,17 +588,17 @@ export class EscenaArbol {
     r.g.style.opacity = r.op.toFixed(3);
   }
 
-  // Un único requestAnimationFrame mueve nodos, opacidades y aristas
+  // Una única tarea del planificador común mueve nodos, opacidades y aristas; devuelve true mientras la transición siga viva
   frame = now => {
-    const T = this.T, k = T.dur ? Math.min(1, (now - T.t0) / T.dur) : 1, e = ease(k);
+    const T = this.T, k = T.dur ? Math.min(1, Math.max(0, (now - T.t0) / T.dur)) : 1, e = ease(k);
     for (const r of this.nd.values()) {
       for (const c of ['x', 'y', 'op', 'sc']) if (!r.libre || c === 'op') r[c] = r.de[c] + (r.a[c] - r.de[c]) * e;
       this.ponerNodo(r);
     }
     for (const r of this.ed.values()) r.op = r.de + (r.a - r.de) * e;
     this.dibujarAristas();
-    if (k < 1) this.raf = requestAnimationFrame(this.frame);
-    else this.limpiar();
+    if (k >= 1) this.limpiar();
+    return k < 1;
   };
 
   /** Al terminar la transición se retiran del DOM los nodos y aristas que ya salieron. */
@@ -662,7 +660,7 @@ export class EscenaArbol {
   /** Un único trabajo por fotograma mientras los muelles se mueven; al reposar (y sin puntero encima) termina el asentamiento. */
   tareaNodo(v) {
     const r = v.r, poner = () => { r.x = r.a.x = v.mx.x; r.y = r.a.y = v.my.x; r.sc = r.a.sc = v.ms.x; this.ponerNodo(r); this.dibujarAristas(); };
-    if (reducido()) { v.mx.salto(v.mx.a); v.my.salto(v.my.a); v.ms.salto(v.ms.a); poner(); if (this.vivo !== v) this.finAsiento(); return; }
+    if (REDUCIDO) { v.mx.salto(v.mx.a); v.my.salto(v.my.a); v.ms.salto(v.ms.a); poner(); if (this.vivo !== v) this.finAsiento(); return; }
     if (v.cancela) return;
     v.cancela = tarea((_, dt) => {
       v.mx.paso(dt); v.my.paso(dt); v.ms.paso(dt); poner();
@@ -690,7 +688,7 @@ export class EscenaArbol {
     const g = e.target.closest?.('.ar-n.arrastrable'), r = g && this.nd.get(g.dataset.id);
     if (!r || this.vivo) return;
     e.preventDefault(); this.svg.setPointerCapture(e.pointerId);
-    cancelAnimationFrame(this.raf); if (this.T) this.frame(Infinity); // termina la transición en curso para arrastrar sobre posiciones finales
+    this.raf?.(); this.raf = null; if (this.T) this.frame(Infinity); // termina la transición en curso para arrastrar sobre posiciones finales
     this.finAsiento();
     const b = this.stage.getBoundingClientRect(), k = b.width / this.W || 1, px = (e.clientX - b.left) / k, py = (e.clientY - b.top) / k;
     const v = this.asiento(g.dataset.id, r);

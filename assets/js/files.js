@@ -1,5 +1,5 @@
 // Proyecto (árbol de archivos), pestañas, guardado en disco y copia de seguridad de lo no guardado.
-import { $, el, store, toast, debounce, sessionKey } from './util.js';
+import { $, el, store, toast, debounce, sessionKey, tablist } from './util.js';
 import { state, emit, on, activeTab } from './state.js';
 import { api } from './api.js';
 import { confirmDialog, promptDialog } from './dialog.js';
@@ -25,6 +25,7 @@ export function createFiles(editor) {
   const idOf = (dir, name) => `${dir}/${name}`;
   const tabById = id => state.tabs.find(t => t.id === id);
   const bufKey = id => 'pg:buf:' + id;
+  let restoring = false;   // mientras se recupera la sesión no se guarda: se escribiría una lista a medias
   const isDirty = tab => !!tab && editor.hasDoc(tab.id) && editor.getText(tab.id) !== tab.saved;
 
   // ── Árbol ─────────────────────────────────────────────────────
@@ -54,6 +55,7 @@ export function createFiles(editor) {
       }
       return el('div', { class: 'tree-group' + (isOpen ? ' open' : '') }, head, items);
     }));
+    emit('tree-render');   // leccion.js parchea las marcas de progreso sobre los nodos recién creados
   }
 
   function treeItem(g, f) {
@@ -61,7 +63,7 @@ export function createFiles(editor) {
     const dirty = isDirty(tabById(id));
     const btn = el('div', {
       class: 'tree-item' + (id === state.active ? ' active' : ''), role: 'button', tabindex: '0', title: f.name + (f.solution ? ' (tiene solución de referencia)' : ''),
-      dataset: { name: f.name },
+      dataset: { name: f.name, dir: g.dir },
       onclick: () => openFile(g.dir, f.name),
       onkeydown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openFile(g.dir, f.name); } if (e.key === 'Delete' && g.dir === 'practicas') removeFile(f.name); },
     },
@@ -84,23 +86,28 @@ export function createFiles(editor) {
 
   // ── Pestañas ──────────────────────────────────────────────────
   function renderTabs() {
-    tabsEl.replaceChildren(...state.tabs.map(t => {
-      const dirty = isDirty(t);
-      const node = el('div', {
-        class: 'tab' + (t.id === state.active ? ' active' : '') + (t.readOnly ? ' ro' : ''), role: 'tab', tabindex: '0', 'aria-selected': String(t.id === state.active),
-        title: t.id, onclick: () => activate(t.id),
-        onkeydown: e => { if (e.key === 'Enter') activate(t.id); },
+    const hadFocus = tabsEl.contains(document.activeElement);
+    // Solo un tabindex=0 (la activa, o la primera si no hay): el resto se alcanza con las flechas
+    const stop = state.tabs.some(t => t.id === state.active) ? state.active : state.tabs[0]?.id;
+    tabsEl.replaceChildren(...state.tabs.map((t, i) => {
+      t.dirty = isDirty(t);
+      const act = t.id === state.active;
+      // El contenedor .tab es solo presentación; el role="tab" es .tab-main y el botón de cerrar es su hermano (no va anidado en la pestaña)
+      return el('div', {
+        class: 'tab' + (act ? ' active' : '') + (t.readOnly ? ' ro' : ''), role: 'presentation',
         onauxclick: e => { if (e.button === 1) { e.preventDefault(); close(t.id); } },
       },
-      el('span', { class: 'file-icon ' + (t.dir === 'soluciones' ? 'sol' : t.dir === 'practicas' ? 'prac' : '') }, LANG.logo),
-      el('span', {}, t.name),
-      dirty ? el('span', { class: 'dirty', title: 'Sin guardar' }) : null,
-      el('button', { class: 'close', title: 'Cerrar', 'aria-label': 'Cerrar ' + t.name, onclick: e => { e.stopPropagation(); close(t.id); } }, '×'));
-      return node;
+      el('div', { class: 'tab-main', id: 'tab-f' + i, role: 'tab', tabindex: t.id === stop ? '0' : '-1', 'aria-selected': String(act), 'aria-controls': 'editor', title: t.id, dataset: { id: t.id }, onclick: () => activate(t.id) },
+        el('span', { class: 'file-icon ' + (t.dir === 'soluciones' ? 'sol' : t.dir === 'practicas' ? 'prac' : '') }, LANG.logo),
+        el('span', {}, t.name),
+        t.dirty ? el('span', { class: 'dirty', title: 'Sin guardar', role: 'img', 'aria-label': 'Sin guardar' }) : null),
+      el('button', { class: 'close', tabindex: '-1', title: 'Cerrar', 'aria-label': 'Cerrar ' + t.name, onclick: e => { e.stopPropagation(); close(t.id); } }, '×'));
     }));
-    $('.tab.active', tabsEl)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    const activa = $('.tab.active .tab-main', tabsEl);
+    $('#editor').setAttribute('aria-labelledby', activa?.id ?? '');
+    activa?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    if (hadFocus) (activa ?? $('.tab-main', tabsEl))?.focus({ preventScroll: true });
     updateRestore();
-    persistSession();
   }
 
   function updateRestore() {
@@ -111,7 +118,8 @@ export function createFiles(editor) {
     restoreBtn.textContent = tab?.dir === 'practicas' ? 'Restaurar original' : 'Restaurar';
   }
 
-  const persistSession = () => store.set('pg:session', JSON.stringify({ tabs: state.tabs.map(t => t.id), active: state.active }));
+  // Solo al abrir, cerrar o activar una pestaña: no en cada pulsación
+  const persistSession = () => { if (!restoring) store.set('pg:session', JSON.stringify({ tabs: state.tabs.map(t => t.id), active: state.active })); };
 
   function activate(id) {
     if (!tabById(id)) return;
@@ -120,7 +128,23 @@ export function createFiles(editor) {
     $('#editor-island').classList.remove('is-empty');
     renderTabs();
     renderTree();
+    persistSession();
     emit('active', { id, tab: tabById(id) });
+  }
+
+  /** Crea la pestaña y su documento (con los cambios sin guardar si los hay) sin activarla. */
+  function addTab(dir, name, data, quiet) {
+    const id = idOf(dir, name);
+    const tab = { id, dir, name, saved: data.code, hasSolution: !!data.solution, readOnly: dir === 'soluciones', dirty: false };
+    state.tabs.push(tab);
+    let text = data.code;
+    const backup = store.get(bufKey(id));
+    if (backup !== null && backup !== data.code && !tab.readOnly) {
+      text = backup;
+      if (!quiet) toast(`Recuperados los cambios sin guardar de ${name}`);
+    }
+    editor.openDoc(id, text, { readOnly: tab.readOnly });
+    return tab;
   }
 
   async function openFile(dir, name, { line, quiet = false } = {}) {
@@ -135,15 +159,7 @@ export function createFiles(editor) {
         if (!quiet) toast(e.message, 'error');
         return false;
       }
-      const tab = { id, dir, name, saved: data.code, hasSolution: !!data.solution, readOnly: dir === 'soluciones' };
-      state.tabs.push(tab);
-      let text = data.code;
-      const backup = store.get(bufKey(id));
-      if (backup !== null && backup !== data.code && !tab.readOnly) {
-        text = backup;
-        if (!quiet) toast(`Recuperados los cambios sin guardar de ${name}`);
-      }
-      editor.openDoc(id, text, { readOnly: tab.readOnly });
+      if (!tabById(id)) addTab(dir, name, data, quiet);   // otra llamada pudo abrirla mientras llegaba la respuesta
       activate(id);
     }
     if (line) editor.reveal(line);
@@ -165,9 +181,10 @@ export function createFiles(editor) {
     if (state.active === id) {
       const next = state.tabs[Math.min(idx, state.tabs.length - 1)];
       if (next) activate(next.id);
-      else { state.active = null; editor.clearView(); $('#editor-island').classList.add('is-empty'); renderTabs(); renderTree(); emit('active', { id: null, tab: null }); }
+      else { state.active = null; editor.clearView(); $('#editor-island').classList.add('is-empty'); renderTabs(); renderTree(); persistSession(); emit('active', { id: null, tab: null }); }
     } else {
       renderTabs();
+      persistSession();
     }
   }
 
@@ -269,21 +286,50 @@ export function createFiles(editor) {
     const text = editor.getText(id);
     if (text === tab.saved) store.del(bufKey(id)); else store.set(bufKey(id), text);
   }, 400);
-  on('doc-change', ({ id }) => { backup(id); renderTabs(); if (id === state.active) { renderTree(); } });
+  // El punto «sin guardar» solo se toca cuando el estado cambia (limpio <-> sucio): una comparación ya agrupada
+  // tras las pulsaciones, en vez de reconstruir pestañas y árbol y comparar el texto en cada tecla.
+  const sucias = new Set();
+  let sucioTimer = 0;
+  const syncDirty = () => {
+    sucioTimer = 0;
+    for (const id of sucias) {
+      const tab = tabById(id);
+      if (!tab) continue;
+      const d = isDirty(tab);
+      if (d === !!tab.dirty) continue;
+      tab.dirty = d;
+      renderTabs();
+      renderTree();
+      emit('dirty', { id, dirty: d });
+    }
+    sucias.clear();
+  };
+  on('doc-change', ({ id }) => { backup(id); sucias.add(id); if (!sucioTimer) sucioTimer = setTimeout(syncDirty, 120); });
   window.addEventListener('beforeunload', e => { if (state.tabs.some(t => isDirty(t) && !t.readOnly)) { e.preventDefault(); e.returnValue = ''; } });
 
+  // Pestañas: con flechas se mueve el foco; Enter/Espacio abre (activar mueve el foco al editor)
+  tablist(tabsEl, { sel: '.tab-main', activate: t => activate(t.dataset.id) });
   restoreBtn.addEventListener('click', restore);
   $('#btn-new').addEventListener('click', newFile);
 
   async function init() {
-    await refreshTree();
     const session = store.json('pg:session', null);
-    let opened = 0;
-    for (const id of session?.tabs ?? []) {
+    const ids = (session?.tabs ?? []).filter(id => typeof id === 'string' && id.includes('/'));
+    // Árbol y archivos de la sesión se piden a la vez; las pestañas se crean después, en el orden guardado
+    const [, ...datos] = await Promise.all([refreshTree(), ...ids.map(id => {
       const i = id.indexOf('/');
-      if (await openFile(id.slice(0, i), id.slice(i + 1), { quiet: true })) opened++;
-    }
-    if (session?.active && tabById(session.active)) activate(session.active);
+      return api('file', { params: { dir: id.slice(0, i), name: id.slice(i + 1) } }).catch(() => null);
+    })]);
+    let opened = 0;
+    restoring = true;
+    ids.forEach((id, k) => {
+      if (!datos[k] || tabById(id)) return;
+      const i = id.indexOf('/');
+      addTab(id.slice(0, i), id.slice(i + 1), datos[k], true);
+      opened++;
+    });
+    restoring = false;
+    if (opened) activate(session?.active && tabById(session.active) ? session.active : state.tabs[0].id);   // una sola activación: un solo análisis
     if (!opened) {
       const first = state.tree.ejemplos?.[0];
       if (first) await openFile('ejemplos', first.name);

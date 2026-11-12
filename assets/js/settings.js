@@ -44,6 +44,8 @@ const KEYS = [
   ['Ctrl + F  ·  Ctrl + H', 'Buscar  ·  reemplazar'],
   ['Alt + 1', 'Mostrar u ocultar el panel Proyecto'],
   ['Alt + Z', 'Ajuste de línea'],
+  ['Alt + I', 'Aparcar una idea (nota rápida por lección) y seguir con el ejercicio'],
+  ['Alt + Q', 'Sin distracciones: oculta el proyecto y los resultados'],
   ['F1', 'Esta ayuda'],
 ];
 

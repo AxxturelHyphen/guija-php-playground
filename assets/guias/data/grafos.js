@@ -365,7 +365,34 @@ export default {
       aristaEst: Object.fromEntries(claves(G_BFS).map(k => [k, ARISTAS_RUTA.has(k) ? 'camino' : null])),
       code: C_CAMINO, line: 3,
       es: 'Para recuperar el camino se sube por `padre` desde el destino y se invierte. De 0 a 6: 0 → 1 → 4 → 6, tres aristas. Hay otro igual de corto (0 → 2 → 5 → 6): BFS devuelve el que descubre primero. Todas las aristas del árbol de BFS son caminos mínimos desde el origen.',
-      en: 'To recover the path you climb `padre` from the destination and reverse it. From 0 to 6: 0 → 1 → 4 → 6, three edges. There is another equally short one (0 → 2 → 5 → 6): BFS returns the one it discovers first. Every edge of the BFS tree is a shortest path from the source.' },
+      en: 'To recover the path you climb `padre` from the destination and reverse it. From 0 to 6: 0 → 1 → 4 → 6, three edges. There is another equally short one (0 → 2 → 5 → 6): BFS returns the one it discovers first. Every edge of the BFS tree is a shortest path from the source.',
+      deriva: {
+        pregunta: {
+          es: 'El árbol de BFS ya tiene `padre` para los 7 nodos. Si subes por `padre` desde el 6 hasta el 0, ¿qué camino recuperas?',
+          en: 'The BFS tree already has `padre` for all 7 nodes. If you climb `padre` from 6 up to 0, which path do you recover?',
+        },
+        opciones: [
+          { es: '`0 → 2 → 5 → 6`', en: '`0 → 2 → 5 → 6`' },
+          { es: '`0 → 1 → 4 → 6`', en: '`0 → 1 → 4 → 6`' },
+          { es: '`0 → 2 → 4 → 6`', en: '`0 → 2 → 4 → 6`' },
+        ],
+        correcta: 1,
+        razones: [
+          { es: 'Entre caminos igual de cortos, BFS elige uno al azar', en: 'Among equally short paths, BFS picks one at random' },
+          { es: 'BFS prefiere siempre pasar por los nodos de menor número', en: 'BFS always prefers to go through the lowest-numbered nodes' },
+          { es: '`padre[v]` se escribe una sola vez, al encolar `v` por primera vez, y los nodos salen en el orden en que entraron (FIFO)', en: '`padre[v]` is written only once, when `v` is first queued, and nodes leave in the order they entered (FIFO)' },
+          { es: '`padre[v]` se reescribe con cada camino igual de corto y gana el último', en: '`padre[v]` is rewritten for each equally short path and the last one wins' },
+        ],
+        razonCorrecta: 2,
+        pistas: [
+          { es: 'Los tres caminos tienen 3 aristas: la longitud no decide cuál se recupera. ¿Qué fija el valor de `padre[v]`?', en: 'All three paths have 3 edges: length does not decide which one you recover. What fixes the value of `padre[v]`?' },
+          { es: 'Cada `padre[v]` se escribe una sola vez, cuando `dist[v] == -1`: al encolar `v` por primera vez.', en: 'Each `padre[v]` is written only once, when `dist[v] == -1`: when `v` is first queued.' },
+        ],
+        revela: {
+          es: '`dist[v] == -1` hace de «visitado», así que `padre[v]` queda fijado la primera vez que se alcanza `v`. `g[0]` lista antes al 1 que al 2: el 1 sale primero y encola al 4 (padre 1); después el 4 sale antes que el 5 y encola al 6 (padre 4). Con otro orden en las listas saldría otro camino igual de corto: BFS garantiza la **longitud** mínima, no *cuál* devuelve.',
+          en: '`dist[v] == -1` works as "visited", so `padre[v]` is fixed the first time `v` is reached. `g[0]` lists 1 before 2: 1 leaves first and queues 4 (parent 1); then 4 leaves before 5 and queues 6 (parent 4). With a different list order another equally short path would come out: BFS guarantees the minimum **length**, not *which* path it returns.',
+        },
+      } },
     { ...RESET, code: C_BFS, line: null, jugar: jugarBFS,
       es: 'Haz clic en un nodo para lanzar BFS desde él. Las etiquetas `d=` son las distancias y las aristas gruesas, el árbol de BFS. Las lecturas dan el orden de salida de la cola y los niveles. ¿Qué origen da menos niveles?',
       en: 'Click a node to run BFS from it. The `d=` labels are the distances and the thick edges the BFS tree. The readings give the queue order and the levels. Which source gives the fewest levels?' },

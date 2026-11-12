@@ -11,7 +11,7 @@
 const ESTADOS = ['activo', 'visitado', 'camino', 'ok', 'mal'];
 const ESTADOS_ARISTA = ['camino', 'activa'];
 const PARCHE = ['+nodos', '+aristas', '-nodos', '-aristas', 'val', 'etiquetas', 'est', 'aristaEst', 'notas'];
-const PASO = ['arbol', 'hl', 'code', 'line', 'sec', 'es', 'en', 'jugar', 'pregunta', 'traza'];
+const PASO = ['arbol', 'hl', 'code', 'line', 'sec', 'es', 'en', 'jugar', 'pregunta', 'deriva', 'traza'];
 const FRAME = ['line', 'es', 'en'];
 const ABRE = ['modo', 'nodos', 'aristas', 'raiz', 'notas', 'cabida', 'lienzo', 'radio'];
 

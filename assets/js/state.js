@@ -19,6 +19,8 @@ export const state = {
   solution: null,      // última lista de soluciones
   busy: null,          // null | 'run' | 'measure' | 'compare'
   stdin: '',
+  leccion: null,       // lección del archivo abierto según el temario: {id, titulo, archivo, ej:[{k,n}]} (la fija leccion.js)
+  foco: null,          // clave del ejercicio en modo enfoque, o null
   settings: { ...DEFAULT_SETTINGS, ...store.json('pg:settings', {}) },
 };
 

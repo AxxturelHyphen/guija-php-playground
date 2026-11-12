@@ -20,8 +20,9 @@ const ROOT = path.join(__dirname, '..');
 const CLAVES = ['celdas', 'barras', 'arbol', 'grafica', 'tabla', 'funcion', 'campo'];
 const LEYENDA = ['activo', 'compara', 'hecho', 'mal', 'camino', 'aux']; // claves de `leyenda` (ver cabecera de assets/guias/guia.js)
 const todas = require('../contenido/guias.json').guias.map(g => g.id);
-const ids = (process.argv.slice(2).length ? process.argv.slice(2) : todas)
-  .filter(id => fs.existsSync(path.join(ROOT, 'assets/guias/data', id + '.js')));
+// Datos de una guía: assets/guias/data/<id>.js; las guías demo (no se sirven) viven en tests/guias/demo-*.js y solo se validan por id explícito
+const rutaDe = id => [path.join(ROOT, 'assets/guias/data', id + '.js'), path.join(__dirname, 'guias', id + '.js')].find(f => (f === path.join(__dirname, 'guias', id + '.js') ? /^demo-/.test(id) : true) && fs.existsSync(f));
+const ids = (process.argv.slice(2).length ? process.argv.slice(2) : todas).filter(id => rutaDe(id));
 const L = (x, lang) => (x && typeof x === 'object' && 'es' in x ? x[lang] : x) ?? '';
 // KaTeX local (el mismo que carga la guía): todo `$…$` debe compilar con throwOnError; y no debe quedar LaTeX suelto fuera de `$…$`
 let katexLocal;
@@ -48,9 +49,37 @@ const validadorDe = tipo => {
   return fs.existsSync(f) ? require(f)() : null;
 };
 
+// Texto {es,en} de una pregunta/deriva: ambos idiomas, backticks y $ emparejados (el LaTeX se compila aparte en recorrerMates)
+function textoBilingue(x, w, donde) {
+  for (const lang of ['es', 'en']) {
+    const t = x?.[lang];
+    if (typeof t !== 'string' || !t.trim()) { w(`${donde}: falta el texto «${lang}»`); continue; }
+    if ((t.match(/`/g) || []).length % 2) w(`${donde}.${lang}: backticks desparejados`);
+    if ((t.match(/\$/g) || []).length % 2) w(`${donde}.${lang}: $ desparejados`);
+  }
+}
+// Paso con `deriva` (re-derivación: predicción → razón → revelación). Formato en la cabecera de assets/guias/data/punteros.js
+function validarDeriva(p, i, w) {
+  const D = p.deriva, indice = (x, lista) => Number.isInteger(x) && x >= 0 && x < lista.length;
+  if (i === 0) w('deriva: no puede ser el primer paso (antes de la revelación se muestra el paso anterior)');
+  if (p.pregunta || p.jugar || p.traza) w('deriva: no se combina con pregunta, jugar ni traza en el mismo paso');
+  textoBilingue(D.pregunta, w, 'deriva.pregunta');
+  textoBilingue(D.revela, w, 'deriva.revela');
+  for (const [lista, buena] of [['opciones', 'correcta'], ['razones', 'razonCorrecta']]) {
+    const xs = D[lista];
+    if (!Array.isArray(xs) || xs.length < 2) { w(`deriva.${lista}: al menos 2 elementos`); continue; }
+    xs.forEach((x, k) => textoBilingue(x, w, `deriva.${lista}[${k}]`));
+    if (!indice(D[buena], xs)) w(`deriva.${buena}: índice fuera de rango (0..${xs.length - 1})`);
+  }
+  if (D.pistas !== undefined) {
+    if (!Array.isArray(D.pistas) || !D.pistas.length) w('deriva.pistas: lista no vacía de {es,en}');
+    else D.pistas.forEach((x, k) => textoBilingue(x, w, `deriva.pistas[${k}]`));
+  }
+}
+
 async function validar(id) {
   const err = [];
-  const G = (await import(pathToFileURL(path.join(ROOT, 'assets/guias/data', id + '.js')).href)).default, pasos = G.pasos ?? [];
+  const G = (await import(pathToFileURL(rutaDe(id)).href)).default, pasos = G.pasos ?? [];
   if (!G.titulo?.es || !G.titulo?.en) err.push('titulo {es,en} requerido');
   if (G.fuentes !== undefined) {
     if (!Array.isArray(G.fuentes) || !G.fuentes.length) err.push('fuentes: lista no vacía de cadenas (APA 7)');
@@ -158,7 +187,17 @@ async function validar(id) {
       if (ok !== 1) w(`pregunta: debe haber exactamente 1 opción ok (hay ${ok})`);
       for (const o of p.pregunta.opc || []) if (!o.es || !o.en) w('pregunta: opción sin es/en');
       if (!p.pregunta.why?.es || !p.pregunta.why?.en) w('pregunta: falta why {es,en}');
+      // pistas (opcional): una por fallo no terminal → como mucho (opciones − 2); con 2 opciones el primer fallo ya termina la pregunta
+      if (p.pregunta.pistas !== undefined) {
+        const ps = p.pregunta.pistas, max = Math.max(0, (p.pregunta.opc || []).length - 2);
+        if (!Array.isArray(ps) || !ps.length) w('pregunta.pistas: lista no vacía de {es,en}');
+        else {
+          if (ps.length > max) w(`pregunta.pistas: ${ps.length} pistas pero solo se llegan a mostrar ${max} (opciones − 2)`);
+          ps.forEach((x, k) => textoBilingue(x, w, `pregunta.pistas[${k}]`));
+        }
+      }
     }
+    if (p.deriva) validarDeriva(p, i, w);
     if (p.jugar) {
       const J = p.jugar;
       if (!Array.isArray(J.botones) || !J.botones.length || typeof J.lecturas !== 'function') w('jugar: necesita botones[] y lecturas()');
@@ -179,7 +218,7 @@ async function validar(id) {
   });
   if (pasos.length && !pasos[0].sec) err.push('el primer paso debe llevar sec {es,en}');
   pasos.forEach((p, i) => { if (p.sec && (!p.sec.es || !p.sec.en)) err.push(`paso ${i + 1}: sec necesita es y en`); });
-  const q = pasos.filter(p => p.pregunta).length, j = pasos.filter(p => p.jugar).length, t = pasos.filter(p => p.traza).length;
+  const q = pasos.filter(p => p.pregunta || p.deriva).length, j = pasos.filter(p => p.jugar).length, t = pasos.filter(p => p.traza).length;
   console.log(`${err.length ? '✗' : '✓'} ${id}: ${pasos.length} pasos, ${q} preguntas, ${j} interactivos${t ? `, ${t} trazas` : ''}`);
   for (const e of err) console.log('    ' + e);
   return err.length;
