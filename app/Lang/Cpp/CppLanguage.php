@@ -208,9 +208,15 @@ final class CppLanguage extends Language
             if ($c['addr2line'] === null) {
                 $notes[] = 'Sin addr2line: algunos errores (excepciones, segfaults) no dirán la línea exacta.';
             }
+            if (self::windows()) {
+                $notes[] = 'En Windows no hay trazas de excepciones: se explica el tipo y el mensaje, pero la línea puede ser la de main.';
+            }
         }
         return ['version' => $c['version'] !== null ? $c['version'] . ' (' . ($c['familia'] === 'clang' ? 'clang++' : 'g++') . ')' : null, 'ok' => $missing === [],
-            'missing' => $missing, 'notes' => $notes];
+            'missing' => $missing, 'notes' => $notes,
+            // Capacidades que las pruebas necesitan saber (no se muestran en la interfaz):
+            'san' => (bool) $c['san'], 'lsan' => (bool) $c['lsan'],
+            'traza' => !self::windows() && $c['addr2line'] !== null];
     }
 
     /** Catálogo del editor (data/catalogo.json), cacheado en memoria y en var/cpp-catalog.json. */
@@ -969,6 +975,39 @@ final class CppLanguage extends Language
         }
         if ($fin === null) {
             $items[] = ['t' => 'ev', 'ev' => ['t' => 'end', 'ms' => $wallMs, 'mem' => null, 'peak' => null]];
+        }
+
+        // _GLIBCXX_ASSERTIONS sin sanitizers (Windows): el abort no llega como evento, pero el mensaje
+        // «Assertion '…' failed» sí está en la salida. Se sintetiza el error para explicarlo igual.
+        $hayError = false;
+        foreach ($items as $it) {
+            if ($it['t'] === 'ev' && ($it['ev']['t'] ?? '') === 'err') {
+                $hayError = true;
+                break;
+            }
+        }
+        if (!$hayError) {
+            $salida = '';
+            foreach ($items as $it) {
+                if ($it['t'] === 'out') {
+                    $salida .= $it['text'];
+                }
+            }
+            $ev = null;
+            if (preg_match('/' . preg_quote(self::FUENTE, '/') . ':(\d+): [^\n]*?Assertion [`\'](.+?)\' failed\.?/', $salida, $m)) {
+                $ev = ['t' => 'err', 'kind' => 'abort', 'cls' => 'assert', 'msg' => "assert({$m[2]}) no se cumple", 'line' => (int) $m[1]];
+            } elseif (preg_match('/:\d+: [^\n]*?Assertion [`\'](.+?)\' failed\.?/', $salida, $m)) {
+                $ev = ['t' => 'err', 'kind' => 'abort', 'cls' => 'glibcxx-assert', 'msg' => "comprobación de la biblioteca: {$m[1]}", 'line' => 0];
+            }
+            if ($ev !== null) {
+                $fin = null;
+                foreach ($items as $i => $it) {
+                    if ($it['t'] === 'ev' && ($it['ev']['t'] ?? '') === 'end') {
+                        $fin = $i;
+                    }
+                }
+                array_splice($items, $fin ?? count($items), 0, [['t' => 'ev', 'ev' => $ev]]);
+            }
         }
 
         // Direcciones → líneas (una sola llamada a addr2line para todos los eventos)

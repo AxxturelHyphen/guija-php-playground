@@ -114,6 +114,7 @@ final class CppAnalysis
             for ($i = $it['ti']; $i <= $it['tj']; $i++) {
                 $norm .= $T[$i][1];
             }
+            $norm = str_replace(["\r\n", "\r"], "\n", $norm);   // comparar código, no finales de línea
             $out[$key] = ['key' => $key, 'name' => $it['name'], 'kind' => $kind, 'line' => substr_count($code, "\n", 0, $start) + 1,
                 'endLine' => substr_count($code, "\n", 0, max(0, $end - 1)) + 1, 'start' => $start, 'end' => $end,
                 'doc' => $doc === null ? null : substr($code, $doc[0], $doc[1] - $doc[0]), 'norm' => $norm];

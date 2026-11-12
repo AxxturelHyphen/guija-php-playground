@@ -666,6 +666,7 @@ final class JavaLanguage extends Language
             for ($i = $d['ti']; $i <= $d['tj'] && $i < count($T); $i++) {
                 $norm .= $T[$i][1];
             }
+            $norm = str_replace(["\r\n", "\r"], "\n", $norm);   // comparar código, no finales de línea
             $doc = $L['doc'][$d['ti']] ?? null;
             return ['key' => $key, 'name' => $name, 'kind' => $kind, 'line' => $linea($d['start']), 'endLine' => $linea($d['end'] - 1),
                 'start' => $d['start'], 'end' => $d['end'], 'doc' => $doc === null ? null : substr($code, $doc[0], $doc[1] - $doc[0]), 'norm' => $norm];
