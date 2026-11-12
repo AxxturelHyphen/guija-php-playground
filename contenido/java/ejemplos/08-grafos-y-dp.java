@@ -340,20 +340,6 @@ class GrafosYDp {
         return s.toString();
     }
 
-    private static boolean calentada;
-
-    /** Calienta la JVM una sola vez (sin cronometrar) para que las mediciones no incluyan el código aún sin compilar. */
-    static void calentar() {
-        if (calentada) {
-            return;
-        }
-        calentada = true;
-        long fin = System.nanoTime() + 300_000_000L;
-        while (System.nanoTime() < fin) {
-            escaleras(85);
-        }
-    }
-
     public static void main(String[] args) {
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -584,11 +570,8 @@ class GrafosYDp {
         medir("contarIslas", n -> args(mapaAleatorio(n)));                                  // O(celdas)
         medir("dijkstra", n -> args(grafoPonderado(n), "n0"));                              // O((V+E) log V)
         // escaleras: una sola llamada tarda nanosegundos (el reloj no la distingue del ruido), así que cada repetición
-        // hace 1000 llamadas seguidas; y calentar() deja la JVM caliente antes de empezar.
-        medir("escaleras", n -> {
-            calentar();
-            return n;
-        }, n -> {
+        // hace 1000 llamadas seguidas. medir() ya calienta el JIT antes de cronometrar.
+        medir("escaleras", n -> n, n -> {
             for (int i = 0; i < 1000; i++) {
                 escaleras(n);
             }
