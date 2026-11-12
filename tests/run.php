@@ -55,6 +55,42 @@ function phpBinary(): string
     return PHP_BINARY;
 }
 
+/**
+ * Ejecuta un script hijo con la salida en un fichero, sin tuberías: en Windows un residente que herede
+ * el pipe puede dejar `exec()` esperando indefinidamente. Con límite de tiempo.
+ * @param list<string> $args
+ * @return array{out:string, exit:int}
+ */
+function runScript(string $script, array $args = [], int $timeout = 900): array
+{
+    $file = tempnam(sys_get_temp_dir(), 'pg_suite_');
+    $nulo = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
+    $proc = @proc_open([phpBinary(), PG_ROOT . '/' . $script, ...$args],
+        [0 => ['file', $nulo, 'r'], 1 => ['file', $file, 'w'], 2 => ['redirect', 1]], $pipes, PG_ROOT, null, ['bypass_shell' => true]);
+    if (!is_resource($proc)) {
+        @unlink($file);
+        return ['out' => '', 'exit' => -1];
+    }
+    $exit = -1;
+    $fin = microtime(true) + $timeout;
+    while (true) {
+        $st = proc_get_status($proc);
+        if (!$st['running']) {
+            $exit = (int) $st['exitcode'];
+            break;
+        }
+        if (microtime(true) > $fin) {
+            proc_terminate($proc);
+            break;
+        }
+        usleep(50_000);
+    }
+    proc_close($proc);
+    $out = (string) @file_get_contents($file);
+    @unlink($file);
+    return ['out' => $out, 'exit' => $exit];
+}
+
 // ═══════════════════════════════════════ 1. sintaxis de todos los PHP ═══════════════════════════════════════
 section('Sintaxis (php -l) de todos los archivos');
 $dirs = ['app', 'app/Core', 'app/Lang/Php', 'app/Lang/Php/Analysis', 'app/Lang/Php/data', 'app/Lang/Python', 'app/Lang/Java', 'app/Lang/Java/Analysis', 'app/Lang/Cpp', 'app/Lang/Cpp/Analysis',
@@ -359,12 +395,11 @@ foreach (['tests/python/run.php' => 'Python', 'tests/java/run.php' => 'Java', 't
         continue;
     }
     section($label);
-    $out = [];
-    exec(escapeshellarg(phpBinary()) . ' ' . escapeshellarg(PG_ROOT . '/' . $script) . ($fast ? ' --rapido' : '') . ' 2>&1', $out, $rc);
-    foreach ($out as $line) {
+    $res = runScript($script, $fast ? ['--rapido'] : []);
+    foreach (preg_split('/\r\n|\r|\n/', rtrim($res['out'])) as $line) {
         echo '  ', $line, "\n";
     }
-    check($label . ': todo en verde', $rc === 0, "exit {$rc}");
+    check($label . ': todo en verde', $res['exit'] === 0, "exit {$res['exit']}");
 }
 
 // ═══════════════════════════════════════ resumen ═══════════════════════════════════════

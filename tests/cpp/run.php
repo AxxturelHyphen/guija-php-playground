@@ -17,6 +17,7 @@ $cpp = Languages::get('cpp');
 $fast = in_array('--rapido', $argv, true);
 $pass = 0;
 $fail = 0;
+$skipped = 0;
 $failed = [];
 
 function section(string $title): void
@@ -37,6 +38,14 @@ function check(string $label, bool $ok, string $detail = ''): void
     }
 }
 
+/** Una comprobación que esta plataforma no puede hacer (sin sanitizers, sin trazas): se dice y no cuenta como fallo. */
+function skip(string $label, string $why): void
+{
+    global $skipped;
+    $skipped++;
+    echo "  \e[33m○\e[0m {$label} \e[90m(omitida: {$why})\e[0m\n";
+}
+
 function runC(string $code, array $opts = []): array
 {
     $c = Languages::get('cpp');
@@ -51,7 +60,8 @@ function mainC(string $body, string $members = ''): string
 
 function textOf(array $r): string
 {
-    return implode('', array_column(array_filter($r['segments'], static fn($s) => $s['t'] === 'out'), 'text'));
+    // El programa escribe \r\n en Windows; las comprobaciones comparan texto, no bytes de fin de línea.
+    return str_replace(["\r\n", "\r"], "\n", implode('', array_column(array_filter($r['segments'], static fn($s) => $s['t'] === 'out'), 'text')));
 }
 
 /** Diagnósticos explicados de un programa que no compila (por compilador). */
@@ -87,22 +97,49 @@ check('fixture con pendiente(): las pruebas quedan como ⏳ y no es un error', $
 
 $r = runC(mainC("    vector<int> v(10);\n    int s = 0;\n    for (int i = 0; i <= 10; i++) {\n        s += v[i];\n    }\n    cout << s;"));
 $e = $r['problems'][0] ?? null;
-check('ASan: v[10] → index-out-of-range en la línea del acceso (10) y traza', $e !== null && $e['code'] === 'index-out-of-range' && $e['line'] === 10 && $r['exit'] !== 0 && !empty($e['trace']), json_encode($e));
+if ($meta['san']) {
+    check('ASan: v[10] → index-out-of-range en la línea del acceso (10) y traza', $e !== null && $e['code'] === 'index-out-of-range' && $e['line'] === 10 && $r['exit'] !== 0 && !empty($e['trace']), json_encode($e));
+} else {
+    check('sin sanitizers: v[10] se detecta con _GLIBCXX_ASSERTIONS (index-out-of-range)', $e !== null && $e['code'] === 'index-out-of-range' && $e['severity'] === 'error' && $r['exit'] !== 0, json_encode($e));
+}
 
 $r = runC(mainC("    int x = 2147483647;\n    x += 1;\n    cout << x;"));
 $e = $r['problems'][0] ?? null;
-check('UBSan: desbordamiento de int → overflow con su línea (8)', $e !== null && $e['code'] === 'overflow' && $e['line'] === 8, json_encode($e));
+if ($meta['san']) {
+    check('UBSan: desbordamiento de int → overflow con su línea (8)', $e !== null && $e['code'] === 'overflow' && $e['line'] === 8, json_encode($e));
+} else {
+    skip('UBSan: desbordamiento de int → overflow con su línea (8)', 'sin AddressSanitizer/UBSan en este compilador');
+}
 
 $r = runC(mainC("    int* p = new int(1);\n    delete p;\n    cout << *p;"));
-check('ASan: uso tras delete → use-after-free', ($r['problems'][0]['code'] ?? '') === 'use-after-free', json_encode($r['problems'][0] ?? null));
+if ($meta['san']) {
+    check('ASan: uso tras delete → use-after-free', ($r['problems'][0]['code'] ?? '') === 'use-after-free', json_encode($r['problems'][0] ?? null));
+} else {
+    skip('ASan: uso tras delete → use-after-free', 'sin AddressSanitizer en este compilador');
+}
 $r = runC(mainC("    int* p = new int[5];\n    p[0] = 1;"));
-check('LSan: fuga de memoria → memory-leak (aviso)', ($r['problems'][0]['code'] ?? '') === 'memory-leak', json_encode($r['problems'][0] ?? null));
+if ($meta['lsan']) {
+    check('LSan: fuga de memoria → memory-leak (aviso)', ($r['problems'][0]['code'] ?? '') === 'memory-leak', json_encode($r['problems'][0] ?? null));
+} else {
+    skip('LSan: fuga de memoria → memory-leak (aviso)', 'sin LeakSanitizer en este compilador');
+}
 
 $r = runC("#include <stdexcept>\nvoid f() {\n    throw std::runtime_error(\"boom\");\n}\nint main() {\n    f();\n}\n");
 $e = $r['problems'][0] ?? null;
-check('excepción no capturada: línea del throw, título con el mensaje y traza', $e !== null && $e['line'] === 3 && str_contains($e['title'], 'boom') && $e['severity'] === 'error' && $r['exit'] !== 0, json_encode($e));
+check('excepción no capturada: título con el mensaje y salida distinta de cero', $e !== null && str_contains($e['title'], 'boom') && $e['severity'] === 'error' && $r['exit'] !== 0, json_encode($e));
+if ($meta['traza']) {
+    check('excepción no capturada: línea del throw (3) y traza', $e !== null && $e['line'] === 3 && !empty($e['trace']), json_encode($e));
+} else {
+    skip('excepción no capturada: línea del throw (3) y traza', 'sin trazas de excepción en esta plataforma');
+}
 $r = runC(mainC("    vector<int> v(3);\n    cout << v.at(5);"));
-check('v.at(5) → std::out_of_range explicado como index-out-of-range', ($r['problems'][0]['code'] ?? '') === 'index-out-of-range' && ($r['problems'][0]['line'] ?? 0) === 8, json_encode($r['problems'][0] ?? null));
+$e = $r['problems'][0] ?? null;
+check('v.at(5) → std::out_of_range explicado como index-out-of-range', ($e['code'] ?? '') === 'index-out-of-range', json_encode($e));
+if ($meta['traza']) {
+    check('v.at(5) señala la línea del acceso (8)', ($e['line'] ?? 0) === 8, json_encode($e));
+} else {
+    skip('v.at(5) señala la línea del acceso (8)', 'sin trazas de excepción en esta plataforma');
+}
 
 if (!$fast) {
     $t0 = microtime(true);
@@ -289,10 +326,10 @@ if (!$fast && trim((string) shell_exec('command -v clang++ 2>/dev/null')) !== ''
 
 echo "\n" . str_repeat('═', 60) . "\n";
 if ($fail === 0) {
-    echo "\e[32m{$pass} comprobaciones OK\e[0m\n";
+    echo "\e[32m{$pass} comprobaciones OK\e[0m" . ($skipped > 0 ? ", {$skipped} omitidas por la plataforma" : '') . "\n";
     exit(0);
 }
-echo "\e[31m{$fail} FALLOS\e[0m de " . ($pass + $fail) . ":\n";
+echo "\e[31m{$fail} FALLOS\e[0m de " . ($pass + $fail) . ($skipped > 0 ? " ({$skipped} omitidas)" : '') . ":\n";
 foreach ($failed as $f) {
     echo "  - {$f}\n";
 }
