@@ -17,7 +17,7 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 
 const ROOT = path.join(__dirname, '..');
-const CLAVES = ['celdas', 'barras', 'arbol', 'grafica', 'tabla', 'funcion', 'campo'];
+const CLAVES = ['celdas', 'barras', 'arbol', 'grafica', 'tabla', 'funcion', 'campo', 'vectores'];
 const LEYENDA = ['activo', 'compara', 'hecho', 'mal', 'camino', 'aux']; // claves de `leyenda` (ver cabecera de assets/guias/guia.js)
 const todas = require('../contenido/guias.json').guias.map(g => g.id);
 // Datos de una guía: assets/guias/data/<id>.js; las guías demo (no se sirven) viven en tests/guias/demo-*.js y solo se validan por id explícito

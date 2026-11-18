@@ -361,6 +361,123 @@
         "es": "Campos, integrales de línea, teorema de Green, divergencia, rotacional y Stokes.",
         "en": "Fields, line integrals, Green’s theorem, divergence, curl and Stokes."
       }
+    },
+    {
+      "id": "al-intro",
+      "area": "algebra",
+      "leccion": "0",
+      "titulo": {
+        "es": "Introducción: vectores y el mapa de MML",
+        "en": "Introduction: vectors and the MML map"
+      },
+      "desc": {
+        "es": "Qué es un vector (sumar y escalar), por qué trabajamos en ℝⁿ, cómo encaja cada capítulo con regresión, PCA, GMM y SVM, y la notación del libro.",
+        "en": "What a vector is (add and scale), why we work in ℝⁿ, how each chapter feeds regression, PCA, GMM and SVM, and the book's notation."
+      }
+    },
+    {
+      "id": "al-sistemas",
+      "area": "algebra",
+      "leccion": "1",
+      "titulo": {
+        "es": "Sistemas lineales y matrices",
+        "en": "Linear systems and matrices"
+      },
+      "desc": {
+        "es": "Sistemas de ecuaciones vistos como rectas que se cortan y como combinación de columnas; suma, producto, inversa y traspuesta de matrices.",
+        "en": "Systems of equations as intersecting lines and as combinations of columns; matrix sum, product, inverse and transpose."
+      }
+    },
+    {
+      "id": "al-gauss",
+      "area": "algebra",
+      "leccion": "2",
+      "titulo": {
+        "es": "Eliminación gaussiana",
+        "en": "Gaussian elimination"
+      },
+      "desc": {
+        "es": "Forma escalonada reducida, pivotes y variables libres, solución particular más solución general, y el truco de −1 para el núcleo.",
+        "en": "Reduced row-echelon form, pivots and free variables, particular plus general solution, and the minus-1 trick for the null space."
+      }
+    },
+    {
+      "id": "al-espacios",
+      "area": "algebra",
+      "leccion": "3",
+      "titulo": {
+        "es": "Espacios vectoriales e independencia",
+        "en": "Vector spaces and independence"
+      },
+      "desc": {
+        "es": "Grupos, espacios y subespacios vectoriales, combinaciones lineales e independencia lineal, con el subespacio generado dibujado.",
+        "en": "Groups, vector spaces and subspaces, linear combinations and linear independence, with the span drawn."
+      }
+    },
+    {
+      "id": "al-base-aplicaciones",
+      "area": "algebra",
+      "leccion": "4",
+      "titulo": {
+        "es": "Base, rango y aplicaciones lineales",
+        "en": "Basis, rank and linear mappings"
+      },
+      "desc": {
+        "es": "Base y dimensión, rango, aplicaciones lineales y su matriz, cambio de base, núcleo e imagen y espacios afines, con la rejilla transformada.",
+        "en": "Basis and dimension, rank, linear maps and their matrix, change of basis, kernel and image, and affine spaces, with the transformed grid."
+      }
+    },
+    {
+      "id": "al-geometria",
+      "area": "algebra",
+      "leccion": "5",
+      "titulo": {
+        "es": "Normas, productos internos y ortogonalidad",
+        "en": "Norms, inner products and orthogonality"
+      },
+      "desc": {
+        "es": "Normas y bolas unidad, productos internos y matrices definidas positivas, distancias, ángulos, bases ortonormales y complemento ortogonal.",
+        "en": "Norms and unit balls, inner products and positive definite matrices, distances, angles, orthonormal bases and the orthogonal complement."
+      }
+    },
+    {
+      "id": "al-proyecciones",
+      "area": "algebra",
+      "leccion": "6",
+      "titulo": {
+        "es": "Proyecciones ortogonales y rotaciones",
+        "en": "Orthogonal projections and rotations"
+      },
+      "desc": {
+        "es": "Proyección sobre rectas y subespacios, matriz de proyección, Gram-Schmidt, subespacios afines y rotaciones, arrastrando el vector a proyectar.",
+        "en": "Projection onto lines and subspaces, the projection matrix, Gram-Schmidt, affine subspaces and rotations, dragging the vector to project."
+      }
+    },
+    {
+      "id": "al-det-propios",
+      "area": "algebra",
+      "leccion": "7",
+      "titulo": {
+        "es": "Determinante, traza y valores propios",
+        "en": "Determinant, trace and eigenvalues"
+      },
+      "desc": {
+        "es": "El determinante como área con signo, la traza, el polinomio característico y los vectores propios que la matriz solo estira.",
+        "en": "The determinant as signed area, the trace, the characteristic polynomial and the eigenvectors the matrix only stretches."
+      }
+    },
+    {
+      "id": "al-descomposiciones",
+      "area": "algebra",
+      "leccion": "8",
+      "titulo": {
+        "es": "Descomposiciones de matrices",
+        "en": "Matrix decompositions"
+      },
+      "desc": {
+        "es": "Cholesky, diagonalización, descomposición en valores singulares y aproximación de rango bajo: el círculo que la matriz convierte en elipse.",
+        "en": "Cholesky, diagonalization, singular value decomposition and low-rank approximation: the circle the matrix turns into an ellipse."
+      }
     }
   ],
   "areas": [
@@ -408,6 +525,17 @@
           }
         }
       ]
+    },
+    {
+      "id": "algebra",
+      "titulo": {
+        "es": "Álgebra lineal",
+        "en": "Linear algebra"
+      },
+      "desc": {
+        "es": "Vectores, sistemas, matrices, espacios vectoriales y aplicaciones lineales siguiendo Mathematics for Machine Learning, con vectores que arrastras.",
+        "en": "Vectors, systems, matrices, vector spaces and linear maps following Mathematics for Machine Learning, with vectors you can drag."
+      }
     }
   ]
 }

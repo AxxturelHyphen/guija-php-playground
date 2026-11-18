@@ -46,7 +46,7 @@ export function alResponder(paso, opcion, ok, intentos) { /* sin almacenamiento 
 export function estadoInicial() { return null; }
 // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-const MODS = { celdas: () => import('./escena.js'), barras: () => import('./barras.js'), arbol: () => import('./arbol.js'), grafica: () => import('./grafica.js'), tabla: () => import('./tabla.js'), funcion: () => import('./funcion.js'), campo: () => import('./campo.js') };
+const MODS = { celdas: () => import('./escena.js'), barras: () => import('./barras.js'), arbol: () => import('./arbol.js'), grafica: () => import('./grafica.js'), tabla: () => import('./tabla.js'), funcion: () => import('./funcion.js'), campo: () => import('./campo.js'), vectores: () => import('./vectores.js') };
 const UI = {
   es: { paso: 'Paso', ok: 'Correcto.', no: 'No exactamente.', jugar: 'Pruébalo tú', traza: 'Traza paso a paso', ant: 'Anterior', sig: 'Siguiente', play: 'Reproducir', pausa: 'Pausa', atras: 'Frame anterior', adel: 'Frame siguiente', ini: 'Al principio', vel: 'Velocidad', pos: 'Posición en la traza',
     predice: 'Predice antes de mirar', porque: '¿Por qué?', contraste: 'Contraste', tuPred: 'Tu predicción', tuRazon: 'Tu razón', cambiar: 'Cambiar', pista: 'Pista', buena: 'Correcta', bien: 'Predicción y razón correctas.', razonOtra: 'Predicción correcta, pero la razón era otra.', mal: 'La predicción no era esa.', ahoraRazon: 'Ahora elige la razón.', puntos: (a, b) => `Aciertos a la primera: ${a} de ${b}` },

@@ -8,3 +8,5 @@ __pycache__/
 *.md
 !README.md
 .playwright-mcp/
+# Material de referencia con copyright (PDF de MML y sus extractos): solo local
+ref/

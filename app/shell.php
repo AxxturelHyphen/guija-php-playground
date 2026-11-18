@@ -1,29 +1,35 @@
 <?php
 declare(strict_types=1);
 
-defined('PG_ROOT') or exit;
+defined("PG_ROOT") or exit();
 
 /** @var \Playground\Core\Language $pgLang  lo fija index.php según la URL (/php, /python, /java, /cpp) */
 $langId = $pgLang->id();
 $langName = $pgLang->name();
 // Marca de cada lenguaje: texto del logo, degradado y color del icono de archivo
 [$logo, $colA, $colB, $icon] = [
-    'php' => ['PHP', '#8892BF', '#4F5B93', '#7A86B8'],
-    'python' => ['PY', '#4B8BBE', '#306998', '#4B8BBE'],
-    'java' => ['JAVA', '#E76F00', '#5382A1', '#C77B3A'],
-    'cpp' => ['C++', '#00599C', '#004482', '#3A7CC0'],
+    "php" => ["PHP", "#8892BF", "#4F5B93", "#7A86B8"],
+    "python" => ["PY", "#4B8BBE", "#306998", "#4B8BBE"],
+    "java" => ["JAVA", "#E76F00", "#5382A1", "#C77B3A"],
+    "cpp" => ["C++", "#00599C", "#004482", "#3A7CC0"],
 ][$langId];
-$h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+$h = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES, "UTF-8");
 
 // Versión de los assets en la URL: al editar un archivo el navegador no se queda con el viejo.
 $v = static fn(string $rel): string => pg_asset($rel);
 // Misma base que MONACO en assets/js/monaco-setup.js: se precargan loader y editor.main para que bajen mientras arrancan los módulos
-$monaco = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min';
-$favicon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='" . rawurlencode($colB)
-    . "'/%3E%3Ctext x='16' y='21' font-family='monospace' font-size='" . (strlen($logo) > 3 ? '10' : '13') . "' font-weight='700' text-anchor='middle' fill='white'%3E{$logo}%3C/text%3E%3C/svg%3E";
+$monaco = "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min";
+$favicon =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='" .
+    rawurlencode($colB) .
+    "'/%3E%3Ctext x='16' y='21' font-family='monospace' font-size='" .
+    (strlen($logo) > 3 ? "10" : "13") .
+    "' font-weight='700' text-anchor='middle' fill='white'%3E{$logo}%3C/text%3E%3C/svg%3E";
 ?>
 <!doctype html>
-<html lang="es" data-lang="<?= $h($langId) ?>" style="--logo-a: <?= $colA ?>; --logo-b: <?= $colB ?>; --file-icon: <?= $icon ?>">
+<html lang="es" data-lang="<?= $h(
+    $langId,
+) ?>" style="--logo-a: <?= $colA ?>; --logo-b: <?= $colB ?>; --file-icon: <?= $icon ?>">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -33,16 +39,26 @@ $favicon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="preload" href="<?= $monaco ?>/vs/loader.min.js" as="script">
 <link rel="preload" href="<?= $monaco ?>/vs/editor/editor.main.js" as="script">
-<link rel="preload" href="<?= $v('fonts/inter-latin-wght-normal.woff2') ?>" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="<?= $v('fonts/jetbrains-mono-latin-400-normal.woff2') ?>" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="<?= $v(
+    "fonts/inter-latin-wght-normal.woff2",
+) ?>" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="<?= $v(
+    "fonts/jetbrains-mono-latin-400-normal.woff2",
+) ?>" as="font" type="font/woff2" crossorigin>
 <style>
 /* Tipografía autoalojada (OFL, ver assets/fonts/LICENSES.txt): sin peticiones externas que bloqueen el primer pintado */
-@font-face { font-family: Inter; font-style: normal; font-weight: 100 900; font-display: swap; src: url(<?= $v('fonts/inter-latin-wght-normal.woff2') ?>) format("woff2"); }
-@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url(<?= $v('fonts/jetbrains-mono-latin-400-normal.woff2') ?>) format("woff2"); }
-@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 600 700; font-display: swap; src: url(<?= $v('fonts/jetbrains-mono-latin-600-normal.woff2') ?>) format("woff2"); }
+@font-face { font-family: Inter; font-style: normal; font-weight: 100 900; font-display: swap; src: url(<?= $v(
+    "fonts/inter-latin-wght-normal.woff2",
+) ?>) format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url(<?= $v(
+    "fonts/jetbrains-mono-latin-400-normal.woff2",
+) ?>) format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 600 700; font-display: swap; src: url(<?= $v(
+    "fonts/jetbrains-mono-latin-600-normal.woff2",
+) ?>) format("woff2"); }
 </style>
-<link rel="stylesheet" href="<?= $v('css/app.css') ?>">
-<?= pg_cabecera_modulos('js/main.js') ?>
+<link rel="stylesheet" href="<?= $v("css/app.css") ?>">
+<?= pg_cabecera_modulos("js/main.js") ?>
 <script>
 // «Sin distracciones» recordado: se aplica antes del primer pintado para que no haya salto de diseño al cargar
 try { if (localStorage.getItem('pg:zen') === '1') document.documentElement.classList.add('zen'); } catch (e) { /* sin almacenamiento */ }
@@ -56,7 +72,11 @@ addEventListener('unhandledrejection', e => { if (e.reason && (e.reason.name ===
   <button id="btn-sidebar" class="btn btn-icon" title="Proyecto (Alt+1)" aria-label="Mostrar u ocultar el panel Proyecto">
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 3.5h13M1.5 8h13M1.5 12.5h13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
   </button>
-  <a class="brand" href="/" title="Cambiar de lenguaje (PHP, Python, Java, C++)"><span class="logo"><?= $h($logo) ?></span><span class="brand-name">Guija <?= $h($langName) ?> Playground</span></a>
+  <a class="brand" href="/" title="Cambiar de lenguaje (PHP, Python, Java, C++)"><span class="logo"><?= $h(
+      $logo,
+  ) ?></span><span class="brand-name">Guija <?= $h(
+    $langName,
+) ?> Playground</span></a>
   <span class="pill" id="php-version"><?= $h($langName) ?></span>
   <div id="sesion" class="sesion" role="group" aria-label="Sesión de estudio">
     <select id="ses-dur" class="sel hide-sm" aria-label="Duración de la sesión"><option value="10">10 min</option><option value="15">15 min</option><option value="25" selected>25 min</option></select>
@@ -77,7 +97,9 @@ addEventListener('unhandledrejection', e => { if (e.reason && (e.reason.name ===
       <option value="5">5 s</option><option value="10">10 s</option><option value="30">30 s</option>
     </select>
   </label>
-  <button id="btn-save" class="btn" title="Guardar en practicas/<?= $h($langId) ?>/ (Ctrl+S)">
+  <button id="btn-save" class="btn" title="Guardar en practicas/<?= $h(
+      $langId,
+  ) ?>/ (Ctrl+S)">
     <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 2.5h9l2 2v9h-11z M5 2.5v4h5v-4 M5 13.5v-4h6v4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
     <span class="hide-md">Guardar</span>
   </button>
@@ -94,7 +116,7 @@ addEventListener('unhandledrejection', e => { if (e.reason && (e.reason.name ===
     <span id="run-label">Ejecutar</span>
     <span class="hide-sm"><kbd>Ctrl</kbd> <kbd>↵</kbd></span>
   </button>
-<?php if ($langId === 'cpp'): ?>
+<?php if ($langId === "cpp"): ?>
   <a id="btn-guias" class="btn" href="/guias" target="_blank" rel="noopener" title="Guías visuales: punteros, memoria, STL… (se abren en otra pestaña)">
     <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3c2-.8 4-.8 5.5.7 1.500-1.500 3.500-1.500 5.500-.7v9.500c-2-.8-4-.8-5.500.7-1.500-1.500-3.500-1.500-5.500-.7zM8 3.700v9.500" fill="none" stroke="currentColor" stroke-width="1.300" stroke-linejoin="round"/></svg>
     <span class="hide-md">Guías</span>
@@ -124,7 +146,9 @@ addEventListener('unhandledrejection', e => { if (e.reason && (e.reason.name ===
     <div class="island-head">
       <span class="island-title">Proyecto</span>
       <div class="spacer"></div>
-      <button id="btn-new" class="btn btn-sm" title="Nuevo archivo en practicas/<?= $h($langId) ?>/">+ Nuevo</button>
+      <button id="btn-new" class="btn btn-sm" title="Nuevo archivo en practicas/<?= $h(
+          $langId,
+      ) ?>/">+ Nuevo</button>
     </div>
     <div id="siguiente" class="sig"></div>
     <nav id="tree" class="tree" aria-label="Archivos" aria-busy="true">
@@ -192,6 +216,6 @@ addEventListener('unhandledrejection', e => { if (e.reason && (e.reason.name ===
 <div id="toasts" class="toasts" aria-live="polite"></div>
 <div id="modal-root"></div>
 
-<script type="module" src="<?= $v('js/main.js') ?>"></script>
+<script type="module" src="<?= $v("js/main.js") ?>"></script>
 </body>
 </html>
